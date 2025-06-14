@@ -16,6 +16,19 @@ export interface EmissionData {
   residualEmissionPercentage: number;
   decarbonModel: string;
   reTargetYear?: number;
+  // 新增三階段目標
+  nearTermTarget?: {
+    year: number;
+    reductionPercentage: number;
+  };
+  midTermTarget?: {
+    year: number;
+    reductionPercentage: number;
+  };
+  longTermTarget?: {
+    year: number;
+    reductionPercentage: number;
+  };
 }
 
 export interface ReductionModel {
@@ -200,11 +213,20 @@ const CarbonPath = () => {
                       <p>範疇二：{emissionData.scope2.toLocaleString()} tCO2e</p>
                       <p>總排放量：{(emissionData.scope1 + emissionData.scope2).toLocaleString()} tCO2e</p>
                       <p>基準年：{emissionData.baseYear}</p>
-                      <p>目標年：{emissionData.targetYear}</p>
+                      <p>淨零目標年：{emissionData.targetYear}</p>
                       <p>殘留排放：{emissionData.residualEmissionPercentage}%</p>
                       <p>減碳模型：{emissionData.decarbonModel}
                         {emissionData.reTargetYear && ` (${emissionData.reTargetYear})`}
                       </p>
+                      {emissionData.nearTermTarget && (
+                        <p>近期目標：{emissionData.nearTermTarget.year}年減排{emissionData.nearTermTarget.reductionPercentage}%</p>
+                      )}
+                      {emissionData.midTermTarget && (
+                        <p>中期目標：{emissionData.midTermTarget.year}年減排{emissionData.midTermTarget.reductionPercentage}%</p>
+                      )}
+                      {emissionData.longTermTarget && (
+                        <p>遠期目標：{emissionData.longTermTarget.year}年減排{emissionData.longTermTarget.reductionPercentage}%</p>
+                      )}
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">減碳模型</h4>
