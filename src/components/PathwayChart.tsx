@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -12,7 +11,8 @@ interface PathwayChartProps {
   modelType?: 'custom-target' | 'taiwan-target' | 'sbti'; // 傳進來的模型id
   customPhases?: { // 兩階段自訂
     nearTermTarget?: { year: number },
-    longTermTarget?: { year: number }
+    longTermTarget?: { year: number },
+    transitionEndYear?: number
   }
 }
 
@@ -77,24 +77,31 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
     modelType === 'custom-target'
     && customPhases?.nearTermTarget
     && customPhases?.longTermTarget
+    && customPhases?.transitionEndYear
   ) {
     refsArr = [
       {
         x1: baseYear,
         x2: customPhases.nearTermTarget.year,
-        color: '#E0F2FE',
+        color: '#E0F2FE', // Blueish
         label: '近期階段'
       },
       {
         x1: customPhases.nearTermTarget.year,
+        x2: customPhases.transitionEndYear,
+        color: '#FEF3C7', // Yellowish
+        label: '過渡階段'
+      },
+      {
+        x1: customPhases.transitionEndYear,
         x2: customPhases.longTermTarget.year,
-        color: '#E6F4EA',
+        color: '#E6F4EA', // Greenish
         label: '長期階段'
       },
       {
         x1: customPhases.longTermTarget.year,
         x2: netZeroYear + extendedYears,
-        color: '#F5F5F5',
+        color: '#F5F5F5', // Grey
         label: '淨零後'
       }
     ];
@@ -158,6 +165,20 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                       fontWeight: 600,
                       fontSize: 13,
                       value: "近期結束",
+                    }}
+                  />
+                )}
+                {modelType === 'custom-target' && customPhases?.transitionEndYear && (
+                  <ReferenceLine
+                    x={customPhases.transitionEndYear}
+                    stroke="#f59e0b"
+                    strokeDasharray="4 2"
+                    label={{
+                      position: 'top',
+                      fill: "#f59e0b",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      value: "過渡結束",
                     }}
                   />
                 )}

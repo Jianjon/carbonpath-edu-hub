@@ -61,13 +61,14 @@ const CarbonPath = () => {
   }>({});
   const [pathwayData, setPathwayData] = useState<PathwayData[]>([]);
   const [adjustedRates, setAdjustedRates] = useState<{ longTerm?: number }>({});
+  const TRANSITION_DURATION = 3; // 3年平滑過渡期
 
   const generatePathway = () => {
     if (!emissionData || !selectedModel) return;
 
     const totalEmissions = emissionData.scope1 + emissionData.scope2;
     const years = emissionData.targetYear - emissionData.baseYear;
-    const pathway: PathwayData[] = [];
+    let finalPathway: PathwayData[] = [];
 
     console.log('開始生成路徑:', { 
       totalEmissions, 
@@ -76,56 +77,81 @@ const CarbonPath = () => {
       residualPercentage: emissionData.residualEmissionPercentage 
     });
 
-    // 計算最終殘留排放量（這是絕對不能低於的底線）
     const finalResidualEmissions = totalEmissions * (emissionData.residualEmissionPercentage / 100);
     console.log('最終殘留排放量:', finalResidualEmissions, `(${emissionData.residualEmissionPercentage}%)`);
 
-    // 自訂減碳目標 - 兩階段等比減排
+    // 自訂減碳目標 - 帶有平滑過渡的等比減排
     if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.longTermTarget) {
-      console.log('使用自訂目標（等比減排）:', customTargets);
+      console.log('使用自訂目標（等比減排，帶平滑過渡）:', customTargets);
 
-      const nearTermYears = customTargets.nearTermTarget.year - emissionData.baseYear;
+      const nearTermTargetYear = customTargets.nearTermTarget.year;
       const nearTermAnnualRate = customTargets.nearTermTarget.annualReductionRate / 100;
-      const nearTermEndEmissions = totalEmissions * Math.pow(1 - nearTermAnnualRate, nearTermYears);
-      const longTermYears = customTargets.longTermTarget.year - customTargets.nearTermTarget.year;
       
-      let adjustedLongTermRate = 0;
-      if (longTermYears > 0 && nearTermEndEmissions > finalResidualEmissions) {
-        adjustedLongTermRate = 1 - Math.pow(finalResidualEmissions / nearTermEndEmissions, 1 / longTermYears);
-      }
-      
-      setAdjustedRates({ longTerm: adjustedLongTermRate });
-      console.log('調整後的長期年均減排率:', (adjustedLongTermRate * 100).toFixed(4), '%');
+      const calculatePath = (targetLongTermRate: number): { path: PathwayData[], finalEmissions: number } => {
+        const path: PathwayData[] = [];
+        let tempEmissions = totalEmissions;
 
-      for (let i = 0; i <= years; i++) {
-        const currentYear = emissionData.baseYear + i;
-        let currentEmissions: number;
-
-        if (currentYear <= customTargets.nearTermTarget.year) {
-          const yearsInPhase = currentYear - emissionData.baseYear;
-          currentEmissions = totalEmissions * Math.pow(1 - nearTermAnnualRate, yearsInPhase);
-        } else if (currentYear <= customTargets.longTermTarget.year) {
-          const yearsInLongPhase = currentYear - customTargets.nearTermTarget.year;
-          currentEmissions = nearTermEndEmissions * Math.pow(1 - adjustedLongTermRate, yearsInLongPhase);
-        } else {
-          currentEmissions = finalResidualEmissions;
+        for (let i = 0; i <= years; i++) {
+          const currentYear = emissionData.baseYear + i;
+          
+          if (i > 0) {
+            let effectiveRate: number;
+            if (currentYear <= nearTermTargetYear) {
+              effectiveRate = nearTermAnnualRate;
+            } else if (currentYear > nearTermTargetYear && currentYear <= nearTermTargetYear + TRANSITION_DURATION) {
+              const progress = (currentYear - nearTermTargetYear) / TRANSITION_DURATION;
+              effectiveRate = nearTermAnnualRate + (targetLongTermRate - nearTermAnnualRate) * progress;
+            } else {
+              effectiveRate = targetLongTermRate;
+            }
+            tempEmissions *= (1 - effectiveRate);
+          }
+          
+          path.push({
+            year: currentYear,
+            emissions: tempEmissions,
+            reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
+            target: tempEmissions
+          });
         }
+        return { path, finalEmissions: tempEmissions };
+      };
 
-        currentEmissions = Math.max(currentEmissions, finalResidualEmissions);
-        const actualReduction = ((totalEmissions - currentEmissions) / totalEmissions) * 100;
+      // 使用二分搜尋法找到能達成目標的長期減排率
+      let lowRate = 0;
+      let highRate = 0.5; // 最高年減50%作為上限
+      let bestRate = 0;
 
-        pathway.push({
-          year: currentYear,
-          emissions: Math.round(currentEmissions),
-          reduction: Math.round(actualReduction * 10) / 10,
-          target: Math.round(currentEmissions)
-        });
+      for (let iter = 0; iter < 50; iter++) { // 迭代50次以獲得足夠精度
+        const midRate = (lowRate + highRate) / 2;
+        const { finalEmissions } = calculatePath(midRate);
+        if (finalEmissions > finalResidualEmissions) {
+          lowRate = midRate;
+        } else {
+          highRate = midRate;
+        }
       }
-    }
+      bestRate = (lowRate + highRate) / 2;
+      
+      const { path } = calculatePath(bestRate);
+
+      finalPathway = path.map(p => ({
+        ...p,
+        emissions: Math.round(p.emissions),
+        reduction: Math.round(p.reduction * 10) / 10,
+        target: Math.round(p.emissions),
+      }));
+      
+      setAdjustedRates({ longTerm: bestRate });
+      setPathwayData(finalPathway);
+      setStep(4);
+      return; // 完成後直接返回
+    } 
+    
     // 台灣減碳目標 - 階段性線性減排
     else if (selectedModel.id === 'taiwan-target') {
       console.log('使用台灣目標, 残留排放量:', finalResidualEmissions);
-      
+      let pathway: PathwayData[] = []; // Renamed for consistency
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
         let targetReduction = 0;
@@ -160,11 +186,12 @@ const CarbonPath = () => {
           target: Math.round(emissions)
         });
       }
+      finalPathway = pathway;
     } 
     // SBTi 1.5°C目標 - 等比減排
     else {
       console.log('使用SBTi目標（等比減排）:', { annualReductionRate: selectedModel.annualReductionRate, finalResidualEmissions });
-      
+      let pathway: PathwayData[] = []; // Renamed for consistency
       // 計算需要的年均減排率以達到最終殘留排放
       const requiredAnnualRate = 1 - Math.pow(emissionData.residualEmissionPercentage / 100, 1 / years);
       console.log('調整後的年均減排率:', (requiredAnnualRate * 100).toFixed(2), '%');
@@ -187,13 +214,14 @@ const CarbonPath = () => {
           target: Math.round(emissions)
         });
       }
+      finalPathway = pathway;
     }
 
-    console.log('生成的路徑數據:', pathway.slice(0, 5)); // 顯示前5年數據
-    console.log('最後一年數據:', pathway[pathway.length - 1]); // 顯示最後一年數據
+    console.log('生成的路徑數據:', finalPathway.slice(0, 5)); // 顯示前5年數據
+    console.log('最後一年數據:', finalPathway[finalPathway.length - 1]); // 顯示最後一年數據
     
     // 驗證最終年份是否正確達到殘留排放
-    const finalYearData = pathway[pathway.length - 1];
+    const finalYearData = finalPathway[finalPathway.length - 1];
     const expectedFinalEmissions = finalResidualEmissions;
     console.log('驗證最終排放:', {
       actual: finalYearData.emissions,
@@ -201,7 +229,7 @@ const CarbonPath = () => {
       difference: Math.abs(finalYearData.emissions - expectedFinalEmissions)
     });
     
-    setPathwayData(pathway);
+    setPathwayData(finalPathway);
     setStep(4);
   };
 
@@ -350,7 +378,8 @@ const CarbonPath = () => {
                 modelType={selectedModel.id as 'custom-target' | 'taiwan-target' | 'sbti'}
                 customPhases={selectedModel.id === 'custom-target' ? {
                   nearTermTarget: customTargets.nearTermTarget,
-                  longTermTarget: customTargets.longTermTarget
+                  longTermTarget: customTargets.longTermTarget,
+                  transitionEndYear: customTargets.nearTermTarget && (customTargets.nearTermTarget.year + TRANSITION_DURATION)
                 } : undefined}
               />
               <ReportExport 
