@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea, Dot } from 'recharts';
+import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PathwayData } from '../pages/CarbonPath';
 
@@ -10,7 +10,7 @@ import { PathwayData } from '../pages/CarbonPath';
 interface PathwayChartProps {
   data: PathwayData[];
   modelType?: 'custom-target' | 'taiwan-target' | 'sbti'; // 傳進來的模型id
-  customPhases?: { // 三階段自訂
+  customPhases?: { // 兩階段自訂
     nearTermTarget?: { year: number },
     longTermTarget?: { year: number }
   }
@@ -37,6 +37,7 @@ const chartConfig = {
 
 const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhases }) => {
   if (!data.length) return null;
+  
   const baseYear = data[0].year;
   const netZeroYear = data[data.length - 1].year;
   const baseEmissions = data[0].emissions;
@@ -54,6 +55,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
       target: lastEmission,
     }))
   ];
+  
   const dataWithAnnualReduction = extendedData.map((item, idx, arr) => ({
     ...item,
     annualReduction: idx === 0 ? 0 : arr[idx - 1].emissions - item.emissions
@@ -95,15 +97,6 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
     { year: 2035, color: "#FBBF24", label: "2035目標" }
   ];
   const showTaiwanMarks = modelType === 'taiwan-target';
-  const taiwanPoints = showTaiwanMarks
-    ? dataWithAnnualReduction
-        .filter(item => taiwanMilestoneYears.some(tw => tw.year === item.year))
-        .map(item => ({
-          ...item,
-          color: taiwanMilestoneYears.find(tw => tw.year === item.year)?.color,
-          label: taiwanMilestoneYears.find(tw => tw.year === item.year)?.label
-        }))
-    : [];
 
   return (
     <div className="space-y-6">
@@ -127,19 +120,20 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                {/* 只有自訂模型時顯示兩階段填色 */}
+                
+                {/* 自訂模型階段背景色塊 */}
                 {refsArr.map((ph, idx) => (
                   <ReferenceArea
-                    key={ph.label}
+                    key={`phase-${idx}-${ph.label}`}
                     x1={ph.x1}
                     x2={ph.x2}
                     stroke="none"
                     fill={ph.color}
                     fillOpacity={0.32}
                     ifOverflow="extendDomain"
-                    label={idx === 0 || idx === 1 ? ph.label : null}
                   />
                 ))}
+                
                 {/* 分界年標線 */}
                 {modelType === 'custom-target' && customPhases?.nearTermTarget && (
                   <ReferenceLine
@@ -168,12 +162,12 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                     }}
                   />
                 )}
+                
                 <XAxis 
                   dataKey="year" 
                   stroke="#6b7280"
                   fontSize={12}
                   tick={{ fontWeight: 500 }}
-                  allowDuplicatedCategory={false}
                   domain={[baseYear, netZeroYear + extendedYears]}
                   type="number"
                 />
@@ -192,11 +186,11 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                   }}
                 />
-                {/* 主排放量連續區 - 沒有空白 */}
+                
+                {/* 主排放量區域圖 */}
                 <Area 
                   type="monotone"
                   dataKey="emissions"
-                  data={dataWithAnnualReduction}
                   stroke={chartConfig.emissions.color}
                   fill="url(#pathwayGradient)"
                   fillOpacity={0.95}
@@ -204,31 +198,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                   activeDot={{ r: 5, fill: chartConfig.emissions.color }}
                   dot={false}
                 />
-                {/* 殘留排放線（包括目標年與延長10年） */}
-                <Area 
-                  type="monotone"
-                  dataKey="emissions"
-                  data={dataWithAnnualReduction.slice(data.length - 1)}
-                  stroke={chartConfig.residual.color}
-                  fill="url(#residualGradient)"
-                  fillOpacity={0.85}
-                  isAnimationActive={false}
-                  dot={false}
-                  name="淨零殘留排放"
-                  strokeDasharray="3 3"
-                />
-                <Area 
-                  type="monotone"
-                  dataKey="emissions"
-                  data={dataWithAnnualReduction.slice(data.length)}
-                  stroke={chartConfig.residual.color}
-                  fill="url(#residualGradient)"
-                  fillOpacity={0.85}
-                  isAnimationActive={false}
-                  dot={false}
-                  name="淨零殘留排放"
-                  strokeDasharray="7 5"
-                />
+                
                 {/* 目標折線 */}
                 <Line 
                   type="monotone" 
@@ -240,47 +210,49 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                   dot={false}
                   activeDot={false}
                 />
+                
                 {/* Net Zero年標線 */}
                 <ReferenceLine
                   x={netZeroYear}
                   stroke="#26A485"
                   label={{
-                    position: 'insideTop',
+                    position: 'insideTopRight',
                     value: "Net Zero",
                     fill: "#26A485",
                     fontWeight: 600,
                     fontSize: 12,
                   }}
                 />
+                
                 {/* 殘留排放水平線 */}
                 <ReferenceLine
                   y={lastEmission}
-                  x={netZeroYear + 1}
                   stroke="#26C485"
-                  strokeWidth={3}
+                  strokeWidth={2}
                   strokeDasharray="7 6"
                   label={{
-                    position: 'left',
+                    position: 'insideTopRight',
                     fill: "#26C485",
                     fontWeight: 700,
-                    fontSize: 13,
+                    fontSize: 11,
                     value: "殘留排放",
                   }}
                   ifOverflow="extendDomain"
                 />
-                {/* 台灣目標年標點 */}
-                {showTaiwanMarks && taiwanPoints.map((item) => (
+                
+                {/* 台灣目標年標線 */}
+                {showTaiwanMarks && taiwanMilestoneYears.map((milestone) => (
                   <ReferenceLine
-                    key={item.year}
-                    x={item.year}
-                    y={item.target}
-                    stroke={item.color ?? "#d97706"}
+                    key={`taiwan-${milestone.year}`}
+                    x={milestone.year}
+                    stroke={milestone.color}
+                    strokeWidth={2}
                     label={{
-                      value: item.label,
+                      value: milestone.label,
                       position: "top",
-                      fill: item.color ?? "#d97706",
-                      fontSize: 13,
-                      fontWeight: 700
+                      fill: milestone.color,
+                      fontSize: 12,
+                      fontWeight: 600
                     }}
                     ifOverflow="visible"
                   />
@@ -290,6 +262,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
           </ChartContainer>
         </CardContent>
       </Card>
+      
       {/* 年度減量圖 */}
       <Card>
         <CardHeader>
@@ -338,6 +311,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
           </ChartContainer>
         </CardContent>
       </Card>
+      
       {/* 數據表格 */}
       <Card>
         <CardHeader>
@@ -373,4 +347,3 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
 };
 
 export default PathwayChart;
-
