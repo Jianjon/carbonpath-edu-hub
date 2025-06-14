@@ -46,19 +46,62 @@ const CarbonPath = () => {
     const years = emissionData.targetYear - emissionData.baseYear;
     const pathway: PathwayData[] = [];
 
-    for (let i = 0; i <= years; i++) {
-      const year = emissionData.baseYear + i;
-      const reductionFactor = Math.pow(1 - selectedModel.annualReductionRate / 100, i);
-      const emissions = totalEmissions * reductionFactor;
-      const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
-      const target = totalEmissions * (1 - (selectedModel.targetReduction / 100) * (i / years));
+    // 特殊處理台灣減碳目標
+    if (selectedModel.id === 'taiwan-target') {
+      // 台灣目標基於2005年，需要調整到用戶基準年
+      const taiwanTargets = [
+        { year: 2030, reduction: 28 },
+        { year: 2032, reduction: 32 },
+        { year: 2035, reduction: 38 }
+      ];
 
-      pathway.push({
-        year,
-        emissions: Math.round(emissions),
-        reduction: Math.round(reduction * 10) / 10,
-        target: Math.round(target)
-      });
+      for (let i = 0; i <= years; i++) {
+        const currentYear = emissionData.baseYear + i;
+        let targetReduction = 0;
+
+        // 根據年份確定減排目標
+        if (currentYear <= 2030) {
+          targetReduction = (currentYear - emissionData.baseYear) / (2030 - emissionData.baseYear) * 28;
+        } else if (currentYear <= 2032) {
+          targetReduction = 28 + (currentYear - 2030) / (2032 - 2030) * (32 - 28);
+        } else if (currentYear <= 2035) {
+          targetReduction = 32 + (currentYear - 2032) / (2035 - 2032) * (38 - 32);
+        } else {
+          // 2035年後維持38%減排或根據淨零目標線性增加
+          const finalReduction = (1 - emissionData.residualEmissionPercentage / 100) * 100;
+          if (currentYear < emissionData.targetYear) {
+            targetReduction = 38 + (currentYear - 2035) / (emissionData.targetYear - 2035) * (finalReduction - 38);
+          } else {
+            targetReduction = finalReduction;
+          }
+        }
+
+        const emissions = totalEmissions * (1 - targetReduction / 100);
+        const target = emissions;
+
+        pathway.push({
+          year: currentYear,
+          emissions: Math.round(emissions),
+          reduction: Math.round(targetReduction * 10) / 10,
+          target: Math.round(target)
+        });
+      }
+    } else {
+      // 其他模型使用原有邏輯
+      for (let i = 0; i <= years; i++) {
+        const year = emissionData.baseYear + i;
+        const reductionFactor = Math.pow(1 - selectedModel.annualReductionRate / 100, i);
+        const emissions = totalEmissions * reductionFactor;
+        const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
+        const target = totalEmissions * (1 - (selectedModel.targetReduction / 100) * (i / years));
+
+        pathway.push({
+          year,
+          emissions: Math.round(emissions),
+          reduction: Math.round(reduction * 10) / 10,
+          target: Math.round(target)
+        });
+      }
     }
 
     setPathwayData(pathway);

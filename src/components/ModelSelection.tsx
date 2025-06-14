@@ -30,11 +30,11 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({ onNext, onBack }) => {
       annualReductionRate: 2.5
     },
     {
-      id: 'linear-50',
-      name: '線性減排50%',
-      description: '採用線性減排模式，在目標年達成50%減排',
-      targetReduction: 50,
-      annualReductionRate: 3.5
+      id: 'taiwan-target',
+      name: '台灣減碳目標',
+      description: '依循台灣國家減碳目標：2030年減28%、2032年減32%、2035年減38%（相對2005年）',
+      targetReduction: 38,
+      annualReductionRate: 2.8
     },
     {
       id: 'aggressive',
