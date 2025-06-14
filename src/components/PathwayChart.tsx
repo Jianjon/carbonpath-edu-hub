@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -70,9 +69,13 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
 
   // 判斷自訂階段分區
   const refsArr: { x1: number, x2: number, color: string, label: string }[] = [];
-  if (modelType === 'custom-target' && customPhases?.nearTermTarget && customPhases?.midTermTarget && customPhases?.longTermTarget) {
+  if (
+    modelType === 'custom-target'
+    && customPhases?.nearTermTarget
+    && customPhases?.midTermTarget
+    && customPhases?.longTermTarget
+  ) {
     const phaseColors = ['#E0F2FE', '#F1F5F9', '#E6F4EA'];
-    // 近、中、遠期以 ReferenceArea 標註
     refsArr.push({
       x1: baseYear,
       x2: customPhases.nearTermTarget.year,
@@ -107,227 +110,211 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
 
   return (
     <div className="space-y-6">
-      {/* 排放量減少趨勢 + 年度減量圖，左右排列 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 左：排放量減少趨勢圖 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>排放量減少趨勢</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[420px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={dataWithAnnualReduction}>
-                  <defs>
-                    {/* 排放(藍) */}
-                    <linearGradient id="pathwayGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#1976D2" stopOpacity={0.7}/>
-                      <stop offset="100%" stopColor="#90caf9" stopOpacity={0.2}/>
-                    </linearGradient>
-                    {/* 殘留(綠) */}
-                    <linearGradient id="residualGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#26C485" stopOpacity={0.5}/>
-                      <stop offset="100%" stopColor="#d1fae5" stopOpacity={0.18}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  {/* 階段 ReferenceArea：自訂才有 */}
-                  {refsArr.map((ph, idx) => (
-                    <ReferenceArea key={ph.label} x1={ph.x1} x2={ph.x2} stroke="none" fill={ph.color} fillOpacity={0.32} ifOverflow="extend" label={ph.label} />
-                  ))}
-                  <XAxis 
-                    dataKey="year" 
-                    stroke="#6b7280"
-                    fontSize={12}
-                    tick={{ fontWeight: 500 }}
-                    allowDuplicatedCategory={false}
-                    domain={[baseYear, netZeroYear + extendedYears]}
-                    type="number"
-                  />
-                  <YAxis 
-                    stroke="#6b7280"
-                    fontSize={12}
-                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                    width={70}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                  />
-                  {/* 主區間排放量曲線 0~淨零年 */}
-                  <Area 
-                    type="monotone"
-                    dataKey="emissions"
-                    data={dataWithAnnualReduction.slice(0, data.length)}
-                    stroke={chartConfig.emissions.color}
-                    fill="url(#pathwayGradient)"
-                    fillOpacity={0.95}
-                    name="實際排放量"
-                    activeDot={{ r: 5, fill: chartConfig.emissions.color }}
-                    dot={false}
-                  />
-                  {/* 殘留排放線（目標年後，與前期藍色緊密銜接） */}
-                  <Area 
-                    type="monotone"
-                    dataKey="emissions"
-                    data={dataWithAnnualReduction.slice(data.length - 1)}
-                    stroke={chartConfig.residual.color}
-                    fill="url(#residualGradient)"
-                    fillOpacity={0.85}
-                    isAnimationActive={false}
-                    dot={false}
-                    name="淨零殘留排放"
-                    strokeDasharray="3 3"
-                  />
-                  <Area 
-                    type="monotone"
-                    dataKey="emissions"
-                    data={dataWithAnnualReduction.slice(data.length)}
-                    stroke={chartConfig.residual.color}
-                    fill="url(#residualGradient)"
-                    fillOpacity={0.85}
-                    isAnimationActive={false}
-                    dot={false}
-                    name="淨零殘留排放"
-                    strokeDasharray="7 5"
-                  />
-                  {/* 目標折線 */}
-                  <Line 
-                    type="monotone" 
-                    dataKey="target" 
-                    stroke={chartConfig.target.color}
-                    strokeWidth={3}
-                    strokeDasharray="8 2"
-                    name="目標排放量"
-                    dot={false}
-                    activeDot={false}
-                  />
-                  {/* Net Zero年標線 */}
-                  <ReferenceLine
-                    x={netZeroYear}
-                    stroke="#26A485"
-                    label={{
-                      position: 'insideTop',
-                      value: "Net Zero",
-                      fill: "#26C485",
-                      fontWeight: 600,
-                      fontSize: 12,
-                    }}
-                  />
-                  {/* 殘留排放水平線（10年） */}
-                  <ReferenceLine
-                    y={lastEmission}
-                    x={netZeroYear + 1}
-                    stroke="#26C485"
-                    strokeWidth={3}
-                    strokeDasharray="7 6"
-                    label={{
-                      position: 'left',
-                      fill: "#26C485",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      value: "殘留排放",
-                    }}
+      {/* 排放量減少趨勢圖（在上） */}
+      <Card>
+        <CardHeader>
+          <CardTitle>排放量減少趨勢</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-[420px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dataWithAnnualReduction}>
+                <defs>
+                  <linearGradient id="pathwayGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1976D2" stopOpacity={0.7}/>
+                    <stop offset="100%" stopColor="#90caf9" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="residualGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#26C485" stopOpacity={0.5}/>
+                    <stop offset="100%" stopColor="#d1fae5" stopOpacity={0.18}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                {/* 自訂階段 ReferenceArea */}
+                {refsArr.map((ph, idx) => (
+                  <ReferenceArea
+                    key={ph.label}
+                    x1={ph.x1}
+                    x2={ph.x2}
+                    stroke="none"
+                    fill={ph.color}
+                    fillOpacity={0.32}
                     ifOverflow="extendDomain"
+                    label={ph.label}
                   />
-                  {/* 台灣目標年標點 */}
-                  {showTaiwanMarks && taiwanPoints.map((item, idx) => (
-                    <ReferenceLine
-                      key={item.year}
-                      x={item.year}
-                      y={item.target}
-                      stroke={item.color ?? "#d97706"}
-                      label={{
-                        value: item.label,
-                        position: "top",
-                        fill: item.color ?? "#d97706",
-                        fontSize: 13,
-                        fontWeight: 700
-                      }}
-                      ifOverflow="visible"
-                    />
-                  ))}
-                  {/* 台灣目標年標點（點狀） */}
-                  {showTaiwanMarks && taiwanPoints.map((item, idx) =>
-                    <Dot
-                      key={'dot-'+item.year}
-                      cx={0}
-                      cy={0}
-                      r={7}
-                      stroke={item.color}
-                      fill={item.color}
-                      x={undefined}
-                      y={undefined}
-                      dataKey="target"
-                      {...{
-                        // 直接將點繪於曲線
-                        isAnimationActive: false,
-                        className: "recharts-dot-custom"
-                      }}
-                      // custom component放在外層
-                    />
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        {/* 右：年度減量圖 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>年度減量</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[420px]">
-              <ResponsiveContainer width="100%" height="100%">
-                {/* 只顯示真實區間 */}
-                <AreaChart data={dataWithAnnualReduction.slice(1, data.length)}>
-                  <defs>
-                    <linearGradient id="annualReductionGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.7} />
-                      <stop offset="100%" stopColor="#ede9fe" stopOpacity={0.13} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="year"
-                    stroke="#6b7280"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="#6b7280"
-                    fontSize={12}
-                    tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                ))}
+                <XAxis 
+                  dataKey="year" 
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tick={{ fontWeight: 500 }}
+                  allowDuplicatedCategory={false}
+                  domain={[baseYear, netZeroYear + extendedYears]}
+                  type="number"
+                />
+                <YAxis 
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                  width={70}
+                />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                />
+                {/* 主區間排放量曲線 0~淨零年 */}
+                <Area 
+                  type="monotone"
+                  dataKey="emissions"
+                  data={dataWithAnnualReduction.slice(0, data.length)}
+                  stroke={chartConfig.emissions.color}
+                  fill="url(#pathwayGradient)"
+                  fillOpacity={0.95}
+                  name="實際排放量"
+                  activeDot={{ r: 5, fill: chartConfig.emissions.color }}
+                  dot={false}
+                />
+                {/* 残留排放線（目標年後，與前期藍色緊密銜接） */}
+                <Area 
+                  type="monotone"
+                  dataKey="emissions"
+                  data={dataWithAnnualReduction.slice(data.length - 1)}
+                  stroke={chartConfig.residual.color}
+                  fill="url(#residualGradient)"
+                  fillOpacity={0.85}
+                  isAnimationActive={false}
+                  dot={false}
+                  name="淨零殘留排放"
+                  strokeDasharray="3 3"
+                />
+                <Area 
+                  type="monotone"
+                  dataKey="emissions"
+                  data={dataWithAnnualReduction.slice(data.length)}
+                  stroke={chartConfig.residual.color}
+                  fill="url(#residualGradient)"
+                  fillOpacity={0.85}
+                  isAnimationActive={false}
+                  dot={false}
+                  name="淨零殘留排放"
+                  strokeDasharray="7 5"
+                />
+                {/* 目標折線 */}
+                <Line 
+                  type="monotone" 
+                  dataKey="target" 
+                  stroke={chartConfig.target.color}
+                  strokeWidth={3}
+                  strokeDasharray="8 2"
+                  name="目標排放量"
+                  dot={false}
+                  activeDot={false}
+                />
+                {/* Net Zero年標線 */}
+                <ReferenceLine
+                  x={netZeroYear}
+                  stroke="#26A485"
+                  label={{
+                    position: 'insideTop',
+                    value: "Net Zero",
+                    fill: "#26C485",
+                    fontWeight: 600,
+                    fontSize: 12,
+                  }}
+                />
+                {/* 残留排放水平線（10年） */}
+                <ReferenceLine
+                  y={lastEmission}
+                  x={netZeroYear + 1}
+                  stroke="#26C485"
+                  strokeWidth={3}
+                  strokeDasharray="7 6"
+                  label={{
+                    position: 'left',
+                    fill: "#26C485",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    value: "殘留排放",
+                  }}
+                  ifOverflow="extendDomain"
+                />
+                {/* 台灣目標年標點 */}
+                {showTaiwanMarks && taiwanPoints.map((item) => (
+                  <ReferenceLine
+                    key={item.year}
+                    x={item.year}
+                    y={item.target}
+                    stroke={item.color ?? "#d97706"}
+                    label={{
+                      value: item.label,
+                      position: "top",
+                      fill: item.color ?? "#d97706",
+                      fontSize: 13,
+                      fontWeight: 700
                     }}
+                    ifOverflow="visible"
                   />
-                  {/* 年度減量面積圖 */}
-                  <Area
-                    type="monotone"
-                    dataKey="annualReduction"
-                    stroke={chartConfig.annualReduction.color}
-                    fill="url(#annualReductionGradient)"
-                    name="年度減量"
-                    activeDot={{ r: 4, fill: chartConfig.annualReduction.color }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
+                ))}
+                {/* 台灣目標點圓標記由 ReferenceLine 呈現即可 */}
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      {/* 年度減量圖（在下，取消累積減排率圖，只有一個年度減量圖） */}
+      <Card>
+        <CardHeader>
+          <CardTitle>年度減量</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              {/* 只顯示真實區間 */}
+              <AreaChart data={dataWithAnnualReduction.slice(1, data.length)}>
+                <defs>
+                  <linearGradient id="annualReductionGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#ede9fe" stopOpacity={0.13} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="year"
+                  stroke="#6b7280"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
+                />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="annualReduction"
+                  stroke={chartConfig.annualReduction.color}
+                  fill="url(#annualReductionGradient)"
+                  name="年度減量"
+                  activeDot={{ r: 4, fill: chartConfig.annualReduction.color }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+      </Card>
       {/* 數據表格 */}
       <Card>
         <CardHeader>
@@ -363,4 +350,3 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
 };
 
 export default PathwayChart;
-
