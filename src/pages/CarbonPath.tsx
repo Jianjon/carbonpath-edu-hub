@@ -265,16 +265,20 @@ const CarbonPath = () => {
         console.log(`剩餘總減排量 (R_total): ${R_total.toLocaleString()}`);
 
         if (D > 0) {
-          // 修正模型：讓每年的“減排量”本身呈線性增長，確保平滑過渡
-          // 我們將每年的減排量設為 y(t) = C + a*t，t為2030年後的年份 (1, 2, ..., D)
-          // 總減排量為 R_total = Σ(C + a*t) from t=1 to D
-          // R_total = C*D + a * Σt = C*D + a * D*(D+1)/2
-          // 從中解出年度減排增量 'a'
-          const a = (R_total - C * D) > 0 && D > 0 ? 2 * (R_total - C * D) / (D * (D + 1)) : 0;
-          console.log(`計算出的年度減排增量 (a): ${a.toLocaleString()}`);
+          console.log("SBTi 長期減排模式：減排量線性平滑過渡");
+          // To create a smooth transition, we make the annual reduction amount a linear ramp.
+          // It starts at C (reduction in 2030) and ends at y_D (reduction in target year).
+          // The sum of an arithmetic progression is n * (first + last) / 2.
+          // So, R_total = D * (C + y_D) / 2.
+          // We solve for y_D, the reduction amount needed in the final year.
+          const y_D = D > 0 ? (2 * R_total / D) - C : 0;
+          console.log(`目標年末的年度減排量 (y_D): ${y_D.toLocaleString()}`);
           
           for (let t = 1; t <= D; t++) {
-            const annualReduction = C + a * t;
+            // Linear interpolation for the annual reduction amount
+            const progress = D > 1 ? (t - 1) / (D - 1) : 1;
+            const annualReduction = C + (y_D - C) * progress;
+            
             tempEmissions -= annualReduction;
             pathway.push({
               year: 2030 + t,

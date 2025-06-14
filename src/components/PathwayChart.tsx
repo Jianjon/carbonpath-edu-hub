@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -212,7 +211,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
                 
                 {/* 主排放量區域圖 */}
                 <Area 
-                  type="monotone"
+                  type="natural"
                   dataKey="emissions"
                   stroke={chartConfig.emissions.color}
                   fill="url(#pathwayGradient)"
@@ -224,7 +223,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
                 
                 {/* 目標折線 */}
                 <Line 
-                  type="monotone" 
+                  type="natural" 
                   dataKey="target" 
                   stroke={chartConfig.target.color}
                   strokeWidth={3}
@@ -322,7 +321,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
                             }}
                         />
                         <Area
-                            type="monotone"
+                            type="natural"
                             dataKey="annualReduction"
                             stroke={chartConfig.annualReduction.color}
                             fill="url(#annualReductionGradient)"
