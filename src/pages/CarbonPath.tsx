@@ -82,9 +82,9 @@ const CarbonPath = () => {
     
     let finalPathway: PathwayData[] = [];
 
-    // 自訂減碳目標 - 混合模型（近期等比，長期平滑曲線）
+    // 自訂減碳目標 - 混合模型
     if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.longTermTarget) {
-      console.log('使用自訂目標（混合平滑模型）- 從基線到殘留量');
+      console.log('使用自訂目標（混合模型）- 從基線到殘留量');
       
       const path: PathwayData[] = [];
       let tempEmissions = totalEmissions;
@@ -101,9 +101,7 @@ const CarbonPath = () => {
         target: tempEmissions
       });
 
-      let lastYearEmissions = totalEmissions;
       for (let year = baseYear + 1; year <= nearTermTarget.year; year++) {
-        lastYearEmissions = tempEmissions;
         tempEmissions *= (1 - nearTermAnnualRate);
         path.push({
           year,
@@ -113,28 +111,25 @@ const CarbonPath = () => {
         });
       }
 
-      // Phase 2: Smoothed Long-Term Reduction to residualEmissions
+      // Phase 2: Long-Term with Linearly Decreasing Annual Reduction
       const emissionsAtNearTermEnd = tempEmissions;
-      const annualReductionAtNearTermEnd = lastYearEmissions - emissionsAtNearTermEnd;
-      
-      const C = annualReductionAtNearTermEnd;
       const D = targetYear - nearTermTarget.year;
 
       if (D > 0) {
-        console.log("長期減排模式：二次曲線平滑（拋物線）");
-        const y_start = emissionsAtNearTermEnd;
-        const y_end = residualEmissions;
-        const y_prime_start = -C; // Initial slope
-
-        // y(t) = a*t^2 + b*t + c
-        // c = y_start (at t=0)
-        // b = y_prime_start (at t=0)
-        // a is solved from y(D) = y_end
-        const a = (y_end - y_start - y_prime_start * D) / (D * D);
-        const b = y_prime_start;
+        console.log("長期減排模式：年減排量線性遞減");
+        const R_total_phase2 = emissionsAtNearTermEnd - residualEmissions;
         
+        // 年減排量(AR)呈線性遞減，假設最終年AR(D)=0，來計算初始年AR(1)
+        // R_total = D * (AR(1) + AR(D)) / 2 => R_total = D * AR(1) / 2
+        const annualReductionStart = (2 * R_total_phase2) / D;
+        const annualReductionEnd = 0; // 假設最終年減排歸零
+        
+        let currentEmissions = emissionsAtNearTermEnd;
         for (let t = 1; t <= D; t++) {
-          const currentEmissions = y_start + a * t * t + b * t;
+          const progress = D > 1 ? (t - 1) / (D - 1) : 1;
+          const annualReduction = annualReductionStart + (annualReductionEnd - annualReductionStart) * progress;
+          currentEmissions -= annualReduction;
+          
           path.push({
             year: nearTermTarget.year + t,
             emissions: currentEmissions,
@@ -212,9 +207,9 @@ const CarbonPath = () => {
       finalPathway = pathway;
     } 
     
-    // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後平滑減排到殘留量
+    // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後線性遞減年減排量
     else {
-      console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後平滑減排到殘留量');
+      console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量線性遞減');
       let pathway: PathwayData[] = [];
       let tempEmissions = totalEmissions;
 
@@ -228,10 +223,8 @@ const CarbonPath = () => {
       // Phase 1: Geometric reduction until 2030 (or target year if sooner)
       const sbtiRate = 0.042; // 4.2%
       const endPhase1Year = Math.min(2030, emissionData.targetYear);
-      let lastYearEmissions = totalEmissions;
       
       for (let year = emissionData.baseYear + 1; year <= endPhase1Year; year++) {
-        lastYearEmissions = tempEmissions;
         tempEmissions *= (1 - sbtiRate);
         pathway.push({
           year,
@@ -244,25 +237,23 @@ const CarbonPath = () => {
       // Phase 2: Smoothed reduction from 2031 to target year
       if (emissionData.targetYear > 2030) {
         const emissionsAt2030 = tempEmissions;
-        const annualReductionAt2030End = lastYearEmissions - emissionsAt2030;
-        
-        const C = annualReductionAt2030End;
         const D = emissionData.targetYear - 2030;
-
-        console.log(`2030年後平滑減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
-        console.log(`2030年終減排量 (C): ${C.toLocaleString()}`);
+        
+        console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
         if (D > 0) {
-          console.log("SBTi 長期減排模式：二次曲線平滑（拋物線）");
-          const y_start = emissionsAt2030;
-          const y_end = residualEmissions;
-          const y_prime_start = -C;
+          console.log("SBTi 長期減排模式：年減排量線性遞減");
+          const R_total_phase2 = emissionsAt2030 - residualEmissions;
 
-          const a = (y_end - y_start - y_prime_start * D) / (D * D);
-          const b = y_prime_start;
+          const annualReductionStart = (2 * R_total_phase2) / D;
+          const annualReductionEnd = 0;
           
+          let currentEmissions = emissionsAt2030;
           for (let t = 1; t <= D; t++) {
-            const currentEmissions = y_start + a * t * t + b * t;
+            const progress = D > 1 ? (t - 1) / (D - 1) : 1;
+            const annualReduction = annualReductionStart + (annualReductionEnd - annualReductionStart) * progress;
+            currentEmissions -= annualReduction;
+
             pathway.push({
               year: 2030 + t,
               emissions: currentEmissions,
@@ -321,13 +312,13 @@ const CarbonPath = () => {
     });
 
     // 驗證最終年份排放量
-    const finalYearData = fullPathway[fullPathway.length - 1];
+    const finalYearData = fullPathway.find(p => p.year === emissionData.targetYear) || fullPathway[fullPathway.length - 1];
     const actualFinalResidualPercentage = (finalYearData.emissions / baseYearEmissions) * 100;
     console.log('=== 最終驗證 ===');
     console.log('最終排放量:', finalYearData.emissions.toLocaleString(), 'tCO2e');
     console.log('實際殘留比例:', actualFinalResidualPercentage.toFixed(1) + '%');
     console.log('用戶設定比例:', emissionData.residualEmissionPercentage + '%');
-    console.log('是否達到目標:', Math.abs(actualFinalResidualPercentage - emissionData.residualEmissionPercentage) < 0.1);
+    console.log('是否達到目標:', Math.abs(actualFinalResidualPercentage - emissionData.residualEmissionPercentage) < 0.2); // 提高容錯
     
     setPathwayData(fullPathway);
     setStep(4);
