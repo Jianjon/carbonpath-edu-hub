@@ -16,8 +16,8 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
   const [formData, setFormData] = useState({
     scope1: '',
     scope2: '',
-    baseYear: new Date().getFullYear().toString(),
-    targetYear: (new Date().getFullYear() + 10).toString(),
+    baseYear: '2020',
+    targetYear: '2050',
     residualEmissionPercentage: '5',
     decarbonModel: '',
     reTargetYear: '2030'
@@ -129,7 +129,7 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="targetYear">目標年</Label>
+              <Label htmlFor="targetYear">淨零目標年</Label>
               <Input
                 id="targetYear"
                 type="number"
