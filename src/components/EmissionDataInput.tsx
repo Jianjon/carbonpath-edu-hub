@@ -71,11 +71,13 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
         targetYear: parseInt(formData.targetYear),
         residualEmissionPercentage: parseInt(formData.residualEmissionPercentage),
         decarbonModel: formData.decarbonModel,
-        reTargetYear: formData.decarbonModel === 'RE100' ? parseInt(formData.reTargetYear) : undefined
+        reTargetYear: ['RE100', 'RE50', 'RE30'].includes(formData.decarbonModel) ? parseInt(formData.reTargetYear) : undefined
       };
       onNext(data);
     }
   };
+
+  const shouldShowTargetYear = ['RE100', 'RE50', 'RE30'].includes(formData.decarbonModel);
 
   return (
     <Card>
@@ -203,13 +205,13 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
               {errors.decarbonModel && <p className="text-sm text-red-500">{errors.decarbonModel}</p>}
             </div>
 
-            {/* RE100目標年選擇 */}
-            {formData.decarbonModel === 'RE100' && (
+            {/* RE系列目標年選擇 */}
+            {shouldShowTargetYear && (
               <div className="space-y-2 mb-6">
-                <Label htmlFor="reTargetYear">RE100目標年</Label>
+                <Label htmlFor="reTargetYear">{formData.decarbonModel}目標年</Label>
                 <Select value={formData.reTargetYear} onValueChange={(value) => handleInputChange('reTargetYear', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="選擇RE100目標年" />
+                    <SelectValue placeholder={`選擇${formData.decarbonModel}目標年`} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="2030">2030年</SelectItem>
@@ -217,7 +219,7 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
                     <SelectItem value="2040">2040年</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-gray-500">選擇達成100%再生能源的目標年份</p>
+                <p className="text-sm text-gray-500">選擇達成{formData.decarbonModel}目標的年份</p>
               </div>
             )}
           </div>
@@ -235,7 +237,7 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
               {formData.decarbonModel && (
                 <p className="text-green-700">
                   減碳模型：{formData.decarbonModel}
-                  {formData.decarbonModel === 'RE100' && ` (目標年：${formData.reTargetYear})`}
+                  {shouldShowTargetYear && ` (目標年：${formData.reTargetYear})`}
                 </p>
               )}
             </div>
