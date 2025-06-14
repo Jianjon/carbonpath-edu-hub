@@ -4,6 +4,7 @@ import Navigation from '../components/Navigation';
 import EmissionDataInput from '../components/EmissionDataInput';
 import ModelSelection from '../components/ModelSelection';
 import PathwayChart from '../components/PathwayChart';
+import PathwayTable from '../components/PathwayTable';
 import ReportExport from '../components/ReportExport';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,8 +48,10 @@ export interface ReductionModel {
 export interface PathwayData {
   year: number;
   emissions: number;
-  reduction: number;
-  target: number;
+  reduction?: number;
+  target?: number;
+  annualReduction?: number;
+  remainingPercentage?: number;
 }
 
 const CarbonPath = () => {
@@ -247,12 +250,31 @@ const CarbonPath = () => {
       .map(d => ({
         year: d.year,
         emissions: d.emissions,
-        reduction: 0, // Not applicable for historical data in this context
-        target: d.emissions, // No target for past data
+        reduction: undefined, // Not applicable for historical data
+        target: undefined, // No target for past data
       }))
       .sort((a, b) => a.year - b.year);
-
-    const fullPathway = [...historicalPathwayData, ...finalPathway];
+      
+    let fullPathway = [...historicalPathwayData, ...finalPathway];
+    
+    const baseYearEmissions = emissionData.scope1 + emissionData.scope2;
+    fullPathway = fullPathway.map((dataPoint, index, arr) => {
+      let annualReduction: number | undefined = undefined;
+      if (index > 0) {
+        annualReduction = arr[index - 1].emissions - dataPoint.emissions;
+      }
+  
+      let remainingPercentage: number | undefined = undefined;
+      if (dataPoint.year >= emissionData.baseYear) {
+        remainingPercentage = (dataPoint.emissions / baseYearEmissions) * 100;
+      }
+  
+      return {
+        ...dataPoint,
+        annualReduction,
+        remainingPercentage,
+      };
+    });
 
     console.log('生成的完整路徑數據(含歷史):', fullPathway.slice(0, 5)); // 顯示前5年數據
     console.log('最後一年數據:', fullPathway[fullPathway.length - 1]); // 顯示最後一年數據
@@ -418,6 +440,12 @@ const CarbonPath = () => {
                   nearTermTarget: customTargets.nearTermTarget,
                   longTermTarget: customTargets.longTermTarget,
                 } : undefined}
+              />
+              <PathwayTable
+                data={pathwayData}
+                baseYear={emissionData.baseYear}
+                residualEmissions={((emissionData.scope1 + emissionData.scope2) * emissionData.residualEmissionPercentage / 100)}
+                residualPercentage={emissionData.residualEmissionPercentage}
               />
               <ReportExport 
                 emissionData={{
