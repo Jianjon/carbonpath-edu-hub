@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -53,34 +54,38 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
       target: lastEmission,
     }))
   ];
-  // 年度減量資料
   const dataWithAnnualReduction = extendedData.map((item, idx, arr) => ({
     ...item,
     annualReduction: idx === 0 ? 0 : arr[idx - 1].emissions - item.emissions
   }));
 
-  // 自訂模型區段顏色，分為近期、長期
-  const refsArr: { x1: number, x2: number, color: string, label: string }[] = [];
+  // 階段區塊顏色：自訂模型（近/長/淨零後）
+  let refsArr: { x1: number, x2: number, color: string, label: string }[] = [];
   if (
     modelType === 'custom-target'
     && customPhases?.nearTermTarget
     && customPhases?.longTermTarget
   ) {
-    // 近期區段
-    refsArr.push({
-      x1: baseYear,
-      x2: customPhases.nearTermTarget.year,
-      color: '#E0F2FE',
-      label: '近期階段'
-    });
-    // 長期區段
-    refsArr.push({
-      x1: customPhases.nearTermTarget.year,
-      x2: customPhases.longTermTarget.year,
-      color: '#E6F4EA',
-      label: '長期階段'
-    });
-    // 淨零殘留後區段，另見殘留色（延長線本身已有設計）
+    refsArr = [
+      {
+        x1: baseYear,
+        x2: customPhases.nearTermTarget.year,
+        color: '#E0F2FE',
+        label: '近期階段'
+      },
+      {
+        x1: customPhases.nearTermTarget.year,
+        x2: customPhases.longTermTarget.year,
+        color: '#E6F4EA',
+        label: '長期階段'
+      },
+      {
+        x1: customPhases.longTermTarget.year,
+        x2: netZeroYear + extendedYears,
+        color: '#F5F5F5',
+        label: '淨零後'
+      }
+    ];
   }
 
   // 台灣特定目標年標註
@@ -123,7 +128,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {/* 只有自訂模型時顯示兩階段填色 */}
-                {refsArr.map((ph) => (
+                {refsArr.map((ph, idx) => (
                   <ReferenceArea
                     key={ph.label}
                     x1={ph.x1}
@@ -132,9 +137,37 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                     fill={ph.color}
                     fillOpacity={0.32}
                     ifOverflow="extendDomain"
-                    label={ph.label}
+                    label={idx === 0 || idx === 1 ? ph.label : null}
                   />
                 ))}
+                {/* 分界年標線 */}
+                {modelType === 'custom-target' && customPhases?.nearTermTarget && (
+                  <ReferenceLine
+                    x={customPhases.nearTermTarget.year}
+                    stroke="#3b82f6"
+                    strokeDasharray="4 2"
+                    label={{
+                      position: 'top',
+                      fill: "#3b82f6",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      value: "近期結束",
+                    }}
+                  />
+                )}
+                {modelType === 'custom-target' && customPhases?.longTermTarget && (
+                  <ReferenceLine
+                    x={customPhases.longTermTarget.year}
+                    stroke="#26A485"
+                    label={{
+                      position: 'top',
+                      fill: "#26A485",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      value: "長期結束(目標年)",
+                    }}
+                  />
+                )}
                 <XAxis 
                   dataKey="year" 
                   stroke="#6b7280"
@@ -340,3 +373,4 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
 };
 
 export default PathwayChart;
+
