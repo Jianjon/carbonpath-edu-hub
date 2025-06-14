@@ -34,9 +34,9 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
   const nearTermTargetYear = baseYear + nearTermYears;
   const midTermTargetYear = baseYear + midTermYears;
   const nearTermCumulativeReduction = nearTermAnnualRate * nearTermYears;
-  const midTermCumulativeReduction = midTermCumulativeReduction > nearTermCumulativeReduction 
-    ? midTermCumulativeReduction 
-    : nearTermCumulativeReduction + (midTermAnnualRate * (midTermYears - nearTermYears));
+  
+  // 修正：先計算中期累積減排
+  const midTermCumulativeReduction = nearTermCumulativeReduction + (midTermAnnualRate * (midTermYears - nearTermYears));
 
   // 遠期目標計算 - 根據中期目標完成後的剩餘減排量和剩餘時間計算
   const longTermYears = targetYear - baseYear;
@@ -217,7 +217,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
             </div>
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-sm text-gray-600">
-                目標年：{midTermTargetYear} | 累積減排目標：{(nearTermCumulativeReduction + (midTermAnnualRate * (midTermYears - nearTermYears))).toFixed(1)}%
+                目標年：{midTermTargetYear} | 累積減排目標：{midTermCumulativeReduction.toFixed(1)}%
               </p>
             </div>
           </div>
@@ -251,7 +251,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
             <h4 className="font-semibold text-blue-800 mb-2">目標摘要</h4>
             <div className="text-blue-700 text-sm space-y-1">
               <p>近期目標：{nearTermTargetYear}年累積減排{nearTermCumulativeReduction.toFixed(1)}%（年減排{nearTermAnnualRate}%）</p>
-              <p>中期目標：{midTermTargetYear}年累積減排{(nearTermCumulativeReduction + (midTermAnnualRate * (midTermYears - nearTermYears))).toFixed(1)}%（年減排{midTermAnnualRate}%）</p>
+              <p>中期目標：{midTermTargetYear}年累積減排{midTermCumulativeReduction.toFixed(1)}%（年減排{midTermAnnualRate}%）</p>
               <p>遠期目標：{targetYear}年累積減排{longTermReduction}%（年減排{longTermAnnualRate.toFixed(2)}%）</p>
             </div>
           </div>
