@@ -16,18 +16,21 @@ export interface EmissionData {
   residualEmissionPercentage: number;
   decarbonModel: string;
   reTargetYear?: number;
-  // 新增三階段目標
+  // 更新三階段目標結構
   nearTermTarget?: {
     year: number;
     reductionPercentage: number;
+    annualReductionRate: number;
   };
   midTermTarget?: {
     year: number;
     reductionPercentage: number;
+    annualReductionRate: number;
   };
   longTermTarget?: {
     year: number;
     reductionPercentage: number;
+    annualReductionRate: number;
   };
 }
 
@@ -59,8 +62,44 @@ const CarbonPath = () => {
     const years = emissionData.targetYear - emissionData.baseYear;
     const pathway: PathwayData[] = [];
 
+    // 處理自訂減碳目標
+    if (selectedModel.id === 'custom-target' && emissionData.nearTermTarget && emissionData.midTermTarget && emissionData.longTermTarget) {
+      for (let i = 0; i <= years; i++) {
+        const currentYear = emissionData.baseYear + i;
+        let targetReduction = 0;
+        let annualRate = 0;
+
+        // 根據年份確定減排目標和年減排率
+        if (currentYear <= emissionData.nearTermTarget.year) {
+          annualRate = emissionData.nearTermTarget.annualReductionRate;
+          targetReduction = annualRate * i;
+        } else if (currentYear <= emissionData.midTermTarget.year) {
+          const midTermProgress = (currentYear - emissionData.nearTermTarget.year) / 
+                                 (emissionData.midTermTarget.year - emissionData.nearTermTarget.year);
+          annualRate = emissionData.midTermTarget.annualReductionRate;
+          targetReduction = emissionData.nearTermTarget.reductionPercentage + 
+                          midTermProgress * (emissionData.midTermTarget.reductionPercentage - emissionData.nearTermTarget.reductionPercentage);
+        } else {
+          const longTermProgress = (currentYear - emissionData.midTermTarget.year) / 
+                                  (emissionData.longTermTarget.year - emissionData.midTermTarget.year);
+          annualRate = emissionData.longTermTarget.annualReductionRate;
+          targetReduction = emissionData.midTermTarget.reductionPercentage + 
+                          longTermProgress * (emissionData.longTermTarget.reductionPercentage - emissionData.midTermTarget.reductionPercentage);
+        }
+
+        const emissions = totalEmissions * (1 - targetReduction / 100);
+        const target = emissions;
+
+        pathway.push({
+          year: currentYear,
+          emissions: Math.round(emissions),
+          reduction: Math.round(targetReduction * 10) / 10,
+          target: Math.round(target)
+        });
+      }
+    }
     // 特殊處理台灣減碳目標
-    if (selectedModel.id === 'taiwan-target') {
+    else if (selectedModel.id === 'taiwan-target') {
       // 台灣目標基於2005年，需要調整到用戶基準年
       const taiwanTargets = [
         { year: 2030, reduction: 28 },
@@ -219,20 +258,24 @@ const CarbonPath = () => {
                         {emissionData.reTargetYear && ` (${emissionData.reTargetYear})`}
                       </p>
                       {emissionData.nearTermTarget && (
-                        <p>近期目標：{emissionData.nearTermTarget.year}年減排{emissionData.nearTermTarget.reductionPercentage}%</p>
+                        <p>近期目標：{emissionData.nearTermTarget.year}年累積減排{emissionData.nearTermTarget.reductionPercentage.toFixed(1)}%（年減排{emissionData.nearTermTarget.annualReductionRate}%）</p>
                       )}
                       {emissionData.midTermTarget && (
-                        <p>中期目標：{emissionData.midTermTarget.year}年減排{emissionData.midTermTarget.reductionPercentage}%</p>
+                        <p>中期目標：{emissionData.midTermTarget.year}年累積減排{emissionData.midTermTarget.reductionPercentage.toFixed(1)}%（年減排{emissionData.midTermTarget.annualReductionRate}%）</p>
                       )}
                       {emissionData.longTermTarget && (
-                        <p>遠期目標：{emissionData.longTermTarget.year}年減排{emissionData.longTermTarget.reductionPercentage}%</p>
+                        <p>遠期目標：{emissionData.longTermTarget.year}年累積減排{emissionData.longTermTarget.reductionPercentage}%（年減排{emissionData.longTermTarget.annualReductionRate.toFixed(2)}%）</p>
                       )}
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">減碳模型</h4>
                       <p>模型：{selectedModel.name}</p>
-                      <p>目標減排：{selectedModel.targetReduction}%</p>
-                      <p>年均減排率：{selectedModel.annualReductionRate}%</p>
+                      {selectedModel.id !== 'custom-target' && (
+                        <>
+                          <p>目標減排：{selectedModel.targetReduction}%</p>
+                          <p>年均減排率：{selectedModel.annualReductionRate}%</p>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex space-x-4">
