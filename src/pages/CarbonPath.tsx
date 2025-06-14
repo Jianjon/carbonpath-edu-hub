@@ -67,7 +67,11 @@ const CarbonPath = () => {
     const years = emissionData.targetYear - emissionData.baseYear;
     const pathway: PathwayData[] = [];
 
-    console.log('開始生成路徑:', { totalEmissions, years, selectedModel: selectedModel.id });
+    console.log('開始生成路徑:', { totalEmissions, years, selectedModel: selectedModel.id, residualPercentage: emissionData.residualEmissionPercentage });
+
+    // 計算最終殘留排放量
+    const finalResidualEmissions = totalEmissions * (emissionData.residualEmissionPercentage / 100);
+    console.log('最終殘留排放量:', finalResidualEmissions);
 
     // 處理自訂減碳目標 - 等比減排（每年減固定百分比）
     if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.longTermTarget) {
@@ -85,12 +89,12 @@ const CarbonPath = () => {
           currentEmissions = totalEmissions * reductionFactor;
           targetReduction = (1 - reductionFactor) * 100;
         } else {
-          // 長期階段：在近期基礎上繼續等比減排
+          // 長期階段：在近期基礎上繼續等比減排，但不能低於殘留排放
           const nearTermReductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, customTargets.nearTermTarget.year - emissionData.baseYear);
           const nearTermEmissions = totalEmissions * nearTermReductionFactor;
           const yearsInLongPhase = currentYear - customTargets.nearTermTarget.year;
           const longReductionFactor = Math.pow(1 - customTargets.longTermTarget.annualReductionRate / 100, yearsInLongPhase);
-          currentEmissions = nearTermEmissions * longReductionFactor;
+          currentEmissions = Math.max(nearTermEmissions * longReductionFactor, finalResidualEmissions);
           targetReduction = Math.min((1 - (currentEmissions / totalEmissions)) * 100, customTargets.longTermTarget.reductionPercentage);
         }
 
@@ -104,7 +108,7 @@ const CarbonPath = () => {
     }
     // 台灣減碳目標 - 線性減排（每年減固定量）
     else if (selectedModel.id === 'taiwan-target') {
-      console.log('使用台灣目標');
+      console.log('使用台灣目標, 残留排放量:', finalResidualEmissions);
       
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
@@ -120,35 +124,36 @@ const CarbonPath = () => {
           // 線性減排從32%到38%
           targetReduction = 32 + (currentYear - 2032) / (2035 - 2032) * (38 - 32);
         } else {
-          // 線性減排到最終目標
-          const finalReduction = (1 - emissionData.residualEmissionPercentage / 100) * 100;
+          // 線性減排到最終目標（考慮殘留排放）
+          const maxReduction = (1 - emissionData.residualEmissionPercentage / 100) * 100;
           if (currentYear < emissionData.targetYear) {
-            targetReduction = 38 + (currentYear - 2035) / (emissionData.targetYear - 2035) * (finalReduction - 38);
+            targetReduction = 38 + (currentYear - 2035) / (emissionData.targetYear - 2035) * (maxReduction - 38);
           } else {
-            targetReduction = finalReduction;
+            targetReduction = maxReduction;
           }
         }
 
-        const emissions = totalEmissions * (1 - targetReduction / 100);
+        const emissions = Math.max(totalEmissions * (1 - targetReduction / 100), finalResidualEmissions);
+        const actualReduction = (1 - emissions / totalEmissions) * 100;
         const target = emissions;
 
         pathway.push({
           year: currentYear,
           emissions: Math.round(emissions),
-          reduction: Math.round(targetReduction * 10) / 10,
+          reduction: Math.round(actualReduction * 10) / 10,
           target: Math.round(target)
         });
       }
     } 
     // SBTi 1.5°C目標 - 等比減排（每年減固定百分比）
     else {
-      console.log('使用SBTi目標:', { annualReductionRate: selectedModel.annualReductionRate });
+      console.log('使用SBTi目標:', { annualReductionRate: selectedModel.annualReductionRate, finalResidualEmissions });
       
       for (let i = 0; i <= years; i++) {
         const year = emissionData.baseYear + i;
-        // 等比減排：每年減少固定百分比
+        // 等比減排：每年減少固定百分比，但不能低於殘留排放
         const reductionFactor = Math.pow(1 - selectedModel.annualReductionRate / 100, i);
-        const emissions = totalEmissions * reductionFactor;
+        const emissions = Math.max(totalEmissions * reductionFactor, finalResidualEmissions);
         const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
         
         // 目標線也使用等比減排邏輯
@@ -164,6 +169,7 @@ const CarbonPath = () => {
     }
 
     console.log('生成的路徑數據:', pathway.slice(0, 5)); // 顯示前5年數據
+    console.log('最後一年數據:', pathway[pathway.length - 1]); // 顯示最後一年數據
     setPathwayData(pathway);
     setStep(4);
   };

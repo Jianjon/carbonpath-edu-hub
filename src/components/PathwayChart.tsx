@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -43,6 +42,14 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
   const baseEmissions = data[0].emissions;
   const lastEmission = data[data.length - 1].emissions;
   const residualRatio = baseEmissions === 0 ? 0 : lastEmission / baseEmissions;
+  const actualResidualPercentage = Math.round(residualRatio * 100 * 10) / 10;
+
+  console.log('PathwayChart 數據:', {
+    baseEmissions,
+    lastEmission,
+    residualRatio,
+    actualResidualPercentage
+  });
 
   // 延長10年
   const extendedYears = 10;
@@ -103,7 +110,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
       {/* 排放量減少趨勢圖 */}
       <Card>
         <CardHeader>
-          <CardTitle>排放量減少趨勢</CardTitle>
+          <CardTitle>排放量減少趨勢（殘留排放：{actualResidualPercentage}%）</CardTitle>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[420px]">
@@ -224,7 +231,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                   }}
                 />
                 
-                {/* 殘留排放水平線 */}
+                {/* 残留排放水平線 */}
                 <ReferenceLine
                   y={lastEmission}
                   stroke="#26C485"
@@ -235,7 +242,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                     fill: "#26C485",
                     fontWeight: 700,
                     fontSize: 11,
-                    value: "殘留排放",
+                    value: `殘留排放 ${actualResidualPercentage}%`,
                   }}
                   ifOverflow="extendDomain"
                 />
@@ -315,7 +322,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
       {/* 數據表格 */}
       <Card>
         <CardHeader>
-          <CardTitle>年度減碳目標數據表</CardTitle>
+          <CardTitle>年度減碳目標數據表（最終殘留排放：{lastEmission.toLocaleString()} tCO2e，{actualResidualPercentage}%）</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -326,18 +333,23 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                 <TableHead>目標排放量 (tCO2e)</TableHead>
                 <TableHead>累計減排率 (%)</TableHead>
                 <TableHead>年減排量 (tCO2e)</TableHead>
+                <TableHead>殘留排放比例 (%)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dataWithAnnualReduction.slice(0, data.length).map((item) => (
-                <TableRow key={item.year}>
-                  <TableCell className="font-medium">{item.year}</TableCell>
-                  <TableCell>{item.emissions.toLocaleString()}</TableCell>
-                  <TableCell>{item.target.toLocaleString()}</TableCell>
-                  <TableCell>{item.reduction}%</TableCell>
-                  <TableCell>{item.annualReduction.toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
+              {dataWithAnnualReduction.slice(0, data.length).map((item) => {
+                const residualPercent = baseEmissions === 0 ? 0 : Math.round((item.emissions / baseEmissions) * 100 * 10) / 10;
+                return (
+                  <TableRow key={item.year}>
+                    <TableCell className="font-medium">{item.year}</TableCell>
+                    <TableCell>{item.emissions.toLocaleString()}</TableCell>
+                    <TableCell>{item.target.toLocaleString()}</TableCell>
+                    <TableCell>{item.reduction}%</TableCell>
+                    <TableCell>{item.annualReduction.toLocaleString()}</TableCell>
+                    <TableCell className={residualPercent <= 10 ? "text-green-600 font-semibold" : ""}>{residualPercent}%</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
