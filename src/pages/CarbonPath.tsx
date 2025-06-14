@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -119,7 +120,7 @@ const CarbonPath = () => {
       
       const C = annualReductionAtNearTermEnd;
       const D = targetYear - nearTermTarget.year;
-      const R_total = emissionsAtNearTermEnd - finalResidualEmissions;
+      const R_total = emissionsAtNearTermEnd - userSetResidualEmissions;
 
       if (D > 0) {
         // "Hump" case vs "Slope" case
@@ -160,8 +161,8 @@ const CarbonPath = () => {
       // Final adjustment to ensure target is met exactly
       const finalIndex = path.findIndex(p => p.year === targetYear);
       if (finalIndex !== -1) {
-        path[finalIndex].emissions = finalResidualEmissions;
-        path[finalIndex].reduction = ((totalEmissions - finalResidualEmissions) / totalEmissions) * 100;
+        path[finalIndex].emissions = userSetResidualEmissions;
+        path[finalIndex].reduction = ((totalEmissions - userSetResidualEmissions) / totalEmissions) * 100;
       }
 
       finalPathway = path.map(p => ({
