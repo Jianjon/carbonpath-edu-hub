@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { EmissionData } from '../pages/CarbonPath';
-import ThreePhaseTargets from './ThreePhaseTargets';
 
 interface EmissionDataInputProps {
   onNext: (data: EmissionData) => void;
@@ -23,12 +22,6 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
     decarbonModel: '',
     reTargetYear: '2030'
   });
-
-  const [threePhaseTargets, setThreePhaseTargets] = useState<{
-    nearTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-    midTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-    longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-  }>({});
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -61,10 +54,6 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
       newErrors.targetYear = '淨零目標年須大於基準年且不超過2100年';
     }
 
-    if (!formData.decarbonModel) {
-      newErrors.decarbonModel = '請選擇減碳模型';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -78,14 +67,11 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
         targetYear: parseInt(formData.targetYear),
         residualEmissionPercentage: parseInt(formData.residualEmissionPercentage),
         decarbonModel: formData.decarbonModel,
-        reTargetYear: ['RE100', 'RE50', 'RE30'].includes(formData.decarbonModel) ? parseInt(formData.reTargetYear) : undefined,
-        ...threePhaseTargets
+        reTargetYear: undefined, // 取消RE目標。減碳模型選擇已移到下一步
       };
       onNext(data);
     }
   };
-
-  const shouldShowTargetYear = ['RE100', 'RE50', 'RE30'].includes(formData.decarbonModel);
 
   return (
     <div className="space-y-6">
@@ -170,67 +156,6 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
                 </Select>
                 <p className="text-sm text-gray-500">選擇企業最終可接受的殘留排放比例</p>
               </div>
-
-              {/* 減碳模型選擇 */}
-              <div className="space-y-2 mb-6">
-                <Label>減碳模型</Label>
-                <RadioGroup 
-                  value={formData.decarbonModel} 
-                  onValueChange={(value) => handleInputChange('decarbonModel', value)}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                  <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="RE100" id="RE100" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="RE100" className="font-semibold cursor-pointer">RE100</Label>
-                      <p className="text-sm text-gray-600">100%再生能源目標倡議</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="RE50" id="RE50" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="RE50" className="font-semibold cursor-pointer">RE50</Label>
-                      <p className="text-sm text-gray-600">50%再生能源目標</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="RE30" id="RE30" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="RE30" className="font-semibold cursor-pointer">RE30</Label>
-                      <p className="text-sm text-gray-600">30%再生能源目標</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="Fit for 55" id="fit55" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="fit55" className="font-semibold cursor-pointer">Fit for 55</Label>
-                      <p className="text-sm text-gray-600">歐盟2030年減排55%目標</p>
-                    </div>
-                  </div>
-                </RadioGroup>
-                {errors.decarbonModel && <p className="text-sm text-red-500">{errors.decarbonModel}</p>}
-              </div>
-
-              {/* RE系列目標年選擇 */}
-              {shouldShowTargetYear && (
-                <div className="space-y-2 mb-6">
-                  <Label htmlFor="reTargetYear">{formData.decarbonModel}目標年</Label>
-                  <Select value={formData.reTargetYear} onValueChange={(value) => handleInputChange('reTargetYear', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={`選擇${formData.decarbonModel}目標年`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2030">2030年</SelectItem>
-                      <SelectItem value="2035">2035年</SelectItem>
-                      <SelectItem value="2040">2040年</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-gray-500">選擇達成{formData.decarbonModel}目標的年份</p>
-                </div>
-              )}
             </div>
 
             {/* 排放量摘要 */}
@@ -243,27 +168,11 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
                 <p className="text-green-700">
                   殘留排放：{formData.residualEmissionPercentage}%
                 </p>
-                {formData.decarbonModel && (
-                  <p className="text-green-700">
-                    減碳模型：{formData.decarbonModel}
-                    {shouldShowTargetYear && ` (目標年：${formData.reTargetYear})`}
-                  </p>
-                )}
               </div>
             )}
           </div>
         </CardContent>
       </Card>
-
-      {/* 三階段目標設定 */}
-      {formData.baseYear && formData.targetYear && formData.residualEmissionPercentage && (
-        <ThreePhaseTargets
-          baseYear={parseInt(formData.baseYear)}
-          targetYear={parseInt(formData.targetYear)}
-          residualEmissionPercentage={parseInt(formData.residualEmissionPercentage)}
-          onTargetsChange={setThreePhaseTargets}
-        />
-      )}
 
       <Button onClick={handleSubmit} className="w-full bg-green-600 hover:bg-green-700">
         下一步：選擇減碳模型

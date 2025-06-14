@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -16,7 +17,6 @@ export interface EmissionData {
   residualEmissionPercentage: number;
   decarbonModel: string;
   reTargetYear?: number;
-  // 更新三階段目標結構
   nearTermTarget?: {
     year: number;
     reductionPercentage: number;
@@ -53,6 +53,11 @@ const CarbonPath = () => {
   const [step, setStep] = useState(1);
   const [emissionData, setEmissionData] = useState<EmissionData | null>(null);
   const [selectedModel, setSelectedModel] = useState<ReductionModel | null>(null);
+  const [customTargets, setCustomTargets] = useState<{
+    nearTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
+    midTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
+    longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
+  }>({});
   const [pathwayData, setPathwayData] = useState<PathwayData[]>([]);
 
   const generatePathway = () => {
@@ -63,44 +68,35 @@ const CarbonPath = () => {
     const pathway: PathwayData[] = [];
 
     // 處理自訂減碳目標
-    if (selectedModel.id === 'custom-target' && emissionData.nearTermTarget && emissionData.midTermTarget && emissionData.longTermTarget) {
+    if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.midTermTarget && customTargets.longTermTarget) {
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
         let targetReduction = 0;
-        let annualRate = 0;
 
-        // 根據年份確定減排目標和年減排率
-        if (currentYear <= emissionData.nearTermTarget.year) {
-          annualRate = emissionData.nearTermTarget.annualReductionRate;
-          targetReduction = annualRate * i;
-        } else if (currentYear <= emissionData.midTermTarget.year) {
-          const midTermProgress = (currentYear - emissionData.nearTermTarget.year) / 
-                                 (emissionData.midTermTarget.year - emissionData.nearTermTarget.year);
-          annualRate = emissionData.midTermTarget.annualReductionRate;
-          targetReduction = emissionData.nearTermTarget.reductionPercentage + 
-                          midTermProgress * (emissionData.midTermTarget.reductionPercentage - emissionData.nearTermTarget.reductionPercentage);
+        if (currentYear <= customTargets.nearTermTarget.year) {
+          targetReduction = customTargets.nearTermTarget.annualReductionRate * (currentYear - emissionData.baseYear);
+        } else if (currentYear <= customTargets.midTermTarget.year) {
+          targetReduction = customTargets.nearTermTarget.reductionPercentage +
+            customTargets.midTermTarget.annualReductionRate * (currentYear - customTargets.nearTermTarget.year);
         } else {
-          const longTermProgress = (currentYear - emissionData.midTermTarget.year) / 
-                                  (emissionData.longTermTarget.year - emissionData.midTermTarget.year);
-          annualRate = emissionData.longTermTarget.annualReductionRate;
-          targetReduction = emissionData.midTermTarget.reductionPercentage + 
-                          longTermProgress * (emissionData.longTermTarget.reductionPercentage - emissionData.midTermTarget.reductionPercentage);
+          targetReduction = customTargets.midTermTarget.reductionPercentage +
+            customTargets.longTermTarget.annualReductionRate * (currentYear - customTargets.midTermTarget.year);
         }
 
-        const emissions = totalEmissions * (1 - targetReduction / 100);
+        const cappedReduction = Math.min(targetReduction, customTargets.longTermTarget.reductionPercentage);
+        const emissions = totalEmissions * (1 - cappedReduction / 100);
         const target = emissions;
 
         pathway.push({
           year: currentYear,
           emissions: Math.round(emissions),
-          reduction: Math.round(targetReduction * 10) / 10,
+          reduction: Math.round(cappedReduction * 10) / 10,
           target: Math.round(target)
         });
       }
     }
     // 特殊處理台灣減碳目標
     else if (selectedModel.id === 'taiwan-target') {
-      // 台灣目標基於2005年，需要調整到用戶基準年
       const taiwanTargets = [
         { year: 2030, reduction: 28 },
         { year: 2032, reduction: 32 },
@@ -111,7 +107,6 @@ const CarbonPath = () => {
         const currentYear = emissionData.baseYear + i;
         let targetReduction = 0;
 
-        // 根據年份確定減排目標
         if (currentYear <= 2030) {
           targetReduction = (currentYear - emissionData.baseYear) / (2030 - emissionData.baseYear) * 28;
         } else if (currentYear <= 2032) {
@@ -119,7 +114,6 @@ const CarbonPath = () => {
         } else if (currentYear <= 2035) {
           targetReduction = 32 + (currentYear - 2032) / (2035 - 2032) * (38 - 32);
         } else {
-          // 2035年後維持38%減排或根據淨零目標線性增加
           const finalReduction = (1 - emissionData.residualEmissionPercentage / 100) * 100;
           if (currentYear < emissionData.targetYear) {
             targetReduction = 38 + (currentYear - 2035) / (emissionData.targetYear - 2035) * (finalReduction - 38);
@@ -139,7 +133,6 @@ const CarbonPath = () => {
         });
       }
     } else {
-      // 其他模型使用原有邏輯
       for (let i = 0; i <= years; i++) {
         const year = emissionData.baseYear + i;
         const reductionFactor = Math.pow(1 - selectedModel.annualReductionRate / 100, i);
@@ -164,14 +157,13 @@ const CarbonPath = () => {
     setStep(1);
     setEmissionData(null);
     setSelectedModel(null);
+    setCustomTargets({});
     setPathwayData([]);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      
-      {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
@@ -184,8 +176,6 @@ const CarbonPath = () => {
           </div>
         </div>
       </div>
-
-      {/* Progress Steps */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center space-x-8 mb-8">
           {[
@@ -216,8 +206,6 @@ const CarbonPath = () => {
             );
           })}
         </div>
-
-        {/* Step Content */}
         <div className="max-w-4xl mx-auto">
           {step === 1 && (
             <EmissionDataInput 
@@ -228,13 +216,19 @@ const CarbonPath = () => {
             />
           )}
 
-          {step === 2 && (
-            <ModelSelection 
-              onNext={(model) => {
+          {step === 2 && emissionData && (
+            <ModelSelection
+              onNext={(model, customTargetsParam) => {
                 setSelectedModel(model);
+                if (model.id === 'custom-target' && customTargetsParam) {
+                  setCustomTargets(customTargetsParam);
+                }
                 setStep(3);
               }}
               onBack={() => setStep(1)}
+              baseYear={emissionData.baseYear}
+              targetYear={emissionData.targetYear}
+              residualEmissionPercentage={emissionData.residualEmissionPercentage}
             />
           )}
 
@@ -254,17 +248,23 @@ const CarbonPath = () => {
                       <p>基準年：{emissionData.baseYear}</p>
                       <p>淨零目標年：{emissionData.targetYear}</p>
                       <p>殘留排放：{emissionData.residualEmissionPercentage}%</p>
-                      <p>減碳模型：{emissionData.decarbonModel}
-                        {emissionData.reTargetYear && ` (${emissionData.reTargetYear})`}
+                      <p>
+                        減碳模型：{selectedModel.name}
                       </p>
-                      {emissionData.nearTermTarget && (
-                        <p>近期目標：{emissionData.nearTermTarget.year}年累積減排{emissionData.nearTermTarget.reductionPercentage.toFixed(1)}%（年減排{emissionData.nearTermTarget.annualReductionRate}%）</p>
+                      {selectedModel.id === 'custom-target' && customTargets.nearTermTarget && (
+                        <>
+                          <p>近期目標：{customTargets.nearTermTarget.year}年 累積減排{customTargets.nearTermTarget.reductionPercentage.toFixed(1)}%（年減排{customTargets.nearTermTarget.annualReductionRate}%）</p>
+                        </>
                       )}
-                      {emissionData.midTermTarget && (
-                        <p>中期目標：{emissionData.midTermTarget.year}年累積減排{emissionData.midTermTarget.reductionPercentage.toFixed(1)}%（年減排{emissionData.midTermTarget.annualReductionRate}%）</p>
+                      {selectedModel.id === 'custom-target' && customTargets.midTermTarget && (
+                        <>
+                          <p>中期目標：{customTargets.midTermTarget.year}年 累積減排{customTargets.midTermTarget.reductionPercentage.toFixed(1)}%（年減排{customTargets.midTermTarget.annualReductionRate}%）</p>
+                        </>
                       )}
-                      {emissionData.longTermTarget && (
-                        <p>遠期目標：{emissionData.longTermTarget.year}年累積減排{emissionData.longTermTarget.reductionPercentage}%（年減排{emissionData.longTermTarget.annualReductionRate.toFixed(2)}%）</p>
+                      {selectedModel.id === 'custom-target' && customTargets.longTermTarget && (
+                        <>
+                          <p>遠期目標：{customTargets.longTermTarget.year}年 累積減排{customTargets.longTermTarget.reductionPercentage}%（年減排{customTargets.longTermTarget.annualReductionRate.toFixed(2)}%）</p>
+                        </>
                       )}
                     </div>
                     <div>
@@ -295,7 +295,10 @@ const CarbonPath = () => {
             <div className="space-y-6">
               <PathwayChart data={pathwayData} />
               <ReportExport 
-                emissionData={emissionData}
+                emissionData={{
+                  ...emissionData,
+                  ...(selectedModel.id === 'custom-target' ? customTargets : {})
+                }}
                 selectedModel={selectedModel}
                 pathwayData={pathwayData}
                 onReset={resetPlanning}
