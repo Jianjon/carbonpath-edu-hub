@@ -68,35 +68,49 @@ const CarbonPath = () => {
     const years = emissionData.targetYear - emissionData.baseYear;
     const pathway: PathwayData[] = [];
 
-    // 處理自訂減碳目標
+    // 處理自訂減碳目標 - 等比減排（每年減固定百分比）
     if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.midTermTarget && customTargets.longTermTarget) {
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
+        let currentEmissions = totalEmissions;
         let targetReduction = 0;
 
         if (currentYear <= customTargets.nearTermTarget.year) {
-          targetReduction = customTargets.nearTermTarget.annualReductionRate * (currentYear - emissionData.baseYear);
+          // 近期階段：等比減排
+          const yearsInPhase = currentYear - emissionData.baseYear;
+          const reductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, yearsInPhase);
+          currentEmissions = totalEmissions * reductionFactor;
+          targetReduction = (1 - reductionFactor) * 100;
         } else if (currentYear <= customTargets.midTermTarget.year) {
-          targetReduction = customTargets.nearTermTarget.reductionPercentage +
-            customTargets.midTermTarget.annualReductionRate * (currentYear - customTargets.nearTermTarget.year);
+          // 中期階段：在近期基礎上繼續等比減排
+          const nearTermReductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, customTargets.nearTermTarget.year - emissionData.baseYear);
+          const nearTermEmissions = totalEmissions * nearTermReductionFactor;
+          const yearsInMidPhase = currentYear - customTargets.nearTermTarget.year;
+          const midReductionFactor = Math.pow(1 - customTargets.midTermTarget.annualReductionRate / 100, yearsInMidPhase);
+          currentEmissions = nearTermEmissions * midReductionFactor;
+          targetReduction = (1 - (currentEmissions / totalEmissions)) * 100;
         } else {
-          targetReduction = customTargets.midTermTarget.reductionPercentage +
-            customTargets.longTermTarget.annualReductionRate * (currentYear - customTargets.midTermTarget.year);
+          // 遠期階段：在中期基礎上繼續等比減排
+          const nearTermReductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, customTargets.nearTermTarget.year - emissionData.baseYear);
+          const nearTermEmissions = totalEmissions * nearTermReductionFactor;
+          const midYearsInPhase = customTargets.midTermTarget.year - customTargets.nearTermTarget.year;
+          const midReductionFactor = Math.pow(1 - customTargets.midTermTarget.annualReductionRate / 100, midYearsInPhase);
+          const midTermEmissions = nearTermEmissions * midReductionFactor;
+          const yearsInLongPhase = currentYear - customTargets.midTermTarget.year;
+          const longReductionFactor = Math.pow(1 - customTargets.longTermTarget.annualReductionRate / 100, yearsInLongPhase);
+          currentEmissions = midTermEmissions * longReductionFactor;
+          targetReduction = Math.min((1 - (currentEmissions / totalEmissions)) * 100, customTargets.longTermTarget.reductionPercentage);
         }
-
-        const cappedReduction = Math.min(targetReduction, customTargets.longTermTarget.reductionPercentage);
-        const emissions = totalEmissions * (1 - cappedReduction / 100);
-        const target = emissions;
 
         pathway.push({
           year: currentYear,
-          emissions: Math.round(emissions),
-          reduction: Math.round(cappedReduction * 10) / 10,
-          target: Math.round(target)
+          emissions: Math.round(currentEmissions),
+          reduction: Math.round(targetReduction * 10) / 10,
+          target: Math.round(currentEmissions)
         });
       }
     }
-    // 特殊處理台灣減碳目標
+    // 台灣減碳目標 - 線性減排（每年減固定量）
     else if (selectedModel.id === 'taiwan-target') {
       const taiwanTargets = [
         { year: 2030, reduction: 28 },
@@ -109,12 +123,16 @@ const CarbonPath = () => {
         let targetReduction = 0;
 
         if (currentYear <= 2030) {
+          // 線性減排到2030年28%
           targetReduction = (currentYear - emissionData.baseYear) / (2030 - emissionData.baseYear) * 28;
         } else if (currentYear <= 2032) {
+          // 線性減排從28%到32%
           targetReduction = 28 + (currentYear - 2030) / (2032 - 2030) * (32 - 28);
         } else if (currentYear <= 2035) {
+          // 線性減排從32%到38%
           targetReduction = 32 + (currentYear - 2032) / (2035 - 2032) * (38 - 32);
         } else {
+          // 線性減排到最終目標
           const finalReduction = (1 - emissionData.residualEmissionPercentage / 100) * 100;
           if (currentYear < emissionData.targetYear) {
             targetReduction = 38 + (currentYear - 2035) / (emissionData.targetYear - 2035) * (finalReduction - 38);
@@ -133,13 +151,19 @@ const CarbonPath = () => {
           target: Math.round(target)
         });
       }
-    } else {
+    } 
+    // SBTi 1.5°C目標 - 等比減排（每年減固定百分比）
+    else {
       for (let i = 0; i <= years; i++) {
         const year = emissionData.baseYear + i;
+        // 等比減排：每年減少固定百分比
         const reductionFactor = Math.pow(1 - selectedModel.annualReductionRate / 100, i);
         const emissions = totalEmissions * reductionFactor;
         const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
-        const target = totalEmissions * (1 - (selectedModel.targetReduction / 100) * (i / years));
+        
+        // 目標線也使用等比減排邏輯
+        const targetReductionFactor = Math.pow(1 - selectedModel.annualReductionRate / 100, (i / years) * years);
+        const target = totalEmissions * targetReductionFactor;
 
         pathway.push({
           year,
