@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -14,6 +13,9 @@ export interface EmissionData {
   scope2: number;
   baseYear: number;
   targetYear: number;
+  residualEmissionPercentage: number;
+  decarbonModel: string;
+  reTargetYear?: number;
 }
 
 export interface ReductionModel {
@@ -156,6 +158,10 @@ const CarbonPath = () => {
                       <p>總排放量：{(emissionData.scope1 + emissionData.scope2).toLocaleString()} tCO2e</p>
                       <p>基準年：{emissionData.baseYear}</p>
                       <p>目標年：{emissionData.targetYear}</p>
+                      <p>殘留排放：{emissionData.residualEmissionPercentage}%</p>
+                      <p>減碳模型：{emissionData.decarbonModel}
+                        {emissionData.reTargetYear && ` (${emissionData.reTargetYear})`}
+                      </p>
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">減碳模型</h4>
