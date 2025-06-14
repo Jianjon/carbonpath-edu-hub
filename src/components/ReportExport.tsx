@@ -27,6 +27,24 @@ const ReportExport: React.FC<ReportExportProps> = ({
     const finalEmissions = pathwayData[pathwayData.length - 1].emissions;
     const totalReduction = ((totalEmissions - finalEmissions) / totalEmissions * 100).toFixed(1);
     
+    // 根據模型類型生成不同的策略描述
+    let modelStrategyDescription = '';
+    if (selectedModel.id === 'custom-target') {
+      modelStrategyDescription = `採用自訂兩階段減碳目標：
+- 近期目標（${emissionData.baseYear}-${emissionData.nearTermTarget?.year}年）：累積減排 ${emissionData.nearTermTarget?.reductionPercentage?.toFixed(1)}%，年均減排率 ${emissionData.nearTermTarget?.annualReductionRate}%
+- 長期目標（${emissionData.nearTermTarget?.year}-${emissionData.longTermTarget?.year}年）：累積減排 ${emissionData.longTermTarget?.reductionPercentage}%，年均減排率 ${emissionData.longTermTarget?.annualReductionRate?.toFixed(2)}%`;
+    } else if (selectedModel.id === 'taiwan-target') {
+      modelStrategyDescription = `依循台灣國家減碳目標路徑：
+- 2030年減排28%（相對2005年）
+- 2032年減排32%（相對2005年）  
+- 2035年減排38%（相對2005年）
+- ${emissionData.targetYear}年達成淨零排放目標`;
+    } else {
+      modelStrategyDescription = `符合科學基礎目標倡議（SBTi）1.5°C路徑：
+- 年均減排率：${selectedModel.annualReductionRate}%
+- 2030年前減排目標：${selectedModel.targetReduction}%`;
+    }
+    
     return `
 # ${emissionData.baseYear}年淨零路徑規劃報告
 
@@ -37,11 +55,14 @@ const ReportExport: React.FC<ReportExportProps> = ({
 - 總排放量：${totalEmissions.toLocaleString()} tCO2e
 
 ## 減碳目標與策略
-採用「${selectedModel.name}」作為減碳參考模型，具體目標如下：
-- 目標年份：${emissionData.targetYear}年
-- 年均減排率：${selectedModel.annualReductionRate}%
-- 目標減排比例：${selectedModel.targetReduction}%
+${modelStrategyDescription}
+
+**規劃參數：**
+- 基準年：${emissionData.baseYear}年
+- 淨零目標年：${emissionData.targetYear}年
+- 殘留排放比例：${emissionData.residualEmissionPercentage}%
 - 預計總減排量：${totalReduction}%
+- 減碳模型：${selectedModel.name}
 
 ## 減碳路徑規劃
 根據所選模型，制定分階段減碳目標：

@@ -318,11 +318,19 @@ const CarbonPath = () => {
 
           {step === 4 && pathwayData.length > 0 && emissionData && selectedModel && (
             <div className="space-y-6">
-              <PathwayChart data={pathwayData} />
+              <PathwayChart 
+                data={pathwayData} 
+                modelType={selectedModel.id as 'custom-target' | 'taiwan-target' | 'sbti'}
+                customPhases={selectedModel.id === 'custom-target' ? {
+                  nearTermTarget: customTargets.nearTermTarget,
+                  longTermTarget: customTargets.longTermTarget
+                } : undefined}
+              />
               <ReportExport 
                 emissionData={{
                   ...emissionData,
-                  ...(selectedModel.id === 'custom-target' ? customTargets : {})
+                  nearTermTarget: customTargets.nearTermTarget,
+                  longTermTarget: customTargets.longTermTarget
                 }}
                 selectedModel={selectedModel}
                 pathwayData={pathwayData}
