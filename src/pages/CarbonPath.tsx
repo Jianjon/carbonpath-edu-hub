@@ -17,6 +17,7 @@ export interface EmissionData {
   residualEmissionPercentage: number;
   decarbonModel: string;
   reTargetYear?: number;
+  renewableTargetType?: string;
   nearTermTarget?: {
     year: number;
     reductionPercentage: number;

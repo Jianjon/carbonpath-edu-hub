@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EmissionData } from '../pages/CarbonPath';
 
 interface EmissionDataInputProps {
@@ -19,13 +19,14 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
     baseYear: '2020',
     targetYear: '2050',
     residualEmissionPercentage: '5',
-    decarbonModel: '',
-    reTargetYear: '2030'
+    enableRenewableTarget: false,
+    renewableTargetType: '',
+    reTargetYear: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -54,6 +55,16 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
       newErrors.targetYear = '淨零目標年須大於基準年且不超過2100年';
     }
 
+    // 可再生能源目標驗證（可選）
+    if (formData.enableRenewableTarget) {
+      if (!formData.renewableTargetType) {
+        newErrors.renewableTargetType = '請選擇可再生能源目標類型';
+      }
+      if (!formData.reTargetYear || parseInt(formData.reTargetYear) <= baseYear || parseInt(formData.reTargetYear) > targetYear) {
+        newErrors.reTargetYear = '可再生能源目標年須介於基準年與淨零目標年之間';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -66,8 +77,9 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
         baseYear: parseInt(formData.baseYear),
         targetYear: parseInt(formData.targetYear),
         residualEmissionPercentage: parseInt(formData.residualEmissionPercentage),
-        decarbonModel: formData.decarbonModel,
-        reTargetYear: undefined, // 取消RE目標。減碳模型選擇已移到下一步
+        decarbonModel: '',
+        reTargetYear: formData.enableRenewableTarget ? parseInt(formData.reTargetYear) : undefined,
+        renewableTargetType: formData.enableRenewableTarget ? formData.renewableTargetType : undefined,
       };
       onNext(data);
     }
@@ -156,6 +168,57 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
                 </Select>
                 <p className="text-sm text-gray-500">選擇企業最終可接受的殘留排放比例</p>
               </div>
+
+              {/* 可再生能源目標（可選） */}
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enableRenewableTarget"
+                    checked={formData.enableRenewableTarget}
+                    onCheckedChange={(checked) => handleInputChange('enableRenewableTarget', checked as boolean)}
+                  />
+                  <Label htmlFor="enableRenewableTarget" className="font-medium">
+                    設定可再生能源目標（可選）
+                  </Label>
+                </div>
+                <p className="text-sm text-gray-500">可設定RE100、RE50、RE30或Fit 55等可再生能源目標</p>
+
+                {formData.enableRenewableTarget && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2 border-green-200">
+                    <div className="space-y-2">
+                      <Label htmlFor="renewableTargetType">可再生能源目標類型</Label>
+                      <Select 
+                        value={formData.renewableTargetType} 
+                        onValueChange={(value) => handleInputChange('renewableTargetType', value)}
+                      >
+                        <SelectTrigger className={errors.renewableTargetType ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="選擇目標類型" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="RE100">RE100 - 100%可再生能源</SelectItem>
+                          <SelectItem value="RE50">RE50 - 50%可再生能源</SelectItem>
+                          <SelectItem value="RE30">RE30 - 30%可再生能源</SelectItem>
+                          <SelectItem value="Fit55">Fit 55 - 歐盟2030氣候目標</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.renewableTargetType && <p className="text-sm text-red-500">{errors.renewableTargetType}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="reTargetYear">目標達成年份</Label>
+                      <Input
+                        id="reTargetYear"
+                        type="number"
+                        placeholder="例如：2030"
+                        value={formData.reTargetYear}
+                        onChange={(e) => handleInputChange('reTargetYear', e.target.value)}
+                        className={errors.reTargetYear ? 'border-red-500' : ''}
+                      />
+                      {errors.reTargetYear && <p className="text-sm text-red-500">{errors.reTargetYear}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 排放量摘要 */}
@@ -168,6 +231,11 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
                 <p className="text-green-700">
                   殘留排放：{formData.residualEmissionPercentage}%
                 </p>
+                {formData.enableRenewableTarget && formData.renewableTargetType && (
+                  <p className="text-green-700">
+                    可再生能源目標：{formData.renewableTargetType}（{formData.reTargetYear}年達成）
+                  </p>
+                )}
               </div>
             )}
           </div>
