@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PathwayData } from '../pages/CarbonPath';
 
 // 父層務必傳入下面 props
@@ -292,7 +292,6 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
           <CardTitle>年度減量</CardTitle>
         </CardHeader>
         <CardContent>
-            {/* Note: Slicing here should be from the first year with reduction data */}
             <ChartContainer config={chartConfig} className="h-[260px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={dataWithAnnualReduction.filter(d => d.annualReduction !== null)}>
@@ -333,49 +332,6 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
                     </AreaChart>
                 </ResponsiveContainer>
             </ChartContainer>
-        </CardContent>
-      </Card>
-      
-      {/* 數據表格 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            年度減碳目標數據表（最終殘留：{lastEmission.toLocaleString()} tCO2e = {actualResidualPercentage}%，總減排：{finalReductionPercentage}%）
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>年份</TableHead>
-                <TableHead>排放量 (tCO2e)</TableHead>
-                <TableHead>目標排放量 (tCO2e)</TableHead>
-                <TableHead>累計減排率 (%)</TableHead>
-                <TableHead>年減排量 (tCO2e)</TableHead>
-                <TableHead>當年殘留比例 (%)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {dataWithAnnualReduction.slice(0, data.length).map((item) => {
-                const isHistorical = item.year < baseYear;
-                const residualPercent = baseEmissions === 0 ? 0 : Math.round((item.emissions / baseEmissions) * 100 * 10) / 10;
-                const isNearFinal = !isHistorical && (residualPercent <= actualResidualPercentage + 2);
-                
-                return (
-                  <TableRow key={item.year} className={isHistorical ? 'bg-gray-50' : ''}>
-                    <TableCell className="font-medium">{item.year}</TableCell>
-                    <TableCell>{item.emissions.toLocaleString()}</TableCell>
-                    <TableCell>{isHistorical ? 'N/A' : item.target.toLocaleString()}</TableCell>
-                    <TableCell>{isHistorical ? 'N/A' : `${item.reduction}%`}</TableCell>
-                    <TableCell>{item.annualReduction !== null ? item.annualReduction.toLocaleString() : 'N/A'}</TableCell>
-                    <TableCell className={isNearFinal ? "text-green-600 font-semibold" : ""}>
-                      {isHistorical ? 'N/A' : `${residualPercent}%`}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
         </CardContent>
       </Card>
     </div>
