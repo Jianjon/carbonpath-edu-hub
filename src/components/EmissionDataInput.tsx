@@ -25,9 +25,9 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
   });
 
   const [threePhaseTargets, setThreePhaseTargets] = useState<{
-    nearTermTarget?: { year: number; reductionPercentage: number };
-    midTermTarget?: { year: number; reductionPercentage: number };
-    longTermTarget?: { year: number; reductionPercentage: number };
+    nearTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
+    midTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
+    longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
   }>({});
 
   const [errors, setErrors] = useState<Record<string, string>>({});
