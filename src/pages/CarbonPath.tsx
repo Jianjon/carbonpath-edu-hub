@@ -17,6 +17,7 @@ export interface EmissionData {
   decarbonModel: string;
   reTargetYear?: number;
   renewableTargetType?: string;
+  historicalData?: { year: number; emissions: number }[];
   nearTermTarget?: {
     year: number;
     reductionPercentage: number;
@@ -241,11 +242,23 @@ const CarbonPath = () => {
       finalPathway = pathway;
     }
 
-    console.log('生成的路徑數據:', finalPathway.slice(0, 5)); // 顯示前5年數據
-    console.log('最後一年數據:', finalPathway[finalPathway.length - 1]); // 顯示最後一年數據
+    // Prepend historical data if it exists
+    const historicalPathwayData: PathwayData[] = (emissionData.historicalData || [])
+      .map(d => ({
+        year: d.year,
+        emissions: d.emissions,
+        reduction: 0, // Not applicable for historical data in this context
+        target: d.emissions, // No target for past data
+      }))
+      .sort((a, b) => a.year - b.year);
+
+    const fullPathway = [...historicalPathwayData, ...finalPathway];
+
+    console.log('生成的完整路徑數據(含歷史):', fullPathway.slice(0, 5)); // 顯示前5年數據
+    console.log('最後一年數據:', fullPathway[fullPathway.length - 1]); // 顯示最後一年數據
     
     // 驗證最終年份是否正確達到殘留排放
-    const finalYearData = finalPathway[finalPathway.length - 1];
+    const finalYearData = fullPathway[fullPathway.length - 1];
     const expectedFinalEmissions = finalResidualEmissions;
     console.log('驗證最終排放:', {
       actual: finalYearData.emissions,
@@ -253,7 +266,7 @@ const CarbonPath = () => {
       difference: Math.abs(finalYearData.emissions - expectedFinalEmissions)
     });
     
-    setPathwayData(finalPathway);
+    setPathwayData(fullPathway);
     setStep(4);
   };
 
@@ -400,6 +413,7 @@ const CarbonPath = () => {
               <PathwayChart 
                 data={pathwayData} 
                 modelType={selectedModel.id as 'custom-target' | 'taiwan-target' | 'sbti'}
+                planBaseYear={emissionData.baseYear}
                 customPhases={selectedModel.id === 'custom-target' ? {
                   nearTermTarget: customTargets.nearTermTarget,
                   longTermTarget: customTargets.longTermTarget,

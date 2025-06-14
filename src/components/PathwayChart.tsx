@@ -9,6 +9,7 @@ import { PathwayData } from '../pages/CarbonPath';
 interface PathwayChartProps {
   data: PathwayData[];
   modelType?: 'custom-target' | 'taiwan-target' | 'sbti'; // 傳進來的模型id
+  planBaseYear?: number;
   customPhases?: { // 兩階段自訂
     nearTermTarget?: { year: number },
     longTermTarget?: { year: number },
@@ -34,12 +35,19 @@ const chartConfig = {
   },
 };
 
-const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhases }) => {
+const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYear, customPhases }) => {
   if (!data.length) return null;
   
-  const baseYear = data[0].year;
+  const baseYear = planBaseYear || data[0].year;
+  const baseYearData = data.find(d => d.year === baseYear);
+
+  if (!baseYearData) {
+    console.error("錯誤：在路徑數據中找不到基準年資料。");
+    return <div>錯誤：找不到基準年數據</div>;
+  }
+
   const netZeroYear = data[data.length - 1].year;
-  const baseEmissions = data[0].emissions;
+  const baseEmissions = baseYearData.emissions;
   const lastEmission = data[data.length - 1].emissions;
   const residualRatio = baseEmissions === 0 ? 0 : lastEmission / baseEmissions;
   const actualResidualPercentage = Math.round(residualRatio * 100 * 10) / 10;
@@ -67,8 +75,11 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
   
   const dataWithAnnualReduction = extendedData.map((item, idx, arr) => ({
     ...item,
-    annualReduction: idx === 0 ? 0 : arr[idx - 1].emissions - item.emissions
+    annualReduction: idx === 0 ? null : arr[idx - 1].emissions - item.emissions
   }));
+
+  // The first year in chart could be historical
+  const firstChartYear = data[0].year;
 
   // 階段區塊顏色：自訂模型（近/長/淨零後）
   let refsArr: { x1: number, x2: number, color: string, label: string }[] = [];
@@ -179,8 +190,9 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                   stroke="#6b7280"
                   fontSize={12}
                   tick={{ fontWeight: 500 }}
-                  domain={[baseYear, netZeroYear + extendedYears]}
+                  domain={[firstChartYear, netZeroYear + extendedYears]}
                   type="number"
+                  allowDataOverflow
                 />
                 <YAxis 
                   stroke="#6b7280"
@@ -235,7 +247,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
                   }}
                 />
                 
-                {/* 殘留排放水平線 */}
+                {/* 残留排放水平線 */}
                 <ReferenceLine
                   y={lastEmission}
                   stroke="#26C485"
@@ -280,46 +292,47 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
           <CardTitle>年度減量</CardTitle>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dataWithAnnualReduction.slice(1, data.length)}>
-                <defs>
-                  <linearGradient id="annualReductionGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.7} />
-                    <stop offset="100%" stopColor="#ede9fe" stopOpacity={0.13} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="year"
-                  stroke="#6b7280"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="#6b7280"
-                  fontSize={12}
-                  tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
-                />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="annualReduction"
-                  stroke={chartConfig.annualReduction.color}
-                  fill="url(#annualReductionGradient)"
-                  name="年度減量"
-                  activeDot={{ r: 4, fill: chartConfig.annualReduction.color }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+            {/* Note: Slicing here should be from the first year with reduction data */}
+            <ChartContainer config={chartConfig} className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={dataWithAnnualReduction.filter(d => d.annualReduction !== null)}>
+                        <defs>
+                            <linearGradient id="annualReductionGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.7} />
+                                <stop offset="100%" stopColor="#ede9fe" stopOpacity={0.13} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                            dataKey="year"
+                            stroke="#6b7280"
+                            fontSize={12}
+                        />
+                        <YAxis 
+                            stroke="#6b7280"
+                            fontSize={12}
+                            tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
+                        />
+                        <ChartTooltip 
+                            content={<ChartTooltipContent />}
+                            contentStyle={{
+                                backgroundColor: 'white',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                            }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="annualReduction"
+                            stroke={chartConfig.annualReduction.color}
+                            fill="url(#annualReductionGradient)"
+                            name="年度減量"
+                            activeDot={{ r: 4, fill: chartConfig.annualReduction.color }}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </ChartContainer>
         </CardContent>
       </Card>
       
@@ -344,16 +357,20 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, customPhas
             </TableHeader>
             <TableBody>
               {dataWithAnnualReduction.slice(0, data.length).map((item) => {
+                const isHistorical = item.year < baseYear;
                 const residualPercent = baseEmissions === 0 ? 0 : Math.round((item.emissions / baseEmissions) * 100 * 10) / 10;
-                const isNearFinal = residualPercent <= actualResidualPercentage + 2; // 接近最終殘留排放
+                const isNearFinal = !isHistorical && (residualPercent <= actualResidualPercentage + 2);
+                
                 return (
-                  <TableRow key={item.year}>
+                  <TableRow key={item.year} className={isHistorical ? 'bg-gray-50' : ''}>
                     <TableCell className="font-medium">{item.year}</TableCell>
                     <TableCell>{item.emissions.toLocaleString()}</TableCell>
-                    <TableCell>{item.target.toLocaleString()}</TableCell>
-                    <TableCell>{item.reduction}%</TableCell>
-                    <TableCell>{item.annualReduction.toLocaleString()}</TableCell>
-                    <TableCell className={isNearFinal ? "text-green-600 font-semibold" : ""}>{residualPercent}%</TableCell>
+                    <TableCell>{isHistorical ? 'N/A' : item.target.toLocaleString()}</TableCell>
+                    <TableCell>{isHistorical ? 'N/A' : `${item.reduction}%`}</TableCell>
+                    <TableCell>{item.annualReduction !== null ? item.annualReduction.toLocaleString() : 'N/A'}</TableCell>
+                    <TableCell className={isNearFinal ? "text-green-600 font-semibold" : ""}>
+                      {isHistorical ? 'N/A' : `${residualPercent}%`}
+                    </TableCell>
                   </TableRow>
                 );
               })}

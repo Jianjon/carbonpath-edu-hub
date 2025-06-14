@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,16 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmissionData } from '../pages/CarbonPath';
+import { PlusCircle, Trash2 } from 'lucide-react';
 
 interface EmissionDataInputProps {
   onNext: (data: EmissionData) => void;
+}
+
+interface HistoricalDataEntry {
+  id: number;
+  year: string;
+  emissions: string;
 }
 
 const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
   const [formData, setFormData] = useState({
     scope1: '',
     scope2: '',
-    baseYear: '2020',
+    baseYear: '2024',
     targetYear: '2050',
     residualEmissionPercentage: '5',
     enableRenewableTarget: false,
@@ -25,12 +31,36 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showHistorical, setShowHistorical] = useState(false);
+  const [historicalData, setHistoricalData] = useState<HistoricalDataEntry[]>([]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const handleAddHistoricalYear = () => {
+    const sortedYears = [...historicalData].sort((a, b) => parseInt(a.year) - parseInt(b.year));
+    const earliestYear = sortedYears.length > 0 ? parseInt(sortedYears[0].year) : parseInt(formData.baseYear);
+    
+    const newYear = !isNaN(earliestYear) ? earliestYear - 1 : new Date().getFullYear() - 2;
+
+    setHistoricalData(prev => [
+      { id: Date.now(), year: newYear.toString(), emissions: '' },
+      ...prev
+    ]);
+  };
+
+  const handleHistoricalChange = (id: number, field: 'year' | 'emissions', value: string) => {
+    setHistoricalData(historicalData.map(item =>
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+  
+  const handleRemoveHistoricalYear = (id: number) => {
+    setHistoricalData(historicalData.filter(item => item.id !== id));
   };
 
   const validateForm = () => {
@@ -55,7 +85,6 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
       newErrors.targetYear = '淨零目標年須大於基準年且不超過2100年';
     }
 
-    // 可再生能源目標驗證（可選）
     if (formData.enableRenewableTarget) {
       if (!formData.renewableTargetType) {
         newErrors.renewableTargetType = '請選擇可再生能源目標類型';
@@ -80,6 +109,14 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
         decarbonModel: '',
         reTargetYear: formData.enableRenewableTarget ? parseInt(formData.reTargetYear) : undefined,
         renewableTargetType: formData.enableRenewableTarget ? formData.renewableTargetType : undefined,
+        historicalData: showHistorical
+          ? historicalData
+              .filter(d => d.year && d.emissions && !isNaN(parseInt(d.year)) && !isNaN(parseFloat(d.emissions)))
+              .map(d => ({
+                year: parseInt(d.year),
+                emissions: parseFloat(d.emissions),
+              }))
+          : undefined,
       };
       onNext(data);
     }
@@ -146,6 +183,49 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
                 />
                 {errors.targetYear && <p className="text-sm text-red-500">{errors.targetYear}</p>}
               </div>
+            </div>
+
+            {/* 歷史排放數據 (選填) */}
+            <div className="border-t pt-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Checkbox
+                    id="enableHistoricalData"
+                    checked={showHistorical}
+                    onCheckedChange={(checked) => setShowHistorical(checked as boolean)}
+                  />
+                  <Label htmlFor="enableHistoricalData" className="font-medium text-lg">
+                    新增歷史排放數據 (選填)
+                  </Label>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">加入基準年以前的排放數據，讓報告圖表更完整。此數據不影響減碳模型計算。</p>
+                
+                {showHistorical && (
+                  <div className="space-y-4 pl-6 border-l-2 border-blue-200">
+                    {historicalData.map((item) => (
+                      <div key={item.id} className="grid grid-cols-[1fr_1.5fr_auto] gap-2 items-center">
+                        <Input
+                          type="number"
+                          placeholder="年份"
+                          value={item.year}
+                          onChange={(e) => handleHistoricalChange(item.id, 'year', e.target.value)}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="總排放量 (tCO2e)"
+                          value={item.emissions}
+                          onChange={(e) => handleHistoricalChange(item.id, 'emissions', e.target.value)}
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => handleRemoveHistoricalYear(item.id)}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button onClick={handleAddHistoricalYear} variant="outline" className="w-full">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      增加一筆歷史年份
+                    </Button>
+                  </div>
+                )}
             </div>
 
             {/* 進階設定 */}
