@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -68,8 +67,12 @@ const CarbonPath = () => {
     const years = emissionData.targetYear - emissionData.baseYear;
     const pathway: PathwayData[] = [];
 
+    console.log('開始生成路徑:', { totalEmissions, years, selectedModel: selectedModel.id });
+
     // 處理自訂減碳目標 - 等比減排（每年減固定百分比）
-    if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.midTermTarget && customTargets.longTermTarget) {
+    if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.longTermTarget) {
+      console.log('使用自訂目標:', customTargets);
+      
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
         let currentEmissions = totalEmissions;
@@ -81,24 +84,13 @@ const CarbonPath = () => {
           const reductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, yearsInPhase);
           currentEmissions = totalEmissions * reductionFactor;
           targetReduction = (1 - reductionFactor) * 100;
-        } else if (currentYear <= customTargets.midTermTarget.year) {
-          // 中期階段：在近期基礎上繼續等比減排
-          const nearTermReductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, customTargets.nearTermTarget.year - emissionData.baseYear);
-          const nearTermEmissions = totalEmissions * nearTermReductionFactor;
-          const yearsInMidPhase = currentYear - customTargets.nearTermTarget.year;
-          const midReductionFactor = Math.pow(1 - customTargets.midTermTarget.annualReductionRate / 100, yearsInMidPhase);
-          currentEmissions = nearTermEmissions * midReductionFactor;
-          targetReduction = (1 - (currentEmissions / totalEmissions)) * 100;
         } else {
-          // 遠期階段：在中期基礎上繼續等比減排
+          // 長期階段：在近期基礎上繼續等比減排
           const nearTermReductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, customTargets.nearTermTarget.year - emissionData.baseYear);
           const nearTermEmissions = totalEmissions * nearTermReductionFactor;
-          const midYearsInPhase = customTargets.midTermTarget.year - customTargets.nearTermTarget.year;
-          const midReductionFactor = Math.pow(1 - customTargets.midTermTarget.annualReductionRate / 100, midYearsInPhase);
-          const midTermEmissions = nearTermEmissions * midReductionFactor;
-          const yearsInLongPhase = currentYear - customTargets.midTermTarget.year;
+          const yearsInLongPhase = currentYear - customTargets.nearTermTarget.year;
           const longReductionFactor = Math.pow(1 - customTargets.longTermTarget.annualReductionRate / 100, yearsInLongPhase);
-          currentEmissions = midTermEmissions * longReductionFactor;
+          currentEmissions = nearTermEmissions * longReductionFactor;
           targetReduction = Math.min((1 - (currentEmissions / totalEmissions)) * 100, customTargets.longTermTarget.reductionPercentage);
         }
 
@@ -112,12 +104,8 @@ const CarbonPath = () => {
     }
     // 台灣減碳目標 - 線性減排（每年減固定量）
     else if (selectedModel.id === 'taiwan-target') {
-      const taiwanTargets = [
-        { year: 2030, reduction: 28 },
-        { year: 2032, reduction: 32 },
-        { year: 2035, reduction: 38 }
-      ];
-
+      console.log('使用台灣目標');
+      
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
         let targetReduction = 0;
@@ -154,6 +142,8 @@ const CarbonPath = () => {
     } 
     // SBTi 1.5°C目標 - 等比減排（每年減固定百分比）
     else {
+      console.log('使用SBTi目標:', { annualReductionRate: selectedModel.annualReductionRate });
+      
       for (let i = 0; i <= years; i++) {
         const year = emissionData.baseYear + i;
         // 等比減排：每年減少固定百分比
@@ -162,8 +152,7 @@ const CarbonPath = () => {
         const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
         
         // 目標線也使用等比減排邏輯
-        const targetReductionFactor = Math.pow(1 - selectedModel.annualReductionRate / 100, (i / years) * years);
-        const target = totalEmissions * targetReductionFactor;
+        const target = emissions;
 
         pathway.push({
           year,
@@ -174,6 +163,7 @@ const CarbonPath = () => {
       }
     }
 
+    console.log('生成的路徑數據:', pathway.slice(0, 5)); // 顯示前5年數據
     setPathwayData(pathway);
     setStep(4);
   };
