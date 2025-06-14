@@ -222,25 +222,16 @@ const CarbonPath = () => {
       finalPathway = pathway;
     } 
     
-    // SBTi 1.5°C目標 - 4.2%年減排但最終達到殘留量
+    // SBTi 1.5°C目標 - 到2030年減排4.2%，之後線性減排到殘留量
     else {
-      console.log('使用SBTi目標 - 4.2%年減排，從基線', totalEmissions.toLocaleString(), '到殘留量', residualEmissions.toLocaleString());
+      console.log('使用SBTi目標 - 到2030年減排4.2%，之後線性減排到殘留量');
       let pathway: PathwayData[] = [];
       
-      const standardAnnualRate = selectedModel.annualReductionRate / 100; // 4.2% -> 0.042
+      const target2030Reduction = 0.042; // 4.2%
+      const emissions2030 = totalEmissions * (1 - target2030Reduction);
       
-      // 計算如果按標準4.2%減排會達到什麼數值
-      const standardFinalEmissions = totalEmissions * Math.pow(1 - standardAnnualRate, years);
-      console.log('標準4.2%減排', years, '年後會達到:', standardFinalEmissions.toLocaleString());
-      console.log('用戶設定殘留量:', residualEmissions.toLocaleString())
-      
-      // 如果標準減排達到的數值比殘留量還高，需要調整減排率
-      let adjustedAnnualRate = standardAnnualRate;
-      if (standardFinalEmissions > residualEmissions) {
-        // 計算需要達到殘留量的實際年減排率
-        adjustedAnnualRate = 1 - Math.pow(residualEmissions / totalEmissions, 1 / years);
-        console.log('調整後年減排率:', (adjustedAnnualRate * 100).toFixed(2), '%');
-      }
+      console.log('2030年目標排放量:', emissions2030.toLocaleString(), 'tCO2e');
+      console.log('殘留排放量:', residualEmissions.toLocaleString(), 'tCO2e');
       
       for (let i = 0; i <= years; i++) {
         const year = emissionData.baseYear + i;
@@ -248,13 +239,17 @@ const CarbonPath = () => {
         
         if (i === 0) {
           emissions = totalEmissions;
-        } else if (i === years) {
+        } else if (year === emissionData.targetYear) {
           // 最終年份必須達到殘留量
           emissions = residualEmissions;
+        } else if (year <= 2030) {
+          // 2030年前線性減排到4.2%
+          const progress = (year - emissionData.baseYear) / (2030 - emissionData.baseYear);
+          emissions = totalEmissions - (totalEmissions - emissions2030) * progress;
         } else {
-          // 使用調整後的減排率
-          const reductionFactor = Math.pow(1 - adjustedAnnualRate, i);
-          emissions = totalEmissions * reductionFactor;
+          // 2030年後線性減排到殘留量
+          const progress = (year - 2030) / (emissionData.targetYear - 2030);
+          emissions = emissions2030 - (emissions2030 - residualEmissions) * progress;
         }
         
         const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
