@@ -32,6 +32,7 @@ export interface EmissionData {
     reductionPercentage: number;
     annualReductionRate: number;
   };
+  adjustedLongTermAnnualRate?: number;
 }
 
 export interface ReductionModel {
@@ -59,6 +60,7 @@ const CarbonPath = () => {
     longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
   }>({});
   const [pathwayData, setPathwayData] = useState<PathwayData[]>([]);
+  const [adjustedRates, setAdjustedRates] = useState<{ longTerm?: number }>({});
 
   const generatePathway = () => {
     if (!emissionData || !selectedModel) return;
@@ -81,42 +83,34 @@ const CarbonPath = () => {
     // 自訂減碳目標 - 兩階段等比減排
     if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.longTermTarget) {
       console.log('使用自訂目標（等比減排）:', customTargets);
+
+      const nearTermYears = customTargets.nearTermTarget.year - emissionData.baseYear;
+      const nearTermAnnualRate = customTargets.nearTermTarget.annualReductionRate / 100;
+      const nearTermEndEmissions = totalEmissions * Math.pow(1 - nearTermAnnualRate, nearTermYears);
+      const longTermYears = customTargets.longTermTarget.year - customTargets.nearTermTarget.year;
       
+      let adjustedLongTermRate = 0;
+      if (longTermYears > 0 && nearTermEndEmissions > finalResidualEmissions) {
+        adjustedLongTermRate = 1 - Math.pow(finalResidualEmissions / nearTermEndEmissions, 1 / longTermYears);
+      }
+      
+      setAdjustedRates({ longTerm: adjustedLongTermRate });
+      console.log('調整後的長期年均減排率:', (adjustedLongTermRate * 100).toFixed(4), '%');
+
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
-        let currentEmissions = totalEmissions;
-        let targetReduction = 0;
+        let currentEmissions: number;
 
         if (currentYear <= customTargets.nearTermTarget.year) {
-          // 近期階段：等比減排（每年減固定百分比）
           const yearsInPhase = currentYear - emissionData.baseYear;
-          const annualReductionRate = customTargets.nearTermTarget.annualReductionRate / 100;
-          const reductionFactor = Math.pow(1 - annualReductionRate, yearsInPhase);
-          currentEmissions = totalEmissions * reductionFactor;
-          targetReduction = (1 - reductionFactor) * 100;
-          
-          console.log(`${currentYear}年 (近期階段): 年減排率${customTargets.nearTermTarget.annualReductionRate}%, 累計減排因子${reductionFactor.toFixed(4)}`);
+          currentEmissions = totalEmissions * Math.pow(1 - nearTermAnnualRate, yearsInPhase);
         } else if (currentYear <= customTargets.longTermTarget.year) {
-          // 長期階段：在近期結束點基礎上繼續等比減排
-          const nearTermYears = customTargets.nearTermTarget.year - emissionData.baseYear;
-          const nearTermReductionFactor = Math.pow(1 - customTargets.nearTermTarget.annualReductionRate / 100, nearTermYears);
-          const nearTermEmissions = totalEmissions * nearTermReductionFactor;
-          
           const yearsInLongPhase = currentYear - customTargets.nearTermTarget.year;
-          const longTermAnnualRate = customTargets.longTermTarget.annualReductionRate / 100;
-          const longPhaseReductionFactor = Math.pow(1 - longTermAnnualRate, yearsInLongPhase);
-          
-          currentEmissions = nearTermEmissions * longPhaseReductionFactor;
-          targetReduction = ((totalEmissions - currentEmissions) / totalEmissions) * 100;
-          
-          console.log(`${currentYear}年 (長期階段): 年減排率${customTargets.longTermTarget.annualReductionRate}%, 長期減排因子${longPhaseReductionFactor.toFixed(4)}`);
+          currentEmissions = nearTermEndEmissions * Math.pow(1 - adjustedLongTermRate, yearsInLongPhase);
         } else {
-          // 目標年之後：維持最終殘留排放
           currentEmissions = finalResidualEmissions;
-          targetReduction = (1 - emissionData.residualEmissionPercentage / 100) * 100;
         }
 
-        // 確保不低於最終殘留排放
         currentEmissions = Math.max(currentEmissions, finalResidualEmissions);
         const actualReduction = ((totalEmissions - currentEmissions) / totalEmissions) * 100;
 
@@ -363,7 +357,9 @@ const CarbonPath = () => {
                 emissionData={{
                   ...emissionData,
                   nearTermTarget: customTargets.nearTermTarget,
-                  longTermTarget: customTargets.longTermTarget
+                  midTermTarget: customTargets.midTermTarget,
+                  longTermTarget: customTargets.longTermTarget,
+                  adjustedLongTermAnnualRate: adjustedRates.longTerm
                 }}
                 selectedModel={selectedModel}
                 pathwayData={pathwayData}

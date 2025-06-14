@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,14 +29,17 @@ const ReportExport: React.FC<ReportExportProps> = ({
     // 根據模型類型生成不同的策略描述
     let modelStrategyDescription = '';
     if (selectedModel.id === 'custom-target') {
+      const longTermRateForDisplay = emissionData.adjustedLongTermAnnualRate
+        ? (emissionData.adjustedLongTermAnnualRate * 100).toFixed(2)
+        : emissionData.longTermTarget?.annualReductionRate?.toFixed(2);
+
       modelStrategyDescription = `採用自訂兩階段減碳目標：
 - 近期目標（${emissionData.baseYear}-${emissionData.nearTermTarget?.year}年）：累積減排 ${emissionData.nearTermTarget?.reductionPercentage?.toFixed(1)}%，年均減排率 ${emissionData.nearTermTarget?.annualReductionRate}%
-- 長期目標（${emissionData.nearTermTarget?.year}-${emissionData.longTermTarget?.year}年）：累積減排 ${emissionData.longTermTarget?.reductionPercentage}%，年均減排率 ${emissionData.longTermTarget?.annualReductionRate?.toFixed(2)}%`;
+- 長期目標（${emissionData.nearTermTarget?.year}-${emissionData.longTermTarget?.year}年）：累積減排 ${emissionData.longTermTarget?.reductionPercentage}%，調整後年均減排率 ${longTermRateForDisplay}%`;
     } else if (selectedModel.id === 'taiwan-target') {
       modelStrategyDescription = `依循台灣國家減碳目標路徑：
-- 2030年減排28%（相對2005年）
-- 2032年減排32%（相對2005年）  
-- 2035年減排38%（相對2005年）
+- 2030年減排24%（相對基準年）
+- 2040年減排60%（相對基準年）
 - ${emissionData.targetYear}年達成淨零排放目標`;
     } else {
       modelStrategyDescription = `符合科學基礎目標倡議（SBTi）1.5°C路徑：
@@ -60,7 +62,7 @@ ${modelStrategyDescription}
 **規劃參數：**
 - 基準年：${emissionData.baseYear}年
 - 淨零目標年：${emissionData.targetYear}年
-- 殘留排放比例：${emissionData.residualEmissionPercentage}%
+- 残留排放比例：${emissionData.residualEmissionPercentage}%
 - 預計總減排量：${totalReduction}%
 - 減碳模型：${selectedModel.name}
 
