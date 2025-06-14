@@ -222,9 +222,9 @@ const CarbonPath = () => {
       finalPathway = pathway;
     } 
     
-    // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後新等比減排到殘留量
+    // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後平滑減排到殘留量
     else {
-      console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後新等比減排到殘留量');
+      console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後平滑減排到殘留量');
       let pathway: PathwayData[] = [];
       let tempEmissions = totalEmissions;
 
@@ -238,8 +238,10 @@ const CarbonPath = () => {
       // Phase 1: Geometric reduction until 2030 (or target year if sooner)
       const sbtiRate = 0.042; // 4.2%
       const endPhase1Year = Math.min(2030, emissionData.targetYear);
+      let lastYearEmissions = totalEmissions;
       
       for (let year = emissionData.baseYear + 1; year <= endPhase1Year; year++) {
+        lastYearEmissions = tempEmissions;
         tempEmissions *= (1 - sbtiRate);
         pathway.push({
           year,
@@ -249,27 +251,50 @@ const CarbonPath = () => {
         });
       }
 
-      // Phase 2: New geometric reduction from 2031 to target year
+      // Phase 2: Smoothed reduction from 2031 to target year
       if (emissionData.targetYear > 2030) {
         const emissionsAt2030 = tempEmissions;
-        const remainingYears = emissionData.targetYear - 2030;
+        const annualReductionAt2030End = lastYearEmissions - emissionsAt2030;
         
-        let newAnnualRate = 0;
-        if (emissionsAt2030 > residualEmissions && remainingYears > 0) {
-            newAnnualRate = 1 - Math.pow(residualEmissions / emissionsAt2030, 1 / remainingYears);
-        }
-        
-        console.log(`2030年後: 起始排放 ${emissionsAt2030.toLocaleString()}, ${remainingYears}年內需達到 ${residualEmissions.toLocaleString()}`);
-        console.log('計算出的新等比減排率:', (newAnnualRate * 100).toFixed(4), '%');
+        const C = annualReductionAt2030End;
+        const D = emissionData.targetYear - 2030;
+        const R_total = emissionsAt2030 - residualEmissions;
 
-        for (let year = 2031; year <= emissionData.targetYear; year++) {
-          tempEmissions *= (1 - newAnnualRate);
-          pathway.push({
-            year,
-            emissions: tempEmissions,
-            reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
-            target: tempEmissions
-          });
+        console.log(`2030年後平滑減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
+        console.log(`2030年終減排量 (C): ${C.toLocaleString()}`);
+        console.log(`剩餘總減排量 (R_total): ${R_total.toLocaleString()}`);
+
+        if (D > 0) {
+          if (C * D < R_total) {
+            console.log("SBTi 長期減排模式：拋物線（加速減排到殘留量）");
+            const A = 6 * (C * D - R_total) / (D * D * D);
+            const B = -A * D;
+            
+            for (let t = 1; t <= D; t++) {
+              const annualReduction = A * t * t + B * t + C;
+              tempEmissions -= annualReduction;
+              pathway.push({
+                year: 2030 + t,
+                emissions: tempEmissions,
+                reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
+                target: tempEmissions,
+              });
+            }
+          } else {
+            console.log("SBTi 長期減排模式：線性遞減到殘留量");
+            const y_D = D > 0 ? (2 * R_total / D) - C : 0;
+            for (let t = 1; t <= D; t++) {
+              const progress = D > 1 ? (t - 1) / (D - 1) : 1;
+              const annualReduction = C + (y_D - C) * progress;
+              tempEmissions -= annualReduction;
+              pathway.push({
+                year: 2030 + t,
+                emissions: tempEmissions,
+                reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
+                target: tempEmissions,
+              });
+            }
+          }
         }
       }
 
