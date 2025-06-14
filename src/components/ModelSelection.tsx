@@ -1,17 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import ThreePhaseTargets from './ThreePhaseTargets';
-import { ReductionModel } from '../pages/CarbonPath';
+import { ReductionModel, CustomTargets } from '../pages/CarbonPath';
 
 interface ModelSelectionProps {
-  onNext: (model: ReductionModel, customTargets?: {
-    nearTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-    longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-  }) => void;
+  onNext: (model: ReductionModel, customTargets?: CustomTargets) => void;
   onBack: () => void;
   baseYear: number;
   targetYear: number;
@@ -50,10 +46,7 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({
   residualEmissionPercentage,
 }) => {
   const [selectedModelId, setSelectedModelId] = useState<string>('');
-  const [customTargets, setCustomTargets] = useState<{
-    nearTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-    longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-  }>({});
+  const [customTargets, setCustomTargets] = useState<CustomTargets>({});
 
   const handleNext = () => {
     const selectedModel = REDUCTION_MODELS.find(model => model.id === selectedModelId);
