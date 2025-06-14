@@ -119,38 +119,28 @@ const CarbonPath = () => {
       
       const C = annualReductionAtNearTermEnd;
       const D = targetYear - nearTermTarget.year;
-      const R_total = emissionsAtNearTermEnd - residualEmissions; // 必須減到殘留量
 
       if (D > 0) {
-        if (C * D < R_total) {
-          console.log("長期減排模式：拋物線（加速減排到殘留量）");
-          const A = 6 * (C * D - R_total) / (D * D * D);
-          const B = -A * D;
-          
-          for (let t = 1; t <= D; t++) {
-            const annualReduction = A * t * t + B * t + C;
-            tempEmissions -= annualReduction;
-            path.push({
-              year: nearTermTarget.year + t,
-              emissions: tempEmissions,
-              reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
-              target: tempEmissions,
-            });
-          }
-        } else {
-          console.log("長期減排模式：線性遞減到殘留量");
-          const y_D = D > 0 ? (2 * R_total / D) - C : 0;
-          for (let t = 1; t <= D; t++) {
-            const progress = D > 1 ? (t - 1) / (D - 1) : 1;
-            const annualReduction = C + (y_D - C) * progress;
-            tempEmissions -= annualReduction;
-            path.push({
-              year: nearTermTarget.year + t,
-              emissions: tempEmissions,
-              reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
-              target: tempEmissions,
-            });
-          }
+        console.log("長期減排模式：二次曲線平滑（拋物線）");
+        const y_start = emissionsAtNearTermEnd;
+        const y_end = residualEmissions;
+        const y_prime_start = -C; // Initial slope
+
+        // y(t) = a*t^2 + b*t + c
+        // c = y_start (at t=0)
+        // b = y_prime_start (at t=0)
+        // a is solved from y(D) = y_end
+        const a = (y_end - y_start - y_prime_start * D) / (D * D);
+        const b = y_prime_start;
+        
+        for (let t = 1; t <= D; t++) {
+          const currentEmissions = y_start + a * t * t + b * t;
+          path.push({
+            year: nearTermTarget.year + t,
+            emissions: currentEmissions,
+            reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
+            target: currentEmissions,
+          });
         }
       }
 
@@ -258,33 +248,26 @@ const CarbonPath = () => {
         
         const C = annualReductionAt2030End;
         const D = emissionData.targetYear - 2030;
-        const R_total = emissionsAt2030 - residualEmissions;
 
         console.log(`2030年後平滑減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
         console.log(`2030年終減排量 (C): ${C.toLocaleString()}`);
-        console.log(`剩餘總減排量 (R_total): ${R_total.toLocaleString()}`);
 
         if (D > 0) {
-          console.log("SBTi 長期減排模式：減排量線性平滑過渡");
-          // To create a smooth transition, we make the annual reduction amount a linear ramp.
-          // It starts at C (reduction in 2030) and ends at y_D (reduction in target year).
-          // The sum of an arithmetic progression is n * (first + last) / 2.
-          // So, R_total = D * (C + y_D) / 2.
-          // We solve for y_D, the reduction amount needed in the final year.
-          const y_D = D > 0 ? (2 * R_total / D) - C : 0;
-          console.log(`目標年末的年度減排量 (y_D): ${y_D.toLocaleString()}`);
+          console.log("SBTi 長期減排模式：二次曲線平滑（拋物線）");
+          const y_start = emissionsAt2030;
+          const y_end = residualEmissions;
+          const y_prime_start = -C;
+
+          const a = (y_end - y_start - y_prime_start * D) / (D * D);
+          const b = y_prime_start;
           
           for (let t = 1; t <= D; t++) {
-            // Linear interpolation for the annual reduction amount
-            const progress = D > 1 ? (t - 1) / (D - 1) : 1;
-            const annualReduction = C + (y_D - C) * progress;
-            
-            tempEmissions -= annualReduction;
+            const currentEmissions = y_start + a * t * t + b * t;
             pathway.push({
               year: 2030 + t,
-              emissions: tempEmissions,
-              reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
-              target: tempEmissions,
+              emissions: currentEmissions,
+              reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
+              target: currentEmissions,
             });
           }
         }
