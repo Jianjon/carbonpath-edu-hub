@@ -10,7 +10,6 @@ import { ReductionModel } from '../pages/CarbonPath';
 interface ModelSelectionProps {
   onNext: (model: ReductionModel, customTargets?: {
     nearTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-    midTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
     longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
   }) => void;
   onBack: () => void;
@@ -37,7 +36,7 @@ const REDUCTION_MODELS: ReductionModel[] = [
   {
     id: 'custom-target',
     name: '自訂減碳目標',
-    description: '根據企業自身情況設定三階段減碳目標，包含近期（3~5年）、中期（5~10年）及遠期目標',
+    description: '根據企業自身情況設定兩階段減碳目標，包含近期（5~10年）及遠期目標',
     targetReduction: 0,
     annualReductionRate: 0,
   },
@@ -53,7 +52,6 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({
   const [selectedModelId, setSelectedModelId] = useState<string>('');
   const [customTargets, setCustomTargets] = useState<{
     nearTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
-    midTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
     longTermTarget?: { year: number; reductionPercentage: number; annualReductionRate: number };
   }>({});
 
@@ -62,12 +60,10 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({
     if (selectedModelId === 'custom-target') {
       if (
         customTargets.nearTermTarget &&
-        customTargets.midTermTarget &&
         customTargets.longTermTarget
       ) {
         onNext(selectedModel!, customTargets);
       }
-      // else 不送出
     } else if (selectedModel) {
       onNext(selectedModel);
     }
@@ -106,7 +102,6 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({
             </div>
           </RadioGroup>
 
-          {/* 若選自訂減碳目標，顯示 ThreePhaseTargets 編輯表單 */}
           {selectedModelId === 'custom-target' && (
             <div>
               <div className="mt-6">
@@ -117,7 +112,6 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({
                   onTargetsChange={setCustomTargets}
                 />
               </div>
-              {/* 須填完 customTargets 各階段才可送出 */}
             </div>
           )}
 
@@ -131,7 +125,6 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({
                 !selectedModelId ||
                 (selectedModelId === 'custom-target' &&
                   (!customTargets.nearTermTarget ||
-                    !customTargets.midTermTarget ||
                     !customTargets.longTermTarget))
               }
               className="bg-green-600 hover:bg-green-700"
