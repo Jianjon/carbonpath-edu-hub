@@ -222,46 +222,71 @@ const CarbonPath = () => {
       finalPathway = pathway;
     } 
     
-    // SBTi 1.5°C目標 - 到2030年減排4.2%，之後線性減排到殘留量
+    // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後新等比減排到殘留量
     else {
-      console.log('使用SBTi目標 - 到2030年減排4.2%，之後線性減排到殘留量');
+      console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後新等比減排到殘留量');
       let pathway: PathwayData[] = [];
+      let tempEmissions = totalEmissions;
+
+      pathway.push({
+        year: emissionData.baseYear,
+        emissions: tempEmissions,
+        reduction: 0,
+        target: tempEmissions,
+      });
+
+      // Phase 1: Geometric reduction until 2030 (or target year if sooner)
+      const sbtiRate = 0.042; // 4.2%
+      const endPhase1Year = Math.min(2030, emissionData.targetYear);
       
-      const target2030Reduction = 0.042; // 4.2%
-      const emissions2030 = totalEmissions * (1 - target2030Reduction);
-      
-      console.log('2030年目標排放量:', emissions2030.toLocaleString(), 'tCO2e');
-      console.log('殘留排放量:', residualEmissions.toLocaleString(), 'tCO2e');
-      
-      for (let i = 0; i <= years; i++) {
-        const year = emissionData.baseYear + i;
-        let emissions;
-        
-        if (i === 0) {
-          emissions = totalEmissions;
-        } else if (year === emissionData.targetYear) {
-          // 最終年份必須達到殘留量
-          emissions = residualEmissions;
-        } else if (year <= 2030) {
-          // 2030年前線性減排到4.2%
-          const progress = (year - emissionData.baseYear) / (2030 - emissionData.baseYear);
-          emissions = totalEmissions - (totalEmissions - emissions2030) * progress;
-        } else {
-          // 2030年後線性減排到殘留量
-          const progress = (year - 2030) / (emissionData.targetYear - 2030);
-          emissions = emissions2030 - (emissions2030 - residualEmissions) * progress;
-        }
-        
-        const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
-        
+      for (let year = emissionData.baseYear + 1; year <= endPhase1Year; year++) {
+        tempEmissions *= (1 - sbtiRate);
         pathway.push({
           year,
-          emissions: Math.round(emissions),
-          reduction: Math.round(reduction * 10) / 10,
-          target: Math.round(emissions)
+          emissions: tempEmissions,
+          reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
+          target: tempEmissions
         });
       }
-      finalPathway = pathway;
+
+      // Phase 2: New geometric reduction from 2031 to target year
+      if (emissionData.targetYear > 2030) {
+        const emissionsAt2030 = tempEmissions;
+        const remainingYears = emissionData.targetYear - 2030;
+        
+        let newAnnualRate = 0;
+        if (emissionsAt2030 > residualEmissions && remainingYears > 0) {
+            newAnnualRate = 1 - Math.pow(residualEmissions / emissionsAt2030, 1 / remainingYears);
+        }
+        
+        console.log(`2030年後: 起始排放 ${emissionsAt2030.toLocaleString()}, ${remainingYears}年內需達到 ${residualEmissions.toLocaleString()}`);
+        console.log('計算出的新等比減排率:', (newAnnualRate * 100).toFixed(4), '%');
+
+        for (let year = 2031; year <= emissionData.targetYear; year++) {
+          tempEmissions *= (1 - newAnnualRate);
+          pathway.push({
+            year,
+            emissions: tempEmissions,
+            reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
+            target: tempEmissions
+          });
+        }
+      }
+
+      // Ensure final year hits residualEmissions exactly to correct for float precision
+      const finalIndex = pathway.findIndex(p => p.year === emissionData.targetYear);
+      if (finalIndex !== -1) {
+        pathway[finalIndex].emissions = residualEmissions;
+        pathway[finalIndex].reduction = ((totalEmissions - residualEmissions) / totalEmissions) * 100;
+        pathway[finalIndex].target = residualEmissions;
+      }
+      
+      finalPathway = pathway.map(p => ({
+        ...p,
+        emissions: Math.round(p.emissions),
+        reduction: Math.round(p.reduction * 10) / 10,
+        target: Math.round(p.target ? p.target : p.emissions)
+      }));
     }
 
     // 添加歷史數據
