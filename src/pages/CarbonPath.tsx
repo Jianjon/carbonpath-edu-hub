@@ -79,8 +79,8 @@ const CarbonPath = () => {
       residualPercentage: emissionData.residualEmissionPercentage 
     });
 
-    const finalResidualEmissions = totalEmissions * (emissionData.residualEmissionPercentage / 100);
-    console.log('最終殘留排放量:', finalResidualEmissions, `(${emissionData.residualEmissionPercentage}%)`);
+    const userSetResidualEmissions = totalEmissions * (emissionData.residualEmissionPercentage / 100);
+    console.log('用戶設定殘留排放量:', userSetResidualEmissions, `(${emissionData.residualEmissionPercentage}%)`);
 
     // 自訂減碳目標 - 混合模型（近期等比，長期平滑曲線）
     if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.longTermTarget) {
@@ -178,8 +178,8 @@ const CarbonPath = () => {
     
     // 台灣減碳目標 - 階段性線性減排
     else if (selectedModel.id === 'taiwan-target') {
-      console.log('使用台灣目標, 残留排放量:', finalResidualEmissions);
-      let pathway: PathwayData[] = []; // Renamed for consistency
+      console.log('使用台灣目標, 用戶設定殘留排放量:', userSetResidualEmissions);
+      let pathway: PathwayData[] = [];
       for (let i = 0; i <= years; i++) {
         const currentYear = emissionData.baseYear + i;
         let targetReduction = 0;
@@ -204,7 +204,7 @@ const CarbonPath = () => {
           }
         }
 
-        const emissions = Math.max(totalEmissions * (1 - targetReduction / 100), finalResidualEmissions);
+        const emissions = Math.max(totalEmissions * (1 - targetReduction / 100), userSetResidualEmissions);
         const actualReduction = ((totalEmissions - emissions) / totalEmissions) * 100;
 
         pathway.push({
@@ -216,28 +216,31 @@ const CarbonPath = () => {
       }
       finalPathway = pathway;
     } 
-    // SBTi 1.5°C目標 - 等比減排
+    // SBTi 1.5°C目標 - 標準等比減排
     else {
-      console.log('使用SBTi目標（標準4.2%年減排）:', { annualReductionRate: selectedModel.annualReductionRate });
+      console.log('使用SBTi目標（標準4.2%年減排）');
       let pathway: PathwayData[] = [];
       
       // 使用標準的 SBTi 年減排率 (4.2%)
       const standardAnnualRate = selectedModel.annualReductionRate / 100; // 4.2% -> 0.042
       console.log('標準年均減排率:', (standardAnnualRate * 100).toFixed(1), '%');
       
+      // 計算 SBTi 標準減排率在目標年能達到的實際殘留排放
+      const sbtiReductionFactor = Math.pow(1 - standardAnnualRate, years);
+      const sbtiActualResidualEmissions = totalEmissions * sbtiReductionFactor;
+      const sbtiActualResidualPercentage = (sbtiActualResidualEmissions / totalEmissions) * 100;
+      
+      console.log('SBTi標準減排實際能達到的殘留排放:', {
+        emissions: sbtiActualResidualEmissions,
+        percentage: sbtiActualResidualPercentage.toFixed(1) + '%'
+      });
+      
       for (let i = 0; i <= years; i++) {
         const year = emissionData.baseYear + i;
         
-        // 等比減排：每年減固定百分比 (4.2%)
+        // 標準等比減排：每年減固定百分比 (4.2%)
         const reductionFactor = Math.pow(1 - standardAnnualRate, i);
-        let emissions = totalEmissions * reductionFactor;
-        
-        // 如果計算出的排放量低於最終殘留排放，則使用殘留排放量
-        // 但保持原有的等比減排邏輯直到達到殘留排放
-        if (emissions < finalResidualEmissions) {
-          emissions = finalResidualEmissions;
-        }
-        
+        const emissions = totalEmissions * reductionFactor;
         const reduction = ((totalEmissions - emissions) / totalEmissions) * 100;
         
         pathway.push({
@@ -246,19 +249,6 @@ const CarbonPath = () => {
           reduction: Math.round(reduction * 10) / 10,
           target: Math.round(emissions)
         });
-        
-        // 如果已經達到殘留排放量，後續年份保持不變
-        if (emissions === finalResidualEmissions) {
-          for (let j = i + 1; j <= years; j++) {
-            pathway.push({
-              year: emissionData.baseYear + j,
-              emissions: Math.round(finalResidualEmissions),
-              reduction: Math.round(reduction * 10) / 10,
-              target: Math.round(finalResidualEmissions)
-            });
-          }
-          break;
-        }
       }
       finalPathway = pathway;
     }
@@ -297,13 +287,13 @@ const CarbonPath = () => {
     console.log('生成的完整路徑數據(含歷史):', fullPathway.slice(0, 5)); // 顯示前5年數據
     console.log('最後一年數據:', fullPathway[fullPathway.length - 1]); // 顯示最後一年數據
     
-    // 驗證最終年份是否正確達到殘留排放
+    // 驗證最終年份排放
     const finalYearData = fullPathway[fullPathway.length - 1];
-    const expectedFinalEmissions = finalResidualEmissions;
+    const actualFinalResidualPercentage = (finalYearData.emissions / baseYearEmissions) * 100;
     console.log('驗證最終排放:', {
-      actual: finalYearData.emissions,
-      expected: expectedFinalEmissions,
-      difference: Math.abs(finalYearData.emissions - expectedFinalEmissions)
+      actualEmissions: finalYearData.emissions,
+      actualPercentage: actualFinalResidualPercentage.toFixed(1) + '%',
+      userSetPercentage: emissionData.residualEmissionPercentage + '%'
     });
     
     setPathwayData(fullPathway);
