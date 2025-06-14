@@ -74,10 +74,12 @@ export const calculatePathwayData = (
         // Formula for a linearly decreasing sequence r_t = A - B(t-1) where A is the starting reduction.
         // Sum of reductions must equal R_total_phase2. We solve for B.
         const B = (2 * (D * annualReductionAtTransition - R_total_phase2)) / (D * (D - 1));
+        console.log(`Custom Target - Phase 2: D=${D}, R_total=${R_total_phase2.toFixed(0)}, A(start reduction)=${annualReductionAtTransition.toFixed(0)}, B(slope factor)=${B.toFixed(2)}`);
 
         for (let t = 1; t <= D; t++) {
-          const annualReduction = annualReductionAtTransition - B * (t - 1);
-          currentEmissions -= annualReduction;
+          // Cumulative reduction in phase 2 after t years, calculated from start to avoid iterative errors.
+          const cumulativeReduction = t * annualReductionAtTransition - B * (t * (t - 1) / 2);
+          currentEmissions = emissionsAtNearTermEnd - cumulativeReduction;
           
           path.push({
             year: nearTermTarget.year + t,
@@ -87,14 +89,6 @@ export const calculatePathwayData = (
           });
         }
       }
-    }
-
-    // 確保最終年份精確達到殘留排放量
-    const finalIndex = path.findIndex(p => p.year === targetYear);
-    if (finalIndex !== -1) {
-      path[finalIndex].emissions = residualEmissions;
-      path[finalIndex].reduction = ((totalEmissions - residualEmissions) / totalEmissions) * 100;
-      path[finalIndex].target = residualEmissions;
     }
 
     finalPathway = path.map(p => ({
@@ -213,10 +207,12 @@ export const calculatePathwayData = (
           // Formula for a linearly decreasing sequence r_t = A - B(t-1) where A is the starting reduction.
           // Sum of reductions must equal R_total_phase2. We solve for B.
           const B = (2 * (D * annualReductionAtTransition - R_total_phase2)) / (D * (D - 1));
+          console.log(`SBTi - Phase 2: D=${D}, R_total=${R_total_phase2.toFixed(0)}, A(start reduction)=${annualReductionAtTransition.toFixed(0)}, B(slope factor)=${B.toFixed(2)}`);
 
           for (let t = 1; t <= D; t++) {
-            const annualReduction = annualReductionAtTransition - B * (t - 1);
-            currentEmissions -= annualReduction;
+            // Cumulative reduction in phase 2 after t years, calculated from start to avoid iterative errors.
+            const cumulativeReduction = t * annualReductionAtTransition - B * (t * (t - 1) / 2);
+            currentEmissions = emissionsAt2030 - cumulativeReduction;
 
             pathway.push({
               year: 2030 + t,
@@ -229,14 +225,6 @@ export const calculatePathwayData = (
       }
     }
 
-    // Ensure final year hits residualEmissions exactly to correct for float precision
-    const finalIndex = pathway.findIndex(p => p.year === emissionData.targetYear);
-    if (finalIndex !== -1) {
-      pathway[finalIndex].emissions = residualEmissions;
-      pathway[finalIndex].reduction = ((totalEmissions - residualEmissions) / totalEmissions) * 100;
-      pathway[finalIndex].target = residualEmissions;
-    }
-    
     finalPathway = pathway.map(p => ({
       ...p,
       emissions: Math.round(p.emissions),
