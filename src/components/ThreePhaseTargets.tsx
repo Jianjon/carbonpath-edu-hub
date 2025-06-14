@@ -34,10 +34,18 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
   const nearTermTargetYear = baseYear + nearTermYears;
   const midTermTargetYear = baseYear + midTermYears;
   const nearTermCumulativeReduction = nearTermAnnualRate * nearTermYears;
-  const midTermCumulativeReduction = midTermAnnualRate * midTermYears;
-  const longTermReduction = maxReduction;
+  const midTermCumulativeReduction = midTermCumulativeReduction > nearTermCumulativeReduction 
+    ? midTermCumulativeReduction 
+    : nearTermCumulativeReduction + (midTermAnnualRate * (midTermYears - nearTermYears));
+
+  // 遠期目標計算 - 根據中期目標完成後的剩餘減排量和剩餘時間計算
   const longTermYears = targetYear - baseYear;
-  const longTermAnnualRate = longTermYears > 0 ? longTermReduction / longTermYears : 0;
+  const longTermReduction = maxReduction;
+  const remainingReductionAfterMidTerm = longTermReduction - midTermCumulativeReduction;
+  const remainingYearsAfterMidTerm = targetYear - midTermTargetYear;
+  const longTermAnnualRate = remainingYearsAfterMidTerm > 0 && remainingReductionAfterMidTerm > 0
+    ? remainingReductionAfterMidTerm / remainingYearsAfterMidTerm 
+    : 0;
 
   useEffect(() => {
     validateAndUpdate();
@@ -62,15 +70,28 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
       newErrors.midTermAnnualRate = '年減排率必須大於0%';
     }
 
+    // 重新計算中期累積減排（考慮近期目標基礎）
+    const calculatedMidTermCumulative = nearTermCumulativeReduction + 
+      (midTermAnnualRate * (midTermYears - nearTermYears));
+
     // 驗證累積減排目標
-    if (nearTermCumulativeReduction >= midTermCumulativeReduction) {
-      newErrors.nearTermAnnualRate = '近期累積減排目標必須小於中期累積減排目標';
+    if (nearTermCumulativeReduction >= calculatedMidTermCumulative) {
+      newErrors.midTermAnnualRate = '中期階段的年減排率設定會導致累積減排目標不合理';
     }
-    if (midTermCumulativeReduction >= maxReduction) {
+    if (calculatedMidTermCumulative >= maxReduction) {
       newErrors.midTermAnnualRate = `中期累積減排目標不可超過${maxReduction}%`;
     }
     if (nearTermCumulativeReduction > maxReduction) {
       newErrors.nearTermAnnualRate = `近期累積減排目標不可超過${maxReduction}%`;
+    }
+
+    // 檢查遠期目標是否合理
+    const calculatedLongTermAnnualRate = remainingYearsAfterMidTerm > 0 && remainingReductionAfterMidTerm > 0
+      ? remainingReductionAfterMidTerm / remainingYearsAfterMidTerm 
+      : 0;
+    
+    if (calculatedLongTermAnnualRate > 10) {
+      newErrors.midTermAnnualRate = '目前設定會導致遠期階段年減排率過高（>10%），請調整中期目標';
     }
 
     setErrors(newErrors);
@@ -85,13 +106,13 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
         },
         midTermTarget: { 
           year: midTermTargetYear, 
-          reductionPercentage: midTermCumulativeReduction,
+          reductionPercentage: calculatedMidTermCumulative,
           annualReductionRate: midTermAnnualRate
         },
         longTermTarget: { 
           year: targetYear, 
           reductionPercentage: longTermReduction,
-          annualReductionRate: longTermAnnualRate
+          annualReductionRate: calculatedLongTermAnnualRate
         }
       });
     }
@@ -117,7 +138,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
                   id="nearTermYears"
                   type="number"
                   value={nearTermYears}
-                  onChange={(e) => setNearTermYears(parseInt(e.target.value))}
+                  onChange={(e) => setNearTermYears(parseInt(e.target.value) || 0)}
                   className={errors.nearTermYears ? 'border-red-500' : ''}
                   min="3"
                   max="5"
@@ -136,7 +157,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
                   type="number"
                   step="0.1"
                   value={nearTermAnnualRate}
-                  onChange={(e) => setNearTermAnnualRate(parseFloat(e.target.value))}
+                  onChange={(e) => setNearTermAnnualRate(parseFloat(e.target.value) || 0)}
                   className={errors.nearTermAnnualRate ? 'border-red-500' : ''}
                 />
                 {errors.nearTermAnnualRate && (
@@ -164,10 +185,10 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
                   id="midTermYears"
                   type="number"
                   value={midTermYears}
-                  onChange={(e) => setMidTermYears(parseInt(e.target.value))}
+                  onChange={(e) => setMidTermYears(parseInt(e.target.value) || 0)}
                   className={errors.midTermYears ? 'border-red-500' : ''}
                   min="5"
-                  max="10"
+                  max="15"
                 />
                 {errors.midTermYears && (
                   <p className="text-sm text-red-500 flex items-center gap-1">
@@ -183,7 +204,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
                   type="number"
                   step="0.1"
                   value={midTermAnnualRate}
-                  onChange={(e) => setMidTermAnnualRate(parseFloat(e.target.value))}
+                  onChange={(e) => setMidTermAnnualRate(parseFloat(e.target.value) || 0)}
                   className={errors.midTermAnnualRate ? 'border-red-500' : ''}
                 />
                 {errors.midTermAnnualRate && (
@@ -196,7 +217,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
             </div>
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-sm text-gray-600">
-                目標年：{midTermTargetYear} | 累積減排目標：{midTermCumulativeReduction.toFixed(1)}%
+                目標年：{midTermTargetYear} | 累積減排目標：{(nearTermCumulativeReduction + (midTermAnnualRate * (midTermYears - nearTermYears))).toFixed(1)}%
               </p>
             </div>
           </div>
@@ -206,8 +227,8 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
             <h4 className="font-semibold text-lg">遠期目標（自動計算）</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>時間區間（年）</Label>
-                <Input value={longTermYears} readOnly className="bg-gray-100" />
+                <Label>剩餘時間（年）</Label>
+                <Input value={remainingYearsAfterMidTerm} readOnly className="bg-gray-100" />
               </div>
               <div className="space-y-2">
                 <Label>年減排目標 (%)</Label>
@@ -219,7 +240,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
                 目標年：{targetYear} | 累積減排目標：{longTermReduction}%
                 <br />
                 <span className="text-xs text-gray-500">
-                  自動計算：100% - {residualEmissionPercentage}% = {longTermReduction}%
+                  剩餘減排量：{remainingReductionAfterMidTerm.toFixed(1)}% ÷ 剩餘時間：{remainingYearsAfterMidTerm}年 = {longTermAnnualRate.toFixed(2)}%/年
                 </span>
               </p>
             </div>
@@ -230,7 +251,7 @@ const ThreePhaseTargets: React.FC<ThreePhaseTargetsProps> = ({
             <h4 className="font-semibold text-blue-800 mb-2">目標摘要</h4>
             <div className="text-blue-700 text-sm space-y-1">
               <p>近期目標：{nearTermTargetYear}年累積減排{nearTermCumulativeReduction.toFixed(1)}%（年減排{nearTermAnnualRate}%）</p>
-              <p>中期目標：{midTermTargetYear}年累積減排{midTermCumulativeReduction.toFixed(1)}%（年減排{midTermAnnualRate}%）</p>
+              <p>中期目標：{midTermTargetYear}年累積減排{(nearTermCumulativeReduction + (midTermAnnualRate * (midTermYears - nearTermYears))).toFixed(1)}%（年減排{midTermAnnualRate}%）</p>
               <p>遠期目標：{targetYear}年累積減排{longTermReduction}%（年減排{longTermAnnualRate.toFixed(2)}%）</p>
             </div>
           </div>
