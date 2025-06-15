@@ -1,6 +1,9 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import pdf from "npm:pdf-parse@1.1.1";
+import { Buffer } from "node:buffer";
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -13,41 +16,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Simple PDF text extraction (basic implementation)
+// Use pdf-parse to extract text from a PDF buffer
 async function extractTextFromPDF(fileBuffer: ArrayBuffer): Promise<string> {
-  // This is a simplified implementation
-  // In production, you might want to use a more robust PDF parser
-  const text = new TextDecoder().decode(fileBuffer);
-  // Basic text extraction - remove binary data and keep readable text
-  return text.replace(/[^\x20-\x7E\u4e00-\u9fff]/g, ' ').replace(/\s+/g, ' ').trim();
+  // pdf-parse expects a Buffer, so we convert ArrayBuffer to Buffer
+  const buffer = Buffer.from(fileBuffer);
+  const data = await pdf(buffer);
+  return data.text;
 }
 
 // Split text into chunks with overlap
-function chunkText(text: string, chunkSize: number = 600, overlap: number = 100): string[] {
+function chunkText(text: string, chunkSize: number = 1500, overlap: number = 200): string[] {
   const chunks: string[] = [];
-  const sentences = text.split(/[。！？\n]/);
-  
-  let currentChunk = '';
-  let currentSize = 0;
-  
-  for (const sentence of sentences) {
-    if (currentSize + sentence.length > chunkSize && currentChunk) {
-      chunks.push(currentChunk.trim());
-      // Keep overlap
-      const words = currentChunk.split(' ');
-      const overlapWords = words.slice(-Math.floor(overlap / 10));
-      currentChunk = overlapWords.join(' ') + ' ' + sentence;
-      currentSize = currentChunk.length;
-    } else {
-      currentChunk += sentence + '。';
-      currentSize = currentChunk.length;
-    }
+  if (!text) {
+    return chunks;
   }
-  
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
+  // Normalize whitespace and trim
+  const normalizedText = text.replace(/\s+/g, ' ').trim();
+  let i = 0;
+  while (i < normalizedText.length) {
+    chunks.push(normalizedText.substring(i, i + chunkSize));
+    i += chunkSize - overlap;
   }
-  
   return chunks.filter(chunk => chunk.length > 50); // Filter out very short chunks
 }
 
@@ -101,7 +90,15 @@ serve(async (req) => {
     const fileBuffer = await fileData.arrayBuffer();
     const text = await extractTextFromPDF(fileBuffer);
     
-    if (!text || text.length < 100) {
+    if (!text || text.length < 50) {
+      await supabase
+        .from('document_processing')
+        .update({
+          status: 'failed',
+          error_message: 'No readable text found in document',
+          updated_at: new Date().toISOString()
+        })
+        .eq('document_name', documentName);
       throw new Error('No readable text found in document');
     }
 
@@ -135,9 +132,10 @@ serve(async (req) => {
           });
         
         // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
         console.error(`Error processing chunk ${i}:`, error);
+        // We can decide to continue or stop on chunk error. Let's continue.
       }
     }
 
@@ -164,7 +162,15 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing document:', error);
     
-    const { documentName } = await req.json().catch(() => ({}));
+    // Check if req.json() can be parsed, otherwise documentName will be undefined.
+    let documentName: string | undefined;
+    try {
+      const body = await req.json();
+      documentName = body.documentName;
+    } catch (_) {
+      // Ignore parsing error if body is empty or already consumed
+    }
+    
     if (documentName) {
       await supabase
         .from('document_processing')
