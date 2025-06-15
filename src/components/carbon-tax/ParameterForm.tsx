@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Calculator } from 'lucide-react';
@@ -12,6 +11,7 @@ import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
 import { ReductionModel } from '@/lib/carbon-tax/types';
 import ReductionScenarioChart from './ReductionScenarioChart';
 import ReductionScenarioTable from './ReductionScenarioTable';
+import { steelAnnualReduction, cementAnnualReduction } from '@/lib/carbon-tax/constants';
 
 interface ParameterFormProps {
   form: UseFormReturn<CarbonTaxFormValues>;
@@ -29,9 +29,6 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
     const startYear = new Date().getFullYear();
     const endYear = 2050;
     
-    const steelAnnualReduction = 1 - Math.pow(1 - 0.252, 1 / 5);
-    const cementAnnualReduction = 1 - Math.pow(1 - 0.223, 1 / 5);
-
     let sbtiEmissions = annualEmissions;
     let taiwanEmissions = annualEmissions;
     let steelEmissions = annualEmissions;
