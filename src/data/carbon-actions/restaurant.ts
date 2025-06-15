@@ -1,0 +1,53 @@
+
+import { Action, ActionAngle } from '../../pages/CarbonCredits';
+
+export const restaurantActions: Record<ActionAngle, Action[]> = {
+  '能源管理': [
+    { id: 'rest-en-1', name: '導入高效率LED照明', description: '顯著降低照明電費，提升環境亮度。', investment: '低' },
+    { id: 'rest-en-2', name: '優化廚房排煙系統（變頻）', description: '節省排風機電力，改善廚房空氣品質。', investment: '中' },
+    { id: 'rest-en-3', name: '選用節能烹飪設備（如IH爐、高效率烤箱）', description: '大幅減少烹飪能耗，降低熱負荷。', investment: '中' },
+    { id: 'rest-en-4', name: '冷藏冷凍設備定期除霜與維護', description: '確保設備效率，降低電力耗損。', investment: '低' },
+    { id: 'rest-en-5', name: '安裝智能溫控系統（空調、冰櫃）', description: '精確控制溫度，避免不必要能源浪費。', investment: '中' },
+    { id: 'rest-en-6', name: '定期清洗空調濾網', description: '維持空調效率，降低能耗。', investment: '低' },
+    { id: 'rest-en-7', name: '員工節能行為培訓（隨手關燈、關火）', description: '透過行為改變，積少成多節省能源。', investment: '低' },
+    { id: 'rest-en-8', name: '導入熱回收系統（利用廢熱加熱水）', description: '降低熱水加熱能耗。', investment: '中' },
+    { id: 'rest-en-9', name: '能源監控與分析系統建置', description: '精準掌握能耗狀況，找出節能潛力。', investment: '中' },
+    { id: 'rest-en-10', name: '優先採購綠色電力', description: '降低範疇二排放，提升企業永續形象。', investment: '中' },
+  ],
+  '循環經濟': [
+    { id: 'rest-ci-1', name: '食材廢棄物減量（精準採購、庫存管理）', description: '減少廚餘產生，降低處理成本。', investment: '低' },
+    { id: 'rest-ci-2', name: '廚餘回收再利用（堆肥、養殖）', description: '將廢棄物轉化為資源，減少掩埋量。', investment: '低' },
+    { id: 'rest-ci-3', name: '推廣外帶容器重複使用/自備', description: '減少一次性包材使用，降低資源消耗。', investment: '低' },
+    { id: 'rest-ci-4', name: '餐具洗滌水回收再利用', description: '節省水資源，降低水費。', investment: '中' },
+    { id: 'rest-ci-5', name: '廢油回收再製（生質柴油、皂化）', description: '避免環境污染，創造附加價值。', investment: '低' },
+    { id: 'rest-ci-6', name: '包裝材料減量化與輕量化', description: '減少資源消耗和運輸碳排。', investment: '低' },
+    { id: 'rest-ci-7', name: '導入循環杯或循環餐具系統', description: '減少一次性用品，提升環保形象。', investment: '中' },
+    { id: 'rest-ci-8', name: '食材邊角料再利用（熬湯、製作小吃）', description: '提升食材利用率，減少浪費。', investment: '低' },
+    { id: 'rest-ci-9', name: '廢棄物分類回收與資源化', description: '提高回收率，減少最終廢棄物量。', investment: '低' },
+    { id: 'rest-ci-10', name: '鼓勵顧客剩食打包', description: '減少廚餘產生。', investment: '低' },
+  ],
+  '永續採購': [
+    { id: 'rest-su-1', name: '優先採購在地食材（縮短食物里程）', description: '降低運輸碳排，支持在地農業。', investment: '低' },
+    { id: 'rest-su-2', name: '採購當季食材', description: '減少溫室種植及長途運輸碳排。', investment: '低' },
+    { id: 'rest-su-3', name: '採購有永續認證標章的食材（如有機、友善環境）', description: '確保食材生產過程環境友善。', investment: '中' },
+    { id: 'rest-su-4', name: '優先選擇節能標章設備', description: '從源頭減少能耗，降低營運成本。', investment: '低' },
+    { id: 'rest-su-5', name: '採購可重複使用或回收材質的餐具與耗材', description: '減少一次性資源消耗。', investment: '低' },
+    { id: 'rest-su-6', name: '選擇環保清潔劑與洗劑', description: '減少化學污染，保護環境。', investment: '低' },
+    { id: 'rest-su-7', name: '建立供應商永續評估機制', description: '確保供應鏈符合永續標準。', investment: '中' },
+    { id: 'rest-su-8', name: '避免採購過度包裝的食材或產品', description: '從源頭減少包裝廢棄物。', investment: '低' },
+    { id: 'rest-su-9', name: '採購節水設備（如省水龍頭、省水馬桶）', description: '節省水資源。', investment: '低' },
+    { id: 'rest-su-10', name: '選擇能提供碳足跡資訊的供應商', description: '幫助企業了解自身碳排來源。', investment: '中' },
+  ],
+  '淨零管理': [
+    { id: 'rest-ne-1', name: '制定企業減碳目標與路徑', description: '為減碳行動提供明確方向與依據。', investment: '低' },
+    { id: 'rest-ne-2', name: '導入ISO 14064溫室氣體盤查', description: '系統化計算碳排，找出熱點。', investment: '中' },
+    { id: 'rest-ne-3', name: '建立內部碳管理團隊', description: '專責推動與監控減碳進度。', investment: '低' },
+    { id: 'rest-ne-4', name: '參與綠色能源憑證購買', description: '抵銷電力碳排，加速淨零進程。', investment: '中' },
+    { id: 'rest-ne-5', name: '員工減碳意識提升與參與活動', description: '培養全員減碳文化，落實日常行為。', investment: '低' },
+    { id: 'rest-ne-6', name: '定期發布企業永續報告書（ESG報告）', description: '展現企業社會責任，提升品牌形象。', investment: '中' },
+    { id: 'rest-ne-7', name: '評估導入碳捕捉技術或自然碳匯專案', description: '長期考量，達到範疇一碳排實質減量或抵銷。', investment: '高' },
+    { id: 'rest-ne-8', name: '供應鏈碳排放協作與輔導', description: '推動上游供應商共同減碳。', investment: '中' },
+    { id: 'rest-ne-9', name: '評估導入智慧能源管理系統', description: '精準管理能源，優化減碳效率。', investment: '中' },
+    { id: 'rest-ne-10', name: '探索創新低碳商業模式', description: '從根本上減少碳排，提升競爭力。', investment: '高' },
+  ],
+};
