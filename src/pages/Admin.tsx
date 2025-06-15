@@ -30,7 +30,8 @@ const AdminPage = () => {
         <div className="space-y-8">
           <FileUpload onFileUpload={handleUpload} isUploading={uploading} />
           
-          {hasIncompleteFiles && (
+          {/* 暫時隱藏重新處理按鈕 */}
+          {false && hasIncompleteFiles && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
