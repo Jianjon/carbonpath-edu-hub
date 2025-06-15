@@ -129,7 +129,11 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[420px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dataWithAnnualReduction} syncId="carbonPathwaySync">
+              <AreaChart 
+                data={dataWithAnnualReduction} 
+                syncId="carbonPathwaySync"
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="pathwayGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#1976D2" stopOpacity={0.7}/>
@@ -293,7 +297,11 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
         <CardContent>
             <ChartContainer config={chartConfig} className="h-[260px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dataWithAnnualReduction} syncId="carbonPathwaySync">
+                    <AreaChart 
+                      data={dataWithAnnualReduction} 
+                      syncId="carbonPathwaySync"
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
                         <defs>
                             <linearGradient id="annualReductionGradient" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.7} />

@@ -1,4 +1,3 @@
-
 import type { EmissionData, ReductionModel, CustomTargets, PathwayData } from '../pages/CarbonPath';
 
 export const calculatePathwayData = (
@@ -323,6 +322,24 @@ export const calculatePathwayData = (
     };
   });
   
+  // 強制修正最終年份排放量，確保符合殘留目標
+  const finalYearIndex = fullPathway.findIndex(p => p.year === emissionData.targetYear);
+  if (finalYearIndex !== -1) {
+    const roundedResidualEmissions = Math.round(residualEmissions);
+    if (fullPathway[finalYearIndex].emissions !== roundedResidualEmissions) {
+      console.log(
+        `修正目標年排放量：從 ${fullPathway[finalYearIndex].emissions.toLocaleString()} 調整為 ${roundedResidualEmissions.toLocaleString()}`
+      );
+      fullPathway[finalYearIndex].emissions = roundedResidualEmissions;
+
+      // 因為排放量已更改，重新計算最後一年的年減排量
+      if (finalYearIndex > 0) {
+        const prevYearEmissions = fullPathway[finalYearIndex - 1].emissions;
+        fullPathway[finalYearIndex].annualReduction = prevYearEmissions - roundedResidualEmissions;
+      }
+    }
+  }
+
   // 驗證最終年份排放量
   const finalYearData = fullPathway.find(p => p.year === emissionData.targetYear) || fullPathway[fullPathway.length - 1];
   const actualFinalResidualPercentage = (finalYearData.emissions / baseYearEmissions) * 100;
