@@ -48,39 +48,46 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Long-Term with Linearly Decreasing Annual Reduction for a smooth transition
+    // Phase 2: Long-Term with a parabolic annual reduction for a smooth transition
     const emissionsAtNearTermEnd = tempEmissions;
     const D = targetYear - nearTermTarget.year;
 
     if (D > 0) {
-      console.log("長期減排模式：從近期目標年減排量開始平滑線性遞減");
       const R_total_phase2 = emissionsAtNearTermEnd - residualEmissions;
-      let currentEmissions = emissionsAtNearTermEnd;
+      
+      const lastYearOfPhase1 = path[path.length - 1];
+      // Handle historical data case where path might be shorter
+      const secondToLastYearOfPhase1 = path.length > 1 ? path[path.length - 2] : { emissions: totalEmissions };
+      const annualReductionAtTransition = secondToLastYearOfPhase1.emissions - lastYearOfPhase1.emissions;
 
       if (D === 1) {
-        currentEmissions -= R_total_phase2;
+        // Single year transition
         path.push({
           year: nearTermTarget.year + 1,
-          emissions: currentEmissions,
-          reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-          target: currentEmissions,
+          emissions: residualEmissions,
+          reduction: ((totalEmissions - residualEmissions) / totalEmissions) * 100,
+          target: residualEmissions,
         });
-      } else {
-        // Get the reduction amount of the last year of phase 1 to ensure a smooth transition
-        const lastYearOfPhase1 = path[path.length - 1];
-        const secondToLastYearOfPhase1 = path[path.length - 2];
-        const annualReductionAtTransition = secondToLastYearOfPhase1.emissions - lastYearOfPhase1.emissions;
-
-        // Formula for a linearly decreasing sequence r_t = A - B(t-1) where A is the starting reduction.
-        // Sum of reductions must equal R_total_phase2. We solve for B.
-        const B = (2 * (D * annualReductionAtTransition - R_total_phase2)) / (D * (D - 1));
-        console.log(`Custom Target - Phase 2: D=${D}, R_total=${R_total_phase2.toFixed(0)}, A(start reduction)=${annualReductionAtTransition.toFixed(0)}, B(slope factor)=${B.toFixed(2)}`);
+      } else if (D === 2) {
+        // Fallback to linear decrease for D=2 to avoid singularity in parabolic formula
+        console.log("長期減排模式：線性遞減（D=2 後備）");
+        const B = 2 * annualReductionAtTransition - R_total_phase2; // Simplified from B = 2*(D*A-R)/(D*(D-1)) for D=2
+        const r1 = annualReductionAtTransition;
+        const r2 = annualReductionAtTransition - B;
+        path.push({ year: nearTermTarget.year + 1, emissions: emissionsAtNearTermEnd - r1, reduction: ((totalEmissions - (emissionsAtNearTermEnd - r1)) / totalEmissions) * 100, target: emissionsAtNearTermEnd - r1 });
+        path.push({ year: nearTermTarget.year + 2, emissions: emissionsAtNearTermEnd - r1 - r2, reduction: ((totalEmissions - (emissionsAtNearTermEnd - r1 - r2)) / totalEmissions) * 100, target: emissionsAtNearTermEnd - r1 - r2 });
+      } else { // D > 2, use Parabolic model
+        console.log("長期減排模式：拋物線型年減排量");
+        // Symmetric parabola where r(1) = r(D) = annualReductionAtTransition
+        const a = 6 * (annualReductionAtTransition * D - R_total_phase2) / (D * (D - 1) * (D - 2));
+        const b = -a * (D + 1);
+        const c = annualReductionAtTransition - a - b;
+        console.log(`Custom Target - Phase 2 Parabolic: D=${D}, R_total=${R_total_phase2.toFixed(0)}, A_trans=${annualReductionAtTransition.toFixed(0)}, a=${a.toFixed(2)}, b=${b.toFixed(2)}, c=${c.toFixed(2)}`);
 
         for (let t = 1; t <= D; t++) {
-          // Cumulative reduction in phase 2 after t years, calculated from start to avoid iterative errors.
-          const cumulativeReduction = t * annualReductionAtTransition - B * (t * (t - 1) / 2);
-          currentEmissions = emissionsAtNearTermEnd - cumulativeReduction;
-          
+          // Cumulative reduction avoids iterative errors
+          const cumulativeReduction = a * t * (t + 1) * (2 * t + 1) / 6 + b * t * (t + 1) / 2 + c * t;
+          const currentEmissions = emissionsAtNearTermEnd - cumulativeReduction;
           path.push({
             year: nearTermTarget.year + t,
             emissions: currentEmissions,
@@ -151,9 +158,9 @@ export const calculatePathwayData = (
     finalPathway = pathway;
   } 
   
-  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後線性遞減年減排量
+  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後拋物線型年減排量
   else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量線性遞減');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量呈拋物線');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -178,7 +185,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Smoothed reduction from 2031 to target year for a smooth transition
+    // Phase 2: Parabolic reduction from 2031 to target year
     if (emissionData.targetYear > 2030) {
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
@@ -186,41 +193,45 @@ export const calculatePathwayData = (
       console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
-        console.log("SBTi 長期減排模式：從2030年減排量開始平滑線性遞減");
         const R_total_phase2 = emissionsAt2030 - residualEmissions;
-        let currentEmissions = emissionsAt2030;
+        
+        const lastYearOfPhase1 = pathway[pathway.length - 1];
+        const secondToLastYearOfPhase1 = pathway.length > 1 ? pathway[pathway.length - 2] : { year: emissionData.baseYear, emissions: totalEmissions };
+        const annualReductionAtTransition = secondToLastYearOfPhase1.emissions - lastYearOfPhase1.emissions;
 
         if (D === 1) {
-          currentEmissions -= R_total_phase2;
           pathway.push({
             year: 2031,
-            emissions: currentEmissions,
-            reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-            target: currentEmissions,
+            emissions: residualEmissions,
+            reduction: ((totalEmissions - residualEmissions) / totalEmissions) * 100,
+            target: residualEmissions,
           });
-        } else {
-          // Get the reduction amount of the last year of phase 1 to ensure a smooth transition.
-          const lastYearOfPhase1 = pathway[pathway.length - 1];
-          const secondToLastYearOfPhase1 = pathway[pathway.length - 2];
-          const annualReductionAtTransition = secondToLastYearOfPhase1.emissions - lastYearOfPhase1.emissions;
+        } else if (D === 2) {
+          // Fallback to linear decrease for D=2
+          console.log("SBTi 長期減排模式：線性遞減（D=2 後備）");
+          const B = 2 * annualReductionAtTransition - R_total_phase2;
+          const r1 = annualReductionAtTransition;
+          const r2 = annualReductionAtTransition - B;
+          pathway.push({ year: 2031, emissions: emissionsAt2030 - r1, reduction: ((totalEmissions - (emissionsAt2030 - r1)) / totalEmissions) * 100, target: emissionsAt2030 - r1 });
+          pathway.push({ year: 2032, emissions: emissionsAt2030 - r1 - r2, reduction: ((totalEmissions - (emissionsAt2030 - r1 - r2)) / totalEmissions) * 100, target: emissionsAt2030 - r1 - r2 });
+        } else { // D > 2, use Parabolic model
+            console.log("SBTi 長期減排模式：拋物線型年減排量");
+            const a = 6 * (annualReductionAtTransition * D - R_total_phase2) / (D * (D - 1) * (D - 2));
+            const b = -a * (D + 1);
+            const c = annualReductionAtTransition - a - b;
+            console.log(`SBTi - Phase 2 Parabolic: D=${D}, R_total=${R_total_phase2.toFixed(0)}, A_trans=${annualReductionAtTransition.toFixed(0)}, a=${a.toFixed(2)}, b=${b.toFixed(2)}, c=${c.toFixed(2)}`);
 
-          // Formula for a linearly decreasing sequence r_t = A - B(t-1) where A is the starting reduction.
-          // Sum of reductions must equal R_total_phase2. We solve for B.
-          const B = (2 * (D * annualReductionAtTransition - R_total_phase2)) / (D * (D - 1));
-          console.log(`SBTi - Phase 2: D=${D}, R_total=${R_total_phase2.toFixed(0)}, A(start reduction)=${annualReductionAtTransition.toFixed(0)}, B(slope factor)=${B.toFixed(2)}`);
-
-          for (let t = 1; t <= D; t++) {
-            // Cumulative reduction in phase 2 after t years, calculated from start to avoid iterative errors.
-            const cumulativeReduction = t * annualReductionAtTransition - B * (t * (t - 1) / 2);
-            currentEmissions = emissionsAt2030 - cumulativeReduction;
-
-            pathway.push({
-              year: 2030 + t,
-              emissions: currentEmissions,
-              reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-              target: currentEmissions,
-            });
-          }
+            for (let t = 1; t <= D; t++) {
+              // Cumulative reduction avoids iterative errors
+              const cumulativeReduction = a * t * (t + 1) * (2 * t + 1) / 6 + b * t * (t + 1) / 2 + c * t;
+              const currentEmissions = emissionsAt2030 - cumulativeReduction;
+              pathway.push({
+                year: 2030 + t,
+                emissions: currentEmissions,
+                reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
+                target: currentEmissions,
+              });
+            }
         }
       }
     }
