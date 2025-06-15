@@ -1,39 +1,9 @@
-import type { EmissionData, ReductionModel, CustomTargets, PathwayData } from '../pages/CarbonPath';
 
-/**
- * 後備方案：計算平滑增長的年度減排量
- * 當U形曲線無法達成時（例如前期減排量過低），使用此模型確保減排路徑平滑向上，避免初期出現不合理的峰值。
- */
-const calculateGrowthReductions = (D: number, totalReductionNeeded: number): number[] => {
-    if (D <= 0) return [];
-    // If reduction is not needed or even negative, distribute linearly.
-    if (totalReductionNeeded <= 0) {
-        return Array(D).fill(totalReductionNeeded / D || 0);
-    }
-    
-    // 使用二次方增長 f(t) = t^2 + 1，確保初始有減排量且平滑增長
-    const baseReductions = Array.from({ length: D }, (_, t) => t ** 2 + 1);
-
-    const totalBaseReduction = baseReductions.reduce((sum, val) => sum + val, 0);
-
-    // This should not happen with t^2+1 but as a safeguard.
-    if (totalBaseReduction <= 0) {
-        return Array(D).fill(totalReductionNeeded / D);
-    }
-
-    const scalingFactor = totalReductionNeeded / totalBaseReduction;
-    
-    const finalReductions = baseReductions.map(base => base * scalingFactor);
-    
-    console.log(
-        `長期階段後備方案：使用平滑增長模型（因無法達成U形）。` +
-        `第一年減排 ${finalReductions[0]?.toFixed(0)}, ` +
-        `最後一年減排 ${finalReductions[D - 1]?.toFixed(0)}`
-    );
-
-    return finalReductions;
-};
-
+import type { EmissionData, ReductionModel, CustomTargets, PathwayData } from '../types/carbon';
+import { calculateCustomTargetPath } from './pathway/customTargetPath';
+import { calculateTaiwanTargetPath } from './pathway/taiwanTargetPath';
+import { calculateSbtiPath } from './pathway/sbtiPath';
+import { postProcessPathway } from './pathway/postProcessPathway';
 
 export const calculatePathwayData = (
   emissionData: EmissionData,
@@ -43,7 +13,6 @@ export const calculatePathwayData = (
   const totalEmissions = emissionData.scope1 + emissionData.scope2;
   const years = emissionData.targetYear - emissionData.baseYear;
   
-  // 残留排放量是用戶設定的目標終點（固定不變）
   const residualEmissions = totalEmissions * (emissionData.residualEmissionPercentage / 100);
   
   console.log('=== 減碳路徑規劃邏輯 ===');
@@ -52,253 +21,38 @@ export const calculatePathwayData = (
   console.log('用戶設定殘留比例:', emissionData.residualEmissionPercentage, '%');
   console.log('需要減排的總量:', (totalEmissions - residualEmissions).toLocaleString(), 'tCO2e');
   
-  let finalPathway: PathwayData[] = [];
+  let calculatedPathway: PathwayData[] = [];
 
-  // 自訂減碳目標 - 混合模型
-  if (selectedModel.id === 'custom-target' && customTargets.nearTermTarget && customTargets.longTermTarget) {
-    console.log('使用自訂目標（混合模型）- 從基線到殘留量');
-    
-    const path: PathwayData[] = [];
-    let tempEmissions = totalEmissions;
-
-    const { baseYear, targetYear } = emissionData;
-    const { nearTermTarget } = customTargets;
-    const nearTermAnnualRate = nearTermTarget.annualReductionRate / 100;
-
-    // Phase 1: Near-Term Geometric Reduction (此處已是等比減少)
-    path.push({
-      year: baseYear,
-      emissions: tempEmissions,
-      reduction: 0,
-      target: tempEmissions
-    });
-
-    for (let year = baseYear + 1; year <= nearTermTarget.year; year++) {
-      tempEmissions *= (1 - nearTermAnnualRate);
-      path.push({
-        year,
-        emissions: tempEmissions,
-        reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
-        target: tempEmissions,
-      });
-    }
-
-    // Phase 2: Long-Term with growth reduction (向上凸)
-    const emissionsAtNearTermEnd = tempEmissions;
-    const D = targetYear - nearTermTarget.year;
-
-    if (D > 0) {
-      const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
-      
-      console.log("自訂長期減排：使用平滑增長模型（向上凸）");
-      const annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
-        
-      console.log(`長期減排總量: ${totalReductionNeeded.toFixed(0)} tCO2e`);
-      console.log(`長期第一年減排量: ${annualReductions[0]?.toFixed(0) ?? 0} tCO2e`);
-      console.log(`長期最後一年減排量: ${annualReductions[D - 1]?.toFixed(0) ?? 0} tCO2e`);
-
-      // Apply reductions to build the pathway
-      let currentEmissions = emissionsAtNearTermEnd;
-      for (let t = 0; t < D; t++) {
-        currentEmissions -= annualReductions[t];
-        
-        if (t === D - 1) {
-          currentEmissions = residualEmissions;
-        }
-        
-        path.push({
-          year: nearTermTarget.year + 1 + t,
-          emissions: currentEmissions,
-          reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-          target: currentEmissions,
-        });
-      }
-    }
-
-    finalPathway = path.map(p => ({
-      ...p,
-      emissions: Math.round(p.emissions),
-      reduction: Math.round(p.reduction * 10) / 10,
-      target: Math.round(p.target as number),
-    }));
-  } 
-  
-  // 台灣減碳目標 - 階段性線性減排到殘留量
-  else if (selectedModel.id === 'taiwan-target') {
-    console.log('使用台灣目標 - 從基線到殘留量:', residualEmissions.toLocaleString());
-    let pathway: PathwayData[] = [];
-    
-    const totalReductionNeeded = totalEmissions - residualEmissions;
-    
-    for (let i = 0; i <= years; i++) {
-      const currentYear = emissionData.baseYear + i;
-      let targetEmissions;
-
-      if (currentYear === emissionData.baseYear) {
-        targetEmissions = totalEmissions;
-      } else if (currentYear === emissionData.targetYear) {
-        targetEmissions = residualEmissions;
-      } else {
-        let reductionProgress = 0;
-        
-        if (currentYear <= 2030) {
-          reductionProgress = (currentYear - emissionData.baseYear) / (2030 - emissionData.baseYear) * 0.28;
-        } else if (currentYear <= 2032) {
-          reductionProgress = 0.28 + (currentYear - 2030) / (2032 - 2030) * (0.32 - 0.28);
-        } else if (currentYear <= 2035) {
-          reductionProgress = 0.32 + (currentYear - 2032) / (2035 - 2032) * (0.38 - 0.32);
-        } else {
-          const finalReductionRatio = (totalEmissions - residualEmissions) / totalEmissions;
-          reductionProgress = 0.38 + (currentYear - 2035) / (emissionData.targetYear - 2035) * (finalReductionRatio - 0.38);
-        }
-        
-        targetEmissions = totalEmissions * (1 - reductionProgress);
-        targetEmissions = Math.max(targetEmissions, residualEmissions);
-      }
-      
-      const actualReduction = ((totalEmissions - targetEmissions) / totalEmissions) * 100;
-
-      pathway.push({
-        year: currentYear,
-        emissions: Math.round(targetEmissions),
-        reduction: Math.round(actualReduction * 10) / 10,
-        target: Math.round(targetEmissions)
-      });
-    }
-    finalPathway = pathway;
-  } 
-  
-  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後採平滑增長
-  else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採平滑增長');
-    let pathway: PathwayData[] = [];
-    let tempEmissions = totalEmissions;
-
-    pathway.push({
-      year: emissionData.baseYear,
-      emissions: tempEmissions,
-      reduction: 0,
-      target: tempEmissions,
-    });
-
-    // Phase 1: Geometric reduction until 2030 (or target year if sooner)
-    const sbtiRate = 0.042; // 4.2%
-    const endPhase1Year = Math.min(2030, emissionData.targetYear);
-    
-    for (let year = emissionData.baseYear + 1; year <= endPhase1Year; year++) {
-      tempEmissions *= (1 - sbtiRate);
-      pathway.push({
-        year,
-        emissions: tempEmissions,
-        reduction: ((totalEmissions - tempEmissions) / totalEmissions) * 100,
-        target: tempEmissions
-      });
-    }
-
-    // Phase 2: Growth reduction from 2031 to target year
-    if (emissionData.targetYear > 2030) {
-      const emissionsAt2030 = tempEmissions;
-      const D = emissionData.targetYear - 2030;
-      
-      console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
-
-      if (D > 0) {
-        const totalReductionNeeded = emissionsAt2030 - residualEmissions;
-        
-        console.log("SBTi 長期減排模式：使用平滑增長模型（向上凸）");
-        const annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
-
-        // Apply reductions
-        let currentEmissions = emissionsAt2030;
-        for (let t = 0; t < D; t++) {
-          currentEmissions -= annualReductions[t];
-          
-          if (t === D - 1) {
-            currentEmissions = residualEmissions;
-          }
-
-          pathway.push({
-            year: 2031 + t,
-            emissions: currentEmissions,
-            reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-            target: currentEmissions,
-          });
-        }
-      }
-    }
-
-    finalPathway = pathway.map(p => ({
-      ...p,
-      emissions: Math.round(p.emissions),
-      reduction: Math.round(p.reduction! * 10) / 10,
-      target: Math.round(p.target ? p.target : p.emissions)
-    }));
-  }
-
-  // 添加歷史數據
-  const historicalPathwayData: PathwayData[] = (emissionData.historicalData || [])
-    .map(d => ({
-      year: d.year,
-      emissions: d.emissions,
-      reduction: undefined,
-      target: undefined,
-    }))
-    .sort((a, b) => a.year - b.year);
-    
-  let fullPathway = [...historicalPathwayData, ...finalPathway];
-  
-  const baseYearEmissions = emissionData.scope1 + emissionData.scope2;
-  fullPathway = fullPathway.map((dataPoint, index, arr) => {
-    let annualReduction: number | undefined = undefined;
-    if (index > 0 && arr[index - 1].emissions) {
-      const prevEmissions = arr[index - 1].emissions;
-      // Handle cases where emissions might not be a number
-      if (typeof prevEmissions === 'number' && typeof dataPoint.emissions === 'number') {
-        annualReduction = prevEmissions - dataPoint.emissions;
-      }
-    }
-
-    let remainingPercentage: number | undefined = undefined;
-    if (dataPoint.year >= emissionData.baseYear && typeof dataPoint.emissions === 'number') {
-      remainingPercentage = (dataPoint.emissions / baseYearEmissions) * 100;
-    }
-
-    return {
-      ...dataPoint,
-      annualReduction,
-      remainingPercentage,
-    };
-  });
-  
-  // 強制修正最終年份排放量，確保符合殘留目標 - This block is no longer needed with the scaling factor method.
-  const finalYearIndex = fullPathway.findIndex(p => p.year === emissionData.targetYear);
-  if (finalYearIndex !== -1) {
-    const roundedResidualEmissions = Math.round(residualEmissions);
-    if (fullPathway[finalYearIndex].emissions !== roundedResidualEmissions) {
-      console.log(
-        `最終路徑驗證：修正目標年 ${fullPathway[finalYearIndex].year} 的排放量，從 ${fullPathway[finalYearIndex].emissions.toLocaleString()} 調整為 ${roundedResidualEmissions.toLocaleString()}`
+  switch (selectedModel.id) {
+    case 'custom-target':
+      calculatedPathway = calculateCustomTargetPath(
+        emissionData, 
+        customTargets, 
+        totalEmissions, 
+        residualEmissions
       );
-      // Ensure the final point is exactly the target
-      fullPathway[finalYearIndex].emissions = roundedResidualEmissions;
-      
-      // Recalculate last annual reduction
-      if (finalYearIndex > 0) {
-        const prevYearEmissions = fullPathway[finalYearIndex - 1].emissions;
-        fullPathway[finalYearIndex].annualReduction = prevYearEmissions - roundedResidualEmissions;
-        fullPathway[finalYearIndex].remainingPercentage = (roundedResidualEmissions / baseYearEmissions) * 100;
-      }
-    }
+      break;
+    case 'taiwan-target':
+      calculatedPathway = calculateTaiwanTargetPath(
+        emissionData,
+        totalEmissions,
+        residualEmissions,
+        years
+      );
+      break;
+    default: // Assume SBTi is the default/fallback
+      calculatedPathway = calculateSbtiPath(
+        emissionData,
+        totalEmissions,
+        residualEmissions
+      );
+      break;
   }
-
-
-  // 驗證最終年份排放量
-  const finalYearData = fullPathway.find(p => p.year === emissionData.targetYear) || fullPathway[fullPathway.length - 1];
-  const actualFinalResidualPercentage = (finalYearData.emissions / baseYearEmissions) * 100;
-  console.log('=== 最終驗證 ===');
-  console.log('最終排放量:', finalYearData.emissions.toLocaleString(), 'tCO2e');
-  console.log('實際殘留比例:', actualFinalResidualPercentage.toFixed(1) + '%');
-  console.log('用戶設定比例:', emissionData.residualEmissionPercentage + '%');
-  console.log('是否達到目標:', Math.abs(actualFinalResidualPercentage - emissionData.residualEmissionPercentage) < 0.2);
-
-  return fullPathway;
+  
+  return postProcessPathway(
+    calculatedPathway, 
+    emissionData, 
+    totalEmissions, 
+    residualEmissions
+  );
 };

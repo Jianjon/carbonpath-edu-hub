@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -10,63 +9,12 @@ import ReportExport from '../components/ReportExport';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { calculatePathwayData } from '../lib/pathwayUtils';
-
-export interface EmissionData {
-  scope1: number;
-  scope2: number;
-  baseYear: number;
-  targetYear: number;
-  residualEmissionPercentage: number;
-  decarbonModel: string;
-  reTargetYear?: number;
-  renewableTargetType?: string;
-  historicalData?: { year: number; emissions: number }[];
-  nearTermTarget?: {
-    year: number;
-    reductionPercentage: number;
-    annualReductionRate: number;
-  };
-  midTermTarget?: {
-    year: number;
-    reductionPercentage: number;
-    annualReductionRate: number;
-  };
-  longTermTarget?: {
-    year: number;
-    reductionPercentage: number;
-    annualReductionRate: number;
-  };
-  adjustedLongTermAnnualRate?: number;
-}
-
-export interface ReductionModel {
-  id: string;
-  name: string;
-  description: string;
-  targetReduction: number; // percentage
-  annualReductionRate: number; // percentage per year
-}
-
-export interface PathwayData {
-  year: number;
-  emissions: number;
-  reduction?: number;
-  target?: number;
-  annualReduction?: number;
-  remainingPercentage?: number;
-}
-
-export interface CustomTargetPhase {
-  year: number;
-  reductionPercentage: number;
-  annualReductionRate: number;
-}
-
-export interface CustomTargets {
-  nearTermTarget?: CustomTargetPhase;
-  midTermTarget?: CustomTargetPhase;
-  longTermTarget?: CustomTargetPhase;
-}
+import type { 
+  EmissionData, 
+  ReductionModel, 
+  PathwayData, 
+  CustomTargets 
+} from '../types/carbon';
 
 const CarbonPath = () => {
   const [step, setStep] = useState(1);
