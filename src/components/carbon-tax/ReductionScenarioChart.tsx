@@ -10,6 +10,8 @@ interface ChartData {
     none: number;
     sbti: number;
     taiwan: number;
+    steel: number;
+    cement: number;
 }
 
 interface ReductionScenarioChartProps {
@@ -21,6 +23,8 @@ const chartConfig = {
     none: { label: "無特定減量計畫", color: "#9ca3af" }, // gray-400
     sbti: { label: "SBTi 1.5°C 路徑", color: "#3b82f6" }, // blue-500
     taiwan: { label: "台灣淨零路徑", color: "#16a34a" }, // green-600
+    steel: { label: "鋼鐵業路徑", color: "#ef4444" }, // red-500
+    cement: { label: "水泥業路徑", color: "#f97316" }, // orange-500
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -48,7 +52,7 @@ const ReductionScenarioChart: React.FC<ReductionScenarioChartProps> = ({ data, r
     <Card>
       <CardHeader>
         <CardTitle>減量路徑比較圖 (至2050年)</CardTitle>
-        <CardDescription>比較不同減量情境下的排放趨勢。您目前的選擇是：<span className="font-semibold">{chartConfig[reductionModel].label}</span></CardDescription>
+        <CardDescription>比較不同減量情境下的排放趨勢。您目前的選擇是：<span className="font-semibold">{chartConfig[reductionModel]?.label ?? ''}</span></CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -63,6 +67,8 @@ const ReductionScenarioChart: React.FC<ReductionScenarioChartProps> = ({ data, r
               <Area type="monotone" dataKey="none" name={chartConfig.none.label} stroke={chartConfig.none.color} fill={chartConfig.none.color} fillOpacity={reductionModel === 'none' ? 0.2 : 0.05} strokeWidth={reductionModel === 'none' ? 2.5 : 1.5} strokeDasharray={"5 5"} />
               <Area type="monotone" dataKey="sbti" name={chartConfig.sbti.label} stroke={chartConfig.sbti.color} fill={chartConfig.sbti.color} fillOpacity={reductionModel === 'sbti' ? 0.3 : 0.1} strokeWidth={reductionModel === 'sbti' ? 2.5 : 1.5} />
               <Area type="monotone" dataKey="taiwan" name={chartConfig.taiwan.label} stroke={chartConfig.taiwan.color} fill={chartConfig.taiwan.color} fillOpacity={reductionModel === 'taiwan' ? 0.3 : 0.1} strokeWidth={reductionModel === 'taiwan' ? 2.5 : 1.5} />
+              <Area type="monotone" dataKey="steel" name={chartConfig.steel.label} stroke={chartConfig.steel.color} fill={chartConfig.steel.color} fillOpacity={reductionModel === 'steel' ? 0.3 : 0.1} strokeWidth={reductionModel === 'steel' ? 2.5 : 1.5} />
+              <Area type="monotone" dataKey="cement" name={chartConfig.cement.label} stroke={chartConfig.cement.color} fill={chartConfig.cement.color} fillOpacity={reductionModel === 'cement' ? 0.3 : 0.1} strokeWidth={reductionModel === 'cement' ? 2.5 : 1.5} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartContainer>

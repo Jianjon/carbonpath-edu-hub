@@ -19,6 +19,8 @@ const reductionModelLabels: Record<ReductionModel, string> = {
   none: '無特定減量計畫',
   sbti: 'SBTi 1.5°C 路徑 (年減4.2%)',
   taiwan: '台灣淨零路徑 (年減約2.8%)',
+  steel: '鋼鐵業指定削減路徑 (年減約5.7%)',
+  cement: '水泥業指定削減路徑 (年減約5.0%)',
 };
 
 const ParameterSummary = ({ formValues, reductionModel, onEdit, leakageCoefficient, setLeakageCoefficient }: ParameterSummaryProps) => {

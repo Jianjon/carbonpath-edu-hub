@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Calculator } from 'lucide-react';
@@ -27,14 +28,21 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
     const data = [];
     const startYear = new Date().getFullYear();
     const endYear = 2050;
+    
+    const steelAnnualReduction = 1 - Math.pow(1 - 0.252, 1 / 5);
+    const cementAnnualReduction = 1 - Math.pow(1 - 0.223, 1 / 5);
 
     let sbtiEmissions = annualEmissions;
     let taiwanEmissions = annualEmissions;
+    let steelEmissions = annualEmissions;
+    let cementEmissions = annualEmissions;
 
     for (let year = startYear; year <= endYear; year++) {
         if (year > startYear) {
             sbtiEmissions *= (1 - 0.042);
             taiwanEmissions *= (1 - 0.028);
+            steelEmissions *= (1 - steelAnnualReduction);
+            cementEmissions *= (1 - cementAnnualReduction);
         }
 
         data.push({
@@ -42,6 +50,8 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
             none: Math.round(annualEmissions),
             sbti: Math.round(sbtiEmissions),
             taiwan: Math.round(taiwanEmissions),
+            steel: Math.round(steelEmissions),
+            cement: Math.round(cementEmissions),
         });
     }
     return data;
@@ -99,6 +109,14 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="taiwan" id="taiwan" />
                   <Label htmlFor="taiwan">台灣淨零路徑 (年減約2.8%)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="steel" id="steel" />
+                  <Label htmlFor="steel">鋼鐵業指定削減路徑 (年減約5.7%)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cement" id="cement" />
+                  <Label htmlFor="cement">水泥業指定削減路徑 (年減約5.0%)</Label>
                 </div>
               </RadioGroup>
             </FormItem>

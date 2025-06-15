@@ -1,3 +1,4 @@
+
 import { useState, useMemo, ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +18,7 @@ interface Rate {
   description: ReactNode;
 }
 
-export type ReductionModel = 'none' | 'sbti' | 'taiwan';
+export type ReductionModel = 'none' | 'sbti' | 'taiwan' | 'steel' | 'cement';
 
 const rates: Rate[] = [
     {
@@ -70,6 +71,10 @@ const rates: Rate[] = [
     },
 ];
 
+// Based on 2030 targets (5 years from 2025)
+const steelAnnualReduction = 1 - Math.pow(1 - 0.252, 1 / 5); // ~5.7%
+const cementAnnualReduction = 1 - Math.pow(1 - 0.223, 1 / 5); // ~5.0%
+
 const CarbonTax = () => {
   const [step, setStep] = useState(1);
   const [selectedRate, setSelectedRate] = useState(rates[0].value);
@@ -108,6 +113,12 @@ const CarbonTax = () => {
                 break;
             case 'taiwan':
                 currentEmissions *= (1 - 0.028); // Simplified Taiwan Target: ~2.8% annual reduction
+                break;
+            case 'steel':
+                currentEmissions *= (1 - steelAnnualReduction);
+                break;
+            case 'cement':
+                currentEmissions *= (1 - cementAnnualReduction);
                 break;
             case 'none':
             default:
