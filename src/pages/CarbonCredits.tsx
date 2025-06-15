@@ -68,14 +68,14 @@ const CarbonActions = () => {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
 
-      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 flex justify-center items-center gap-2">
               <Puzzle className="h-10 w-10" />
               減碳行動
             </h1>
-            <p className="text-xl text-green-100 max-w-2xl mx-auto">
+            <p className="text-xl text-orange-100 max-w-2xl mx-auto">
               探索符合您產業與規模的減碳方案，從四大面向建立您的永續策略。
             </p>
           </div>
@@ -87,13 +87,23 @@ const CarbonActions = () => {
             <InfoCard
                 icon={Puzzle}
                 title="減碳行動功能說明"
-                description="此模組旨在協助您根據產業特性、預算規模與執行資源，探索並選擇最適合的減碳行動方案。透過系統性的四大面向分類，您可以建立一份具體、可行的行動計畫，並將其匯出作為內部溝通與執行的依據。"
-                themeColor="green"
+                description={
+                    <span>
+                        此功能旨在協助企業根據自身情況，系統化地規劃減碳策略。您可以：
+                        <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li><b>設定條件：</b>首先選擇您的產業類別與預算範圍，系統將為您篩選合適的行動方案。</li>
+                            <li><b>探索行動：</b>從「能源管理」、「循環經濟」、「永續採購」、「淨零管理」四大面向，探索具體的減碳作法與其效益。</li>
+                            <li><b>建立計畫：</b>挑選您感興趣的行動，組成一份客製化的減碳行動計畫。</li>
+                            <li><b>分析與匯出：</b>系統將產生效益分析圖表，並讓您匯出完整的計畫，以利於內部溝通和推動執行。</li>
+                        </ul>
+                    </span>
+                }
+                themeColor="orange"
                 className="mb-8"
             />
         )}
         
-        <Stepper currentStep={step} steps={carbonActionsSteps} themeColor="green" />
+        <Stepper currentStep={step} steps={carbonActionsSteps} themeColor="orange" />
 
         <div className="mt-8">
           {step === 1 && <CriteriaSelection onNext={handleCriteriaSelect} />}
