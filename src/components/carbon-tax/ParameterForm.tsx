@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Calculator } from 'lucide-react';
@@ -110,16 +109,6 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
                     {reductionModel !== 'none' && <ReductionScenarioTable data={tableData} />}
                 </div>
             )}
-
-            <FormField control={form.control} name="isHighLeakageRisk" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                    <FormLabel>是否為高碳洩漏風險事業？</FormLabel>
-                    <CardDescription>若適用，碳費計算將採用 0.2 優惠係數。</CardDescription>
-                </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-              </FormItem>
-             )} />
           </form>
         </Form>
       </CardContent>

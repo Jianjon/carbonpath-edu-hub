@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReductionModel } from '@/pages/CarbonTax';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface Rate {
   value: number;
@@ -24,17 +26,18 @@ interface ResultsProps {
   setSelectedRate: (rate: number) => void;
   feeProjection: FeeProjection[];
   isHighLeakageRisk: boolean;
+  setIsHighLeakageRisk: (isHigh: boolean) => void;
   reductionModel: ReductionModel;
 }
 
-const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, isHighLeakageRisk, reductionModel }: ResultsProps) => {
+const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, isHighLeakageRisk, setIsHighLeakageRisk, reductionModel }: ResultsProps) => {
   const totalFee = feeProjection.reduce((acc, item) => acc + item.fee, 0);
 
   return (
     <Card className="bg-white shadow-sm">
       <CardHeader>
         <CardTitle>碳費試算與三種情境比較</CardTitle>
-        <CardDescription>點擊下方按鈕切換不同費率情境，查看對應的碳費成本。</CardDescription>
+        <CardDescription>點擊下方按鈕切換不同費率情境，或啟用高碳洩漏風險模式，查看對應的碳費成本。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-3 gap-2">
@@ -54,6 +57,18 @@ const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, isHighLe
           <p className="text-sm text-gray-500 mt-2">
             於 {rates.find(r => r.value === selectedRate)?.label} 情境下
           </p>
+        </div>
+
+        <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+                <Label htmlFor="high-leakage-switch" className="font-semibold">啟用高碳洩漏風險模式</Label>
+                <p className="text-sm text-muted-foreground">開啟後將依此特定情境重新計算碳費。</p>
+            </div>
+            <Switch
+                id="high-leakage-switch"
+                checked={isHighLeakageRisk}
+                onCheckedChange={setIsHighLeakageRisk}
+            />
         </div>
 
         <Card>
@@ -108,7 +123,12 @@ const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, isHighLe
             <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
             <div>
                 <h5 className="font-semibold">高碳洩漏風險模式已啟用</h5>
-                <p className="text-sm">此模式下，碳費公式為「(年排放量 × 係數0.2) × 費率」。這是為維持產業競爭力所設計的過渡期優惠，25,000噸的起徵門檻在此模式下不適用。</p>
+                <p className="text-sm mt-2">
+                    <b>適用對象：</b>由環境部認定的高度出口導向、易受國際碳成本影響之產業，如鋼鐵、水泥、石化等。
+                </p>
+                <p className="text-sm mt-2">
+                    <b>計算方式：</b>此模式下收費排放量為「<b>年排放量 × 碳洩漏風險係數</b>」。此係數第一階段依風險級距為 0.2、0.4 或 0.6，並將逐期調升。本模擬器使用 <b>0.2</b> 進行計算，且 25,000 噸的起徵門檻不適用。
+                </p>
             </div>
           </div>
         )}

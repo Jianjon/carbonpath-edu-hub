@@ -206,6 +206,7 @@ const CarbonTax = () => {
                         setSelectedRate={setSelectedRate}
                         feeProjection={feeProjection}
                         isHighLeakageRisk={!!formValues.isHighLeakageRisk}
+                        setIsHighLeakageRisk={(checked) => form.setValue('isHighLeakageRisk', checked)}
                         reductionModel={reductionModel}
                     />
                 </div>
