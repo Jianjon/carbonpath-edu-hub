@@ -66,12 +66,12 @@ export const useChat = () => {
         }
 
         const defaultQuestions = [
-            '如何制定企業減碳目標？',
-            '碳費計算方式是什麼？',
-            '自願性碳權有哪些類型？',
-            '範疇三排放如何盤查？',
-            'SBTi目標設定流程？',
-            '碳中和與淨零的差別？'
+            '企業有哪些常見的減碳方法？',
+            '如何制定有效的減碳路徑圖？',
+            '再生能源憑證(REC)如何幫助企業減碳?',
+            '溫室氣體盤查的範疇一、二、三是什麼？',
+            '循環經濟如何貢獻於企業的減碳目標？',
+            '產品碳足跡與組織碳盤查有何不同？'
         ];
 
         setQuickQuestions(data.questions && data.questions.length > 0 ? data.questions : defaultQuestions);
@@ -79,12 +79,12 @@ export const useChat = () => {
       } catch (err) {
         console.error("Error fetching quick questions:", err);
         setQuickQuestions([
-            '如何制定企業減碳目標？',
-            '碳費計算方式是什麼？',
-            '自願性碳權有哪些類型？',
-            '範疇三排放如何盤查？',
-            'SBTi目標設定流程？',
-            '碳中和與淨零的差別？'
+            '企業有哪些常見的減碳方法？',
+            '如何制定有效的減碳路徑圖？',
+            '再生能源憑證(REC)如何幫助企業減碳?',
+            '溫室氣體盤查的範疇一、二、三是什麼？',
+            '循環經濟如何貢獻於企業的減碳目標？',
+            '產品碳足跡與組織碳盤查有何不同？'
         ]);
       } finally {
         setLoadingQuestions(false);
