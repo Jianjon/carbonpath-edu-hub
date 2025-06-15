@@ -74,6 +74,7 @@ const CarbonTax = () => {
   const [step, setStep] = useState(1);
   const [selectedRate, setSelectedRate] = useState(rates[0].value);
   const [reductionModel, setReductionModel] = useState<ReductionModel>('none');
+  const [leakageCoefficient, setLeakageCoefficient] = useState<number>(0);
 
   const form = useForm<CarbonTaxFormValues>({
     resolver: zodResolver(carbonTaxFormSchema),
@@ -86,7 +87,7 @@ const CarbonTax = () => {
   const formValues = form.watch();
 
   const feeProjection = useMemo(() => {
-    const { annualEmissions, isHighLeakageRisk } = formValues;
+    const { annualEmissions } = formValues;
     const baseEmissions = annualEmissions || 0;
     const rate = selectedRate;
     const threshold = 25000;
@@ -118,8 +119,8 @@ const CarbonTax = () => {
     
     return emissionsPath.map((emissions, index) => {
         let fee = 0;
-        if (isHighLeakageRisk) {
-            fee = (emissions * 0.2) * rate;
+        if (leakageCoefficient > 0) {
+            fee = (emissions * leakageCoefficient) * rate;
         } else {
             if (emissions > threshold) {
                 fee = (emissions - threshold) * rate;
@@ -131,7 +132,7 @@ const CarbonTax = () => {
             fee: Math.round(fee),
         };
     });
-  }, [formValues, selectedRate, reductionModel]);
+  }, [formValues, selectedRate, reductionModel, leakageCoefficient]);
 
   const Stepper = ({ currentStep }: { currentStep: number }) => {
     const steps = ['參數與情境設定', '碳費計算', '碳費VS減碳成本'];
@@ -206,8 +207,8 @@ const CarbonTax = () => {
                         selectedRate={selectedRate}
                         setSelectedRate={setSelectedRate}
                         feeProjection={feeProjection}
-                        isHighLeakageRisk={!!formValues.isHighLeakageRisk}
-                        setIsHighLeakageRisk={(checked) => form.setValue('isHighLeakageRisk', checked)}
+                        leakageCoefficient={leakageCoefficient}
+                        setLeakageCoefficient={setLeakageCoefficient}
                         reductionModel={reductionModel}
                     />
                     <div className="text-center pt-4">
