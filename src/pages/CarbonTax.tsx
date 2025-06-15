@@ -3,100 +3,56 @@ import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { BookOpen, Sliders, BarChart3, Sparkles, Leaf, Coins, TrendingDown, Loader2 } from 'lucide-react';
+import { BookOpen, Calculator, AlertTriangle, Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 import Navigation from '../components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { supabase } from '@/integrations/supabase/client';
-import { BotMessage } from '@/components/BotMessage';
+import { Switch } from '@/components/ui/switch';
 
 const formSchema = z.object({
-  annualEmissions: z.coerce.number().min(0, "年排放量不能為負數").default(30000),
-  feeRateOption: z.string().default('300'),
-  customFeeRate: z.coerce.number().optional(),
-  reductionPercentage: z.array(z.number()).default([10]),
-  hasOffset: z.enum(["yes", "no"]).default("no"),
-  offsetAmount: z.coerce.number().min(0, "抵繳量不能為負數").optional(),
-}).refine(data => {
-    if (data.feeRateOption === 'custom') {
-        return data.customFeeRate !== undefined && data.customFeeRate > 0;
-    }
-    return true;
-}, {
-    message: "請輸入有效的自訂費率",
-    path: ["customFeeRate"],
+  annualEmissions: z.coerce.number().min(0, "年排放量不能為負數").default(50000),
+  isHighLeakageRisk: z.boolean().default(false),
 });
 
+const rates = [
+    { value: 300, label: '預設費率 (300元/噸)', description: '適用於一般情況，或未達成自主減量目標的企業。' },
+    { value: 100, label: '優惠費率 A (100元/噸)', description: '適用於已提出自主減量計畫，並達成指定階段性目標的企業。' },
+    { value: 50, label: '優惠費率 B (50元/噸)', description: '適用於過渡期間，給予特定產業的緩衝費率，鼓勵及早規劃減碳。' },
+];
+
 const CarbonTax = () => {
-  const [gptExplanation, setGptExplanation] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedRate, setSelectedRate] = useState(rates[0].value);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      annualEmissions: 30000,
-      feeRateOption: '300',
-      reductionPercentage: [10],
-      hasOffset: 'no',
-      offsetAmount: 0,
+      annualEmissions: 50000,
+      isHighLeakageRisk: false,
     },
   });
 
   const formValues = form.watch();
 
-  const calculatedResults = useMemo(() => {
-    const { annualEmissions, feeRateOption, customFeeRate, reductionPercentage, hasOffset, offsetAmount } = formValues;
-    
-    const feeRate = feeRateOption === 'custom' ? (customFeeRate || 0) : parseInt(feeRateOption, 10);
-    const reduction = (reductionPercentage?.[0] || 0) / 100;
-    const offset = hasOffset === 'yes' ? (offsetAmount || 0) : 0;
+  const calculatedFee = useMemo(() => {
+    const { annualEmissions, isHighLeakageRisk } = formValues;
+    const emissions = annualEmissions || 0;
+    const rate = selectedRate;
+    const threshold = 25000;
 
-    const feeWithoutReduction = (annualEmissions || 0) * feeRate;
-    
-    const emissionsAfterReduction = (annualEmissions || 0) * (1 - reduction);
-    const finalEmissions = Math.max(0, emissionsAfterReduction - offset);
-    const feeAfterReduction = finalEmissions * feeRate;
-
-    const savings = feeWithoutReduction - feeAfterReduction;
-
-    return { feeWithoutReduction, feeAfterReduction, savings };
-  }, [formValues]);
-
-  const handleGenerateExplanation = async () => {
-    setIsGenerating(true);
-    setGptExplanation('');
-    const validation = await form.trigger();
-    if (!validation) {
-        setIsGenerating(false);
-        return;
+    if (isHighLeakageRisk) {
+        return (emissions * 0.2) * rate;
     }
 
-    try {
-        const { data, error } = await supabase.functions.invoke('carbon-tax-explainer', {
-            body: { ...form.getValues(), savings: calculatedResults.savings },
-        });
-
-        if (error) throw error;
-        setGptExplanation(data.explanation);
-    } catch (error) {
-        console.error('Error generating explanation:', error);
-        setGptExplanation('無法產生 AI 建議，請稍後再試。');
-    } finally {
-        setIsGenerating(false);
+    if (emissions > threshold) {
+        return (emissions - threshold) * rate;
     }
-  };
 
-  const chartData = [
-    { name: '未減碳', '碳費成本': calculatedResults.feeWithoutReduction },
-    { name: '減碳後', '碳費成本': calculatedResults.feeAfterReduction },
-  ];
+    return 0;
+  }, [formValues, selectedRate]);
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20 font-sans">
@@ -106,149 +62,102 @@ const CarbonTax = () => {
           <CardHeader>
             <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
               <BookOpen className="mr-3 h-7 w-7 text-blue-600" />
-              碳費制度簡介
+              碳費制度簡介與法規說明
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-gray-600 space-y-2">
-            <p>台灣碳費制度由《氣候變遷因應法》規範，初期主要針對「年排放量超過 25,000 噸 CO₂e」的電力業及大型製造業。碳費的設立旨在以經濟誘因，鼓勵企業投資節能設備、採用低碳技術，或購買碳權來抵銷自身排放，進而達成國家整體的減碳目標。</p>
-            <p>目前預估費率約為每噸 300 元新台幣，未來將視國內外情勢滾動式調整。企業若能積極減碳，不僅能降低營運成本，更能提升在綠色供應鏈中的競爭力。</p>
+          <CardContent className="text-gray-600 space-y-3">
+            <p>台灣碳費制度依據《氣候變遷因應法》設立，旨在透過經濟誘因鼓勵企業減碳，並促進國家達成2050淨零轉型目標。</p>
+            <ul className="list-disc list-inside space-y-1 pl-2">
+                <li><b>徵收對象：</b>初期主要針對年排放量超過 25,000 噸 CO₂e 的電力業及大型製造業。</li>
+                <li><b>基本費率：</b>預設費率為每噸 300 元新台幣，未來將視國內外情況滾動式調整。</li>
+                <li><b>優惠機制：</b>若企業能有效執行自主減量計畫或符合特定條件，可適用優惠費率以茲鼓勵。</li>
+                <li><b>碳洩漏風險：</b>為保護國內產業競爭力，對具備高碳洩漏風險的事業設有不同的收費係數，避免產業外移。</li>
+            </ul>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-8">
             <Card className="bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
-                  <Sliders className="mr-3 h-7 w-7 text-green-600" />
+                  <Calculator className="mr-3 h-7 w-7 text-green-600" />
                   輸入模擬參數
                 </CardTitle>
+                <CardDescription>請輸入您的年排放量，並選擇是否適用高碳洩漏風險係數。</CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form className="space-y-6">
+                  <form className="space-y-8">
                     <FormField control={form.control} name="annualEmissions" render={({ field }) => (
                       <FormItem>
                         <FormLabel>年排放量 (噸 CO₂e)</FormLabel>
-                        <FormControl><Input type="number" placeholder="例如：30000" {...field} /></FormControl>
+                        <FormControl><Input type="number" placeholder="例如：50000" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
 
-                    <FormField control={form.control} name="feeRateOption" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>碳費費率 (元/噸)</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl><SelectTrigger><SelectValue placeholder="選擇費率" /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            <SelectItem value="300">300元 (基準情境)</SelectItem>
-                            <SelectItem value="600">600元 (中度情境)</SelectItem>
-                            <SelectItem value="1000">1000元 (嚴格情境)</SelectItem>
-                            <SelectItem value="custom">自訂費率</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {form.watch('feeRateOption') === 'custom' && (
-                          <FormField control={form.control} name="customFeeRate" render={({ field }) => (
-                            <FormItem className="mt-2">
-                              <FormControl><Input type="number" placeholder="請輸入自訂費率" {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        )}
+                    <FormField control={form.control} name="isHighLeakageRisk" render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <FormLabel>是否為高碳洩漏風險事業？</FormLabel>
+                            <CardDescription>若適用，碳費計算將採用 0.2 優惠係數。</CardDescription>
+                        </div>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                       </FormItem>
-                    )} />
-                    
-                    <FormField control={form.control} name="reductionPercentage" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>採用節能措施可減碳 ({field.value?.[0] || 0}%)</FormLabel>
-                        <FormControl>
-                          <Slider min={0} max={50} step={1} defaultValue={field.value} onValueChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )} />
-
-                    <FormField control={form.control} name="hasOffset" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>是否有碳權抵繳？</FormLabel>
-                        <FormControl>
-                          <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
-                            <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">無</FormLabel></FormItem>
-                            <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">有</FormLabel></FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        {form.watch('hasOffset') === 'yes' && (
-                          <FormField control={form.control} name="offsetAmount" render={({ field }) => (
-                            <FormItem className="mt-2">
-                              <FormLabel className="text-sm text-gray-600">抵繳量 (噸 CO₂e)</FormLabel>
-                              <FormControl><Input type="number" placeholder="輸入碳權數量" {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        )}
-                      </FormItem>
-                    )} />
+                     )} />
                   </form>
                 </Form>
               </CardContent>
             </Card>
           </div>
-
-          <div className="lg:col-span-3 space-y-8">
+        
+          <div className="space-y-8">
             <Card className="bg-white shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
-                  <BarChart3 className="mr-3 h-7 w-7 text-purple-600" />
-                  即時運算結果
-                </CardTitle>
+                <CardTitle>碳費試算與三種情境比較</CardTitle>
+                <CardDescription>點擊下方按鈕切換不同費率情境，查看對應的碳費成本。</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                  <div className="bg-red-50 p-4 rounded-lg">
-                    <p className="text-sm text-red-700 flex items-center justify-center"><Leaf className="mr-1 h-4 w-4" />未減碳碳費</p>
-                    <p className="text-xl font-bold text-red-900">NT$ {calculatedResults.feeWithoutReduction.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-sm text-green-700 flex items-center justify-center"><TrendingDown className="mr-1 h-4 w-4" />減碳後碳費</p>
-                    <p className="text-xl font-bold text-green-900">NT$ {calculatedResults.feeAfterReduction.toLocaleString()}</p>
-                  </div>
-                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-sm text-blue-700 flex items-center justify-center"><Coins className="mr-1 h-4 w-4" />每年可節省</p>
-                    <p className="text-xl font-bold text-blue-900">NT$ {calculatedResults.savings.toLocaleString()}</p>
-                  </div>
+                <div className="grid grid-cols-3 gap-2">
+                    {rates.map((rate) => (
+                        <Button key={rate.value} onClick={() => setSelectedRate(rate.value)} variant={selectedRate === rate.value ? 'default' : 'secondary'} className="h-auto py-2 flex flex-col">
+                            <span className="font-semibold">{rate.label.split(' ')[0]}</span>
+                            <span className="text-xs">{rate.label.split(' ')[1]}</span>
+                        </Button>
+                    ))}
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2 text-center">成本比較圖</h3>
-                  <div className="w-full h-64">
-                    <ResponsiveContainer>
-                      <BarChart data={chartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis tickFormatter={(value) => `NT$${Number(value).toLocaleString()}`} />
-                        <Tooltip formatter={(value) => `NT$${Number(value).toLocaleString()}`} />
-                        <Legend />
-                        <Bar dataKey="碳費成本" fill="#8884d8" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                
+                <div className="text-center bg-gray-50 p-6 rounded-lg border">
+                  <p className="text-lg text-gray-600">預估應繳碳費</p>
+                  <p className="text-4xl font-bold text-indigo-600 mt-2">
+                    NT$ {calculatedFee.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    於 {rates.find(r => r.value === selectedRate)?.label} 情境下
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
-                  <Sparkles className="mr-3 h-7 w-7 text-yellow-500" />
-                  GPT 協助解說
-                </CardTitle>
-                <CardDescription>點擊按鈕，讓 AI 為您分析模擬結果並提供建議。</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={handleGenerateExplanation} disabled={isGenerating} className="w-full mb-4">
-                  {isGenerating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />產生中...</> : '產生 AI 建議'}
-                </Button>
-                {gptExplanation && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                    <BotMessage content={gptExplanation} />
+
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="font-semibold text-center text-gray-700">費率適用條件說明</h4>
+                  {rates.map((rate) => (
+                      <div key={rate.value} className={cn("flex items-start gap-3 p-3 rounded-md", { "bg-blue-50 border border-blue-200": selectedRate === rate.value, "bg-gray-50": selectedRate !== rate.value })}>
+                          <Info className={cn("h-5 w-5 mt-0.5", { "text-blue-700": selectedRate === rate.value, "text-gray-500": selectedRate !== rate.value })} />
+                          <div>
+                              <h5 className="font-semibold">{rate.label}</h5>
+                              <p className="text-sm text-gray-600">{rate.description}</p>
+                          </div>
+                      </div>
+                  ))}
+                </div>
+                
+                {formValues.isHighLeakageRisk && (
+                  <div className="flex items-start gap-3 p-4 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
+                    <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <div>
+                        <h5 className="font-semibold">高碳洩漏風險模式已啟用</h5>
+                        <p className="text-sm">此模式下，碳費公式為「(年排放量 × 係數0.2) × 費率」。這是為維持產業競爭力所設計的過渡期優惠，25,000噸的起徵門檻在此模式下不適用。</p>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -261,3 +170,4 @@ const CarbonTax = () => {
 };
 
 export default CarbonTax;
+
