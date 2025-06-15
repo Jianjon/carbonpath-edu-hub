@@ -102,7 +102,6 @@ const CarbonTax = () => {
                     feeProjection={feeProjection}
                     baselineFeeProjection={baselineFeeProjection}
                     reductionModel={reductionModel}
-                    formValues={formValues}
                 />
                 <div className="flex justify-center gap-4 pt-4">
                     <Button variant="outline" onClick={() => setStep(2)}>
