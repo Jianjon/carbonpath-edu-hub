@@ -40,14 +40,20 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
 
   const analysisData = feeProjection.map((item, index) => {
     const baselineItem = baselineFeeProjection[index];
-    const annualSavings = baselineItem.fee - item.fee;
+    const threshold = 25000;
+
+    // Recalculate fees based on the user's specific logic for this analysis
+    const baselineFee = Math.max(0, (baselineItem.emissions - threshold) * 300);
+    const scenarioFee = Math.max(0, (item.emissions - threshold) * 100);
+
+    const annualSavings = baselineFee - scenarioFee;
     const annualEmissionsReduced = baselineItem.emissions - item.emissions;
     const costPerTonReduced = annualEmissionsReduced > 0 ? annualSavings / annualEmissionsReduced : 0;
 
     return {
         year: item.year,
-        baselineFee: baselineItem.fee,
-        scenarioFee: item.fee,
+        baselineFee,
+        scenarioFee,
         annualSavings,
         annualEmissionsReduced,
         costPerTonReduced,
@@ -65,7 +71,7 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
           減碳節費效益分析
         </CardTitle>
         <CardDescription>
-          此分析比較「維持現狀」與「採取減量措施」兩種情境下的年度碳費。其差額即為您因減碳而省下的費用，可作為評估減碳投資效益的參考。
+          此分析比較「維持現狀」(假設費率300元/噸)與「採取減量措施」(假設適用優惠費率100元/噸)兩種情境下的年度碳費。其差額即為您因減碳而省下的費用，可作為評估減碳投資效益的參考。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
