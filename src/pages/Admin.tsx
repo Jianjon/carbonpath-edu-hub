@@ -3,6 +3,8 @@ import Navigation from '@/components/Navigation';
 import { useDocuments } from '@/hooks/useDocuments';
 import FileUpload from '@/components/admin/FileUpload';
 import FileList from '@/components/admin/FileList';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 const AdminPage = () => {
   const {
@@ -14,7 +16,12 @@ const AdminPage = () => {
     handleUpload,
     handleDelete,
     handleProcessDocument,
+    handleReprocessIncomplete,
   } = useDocuments();
+
+  // 檢查是否有未完成的處理
+  const incompleteProcessing = processing.filter(p => p.status === 'failed' || p.status === 'pending');
+  const hasIncompleteFiles = incompleteProcessing.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,6 +29,31 @@ const AdminPage = () => {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-8">
           <FileUpload onFileUpload={handleUpload} isUploading={uploading} />
+          
+          {hasIncompleteFiles && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    發現 {incompleteProcessing.length} 個未完成的文件處理
+                  </h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    這些文件的處理可能因為錯誤而中斷，您可以一鍵重新處理它們。
+                  </p>
+                </div>
+                <Button
+                  onClick={handleReprocessIncomplete}
+                  variant="outline"
+                  size="sm"
+                  className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  重新處理全部
+                </Button>
+              </div>
+            </div>
+          )}
+
           <FileList
             files={files}
             processing={processing}

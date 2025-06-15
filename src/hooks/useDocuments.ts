@@ -197,6 +197,64 @@ export const useDocuments = () => {
     }
   };
 
+  const handleReprocessIncomplete = async () => {
+    try {
+      // 找出所有失敗或未完成的文件
+      const { data: incompleteProcessing, error } = await supabase
+        .from('document_processing')
+        .select('document_name, status')
+        .in('status', ['failed', 'pending']);
+
+      if (error) {
+        toast({ title: "錯誤", description: "無法讀取處理狀態。", variant: "destructive" });
+        return;
+      }
+
+      if (!incompleteProcessing || incompleteProcessing.length === 0) {
+        toast({ title: "提示", description: "沒有未完成的文件需要重新處理。" });
+        return;
+      }
+
+      // 重新處理每個未完成的文件
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const doc of incompleteProcessing) {
+        try {
+          const { error } = await supabase.functions.invoke('process-document', {
+            body: { documentName: doc.document_name }
+          });
+
+          if (error) {
+            console.error(`重新處理 ${doc.document_name} 失敗:`, error);
+            errorCount++;
+          } else {
+            successCount++;
+          }
+        } catch (error: any) {
+          console.error(`重新處理 ${doc.document_name} 失敗:`, error);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast({ 
+          title: "重新處理已開始", 
+          description: `成功啟動 ${successCount} 個文件的重新處理。${errorCount > 0 ? `${errorCount} 個文件啟動失敗。` : ''}` 
+        });
+        await fetchProcessingStatus();
+      } else {
+        toast({ 
+          title: "重新處理失敗", 
+          description: `所有 ${errorCount} 個文件都無法啟動重新處理。`, 
+          variant: "destructive" 
+        });
+      }
+    } catch (error: any) {
+      toast({ title: "重新處理失敗", description: error.message, variant: "destructive" });
+    }
+  };
+
   return {
     files,
     processing,
@@ -206,5 +264,6 @@ export const useDocuments = () => {
     handleUpload,
     handleDelete,
     handleProcessDocument,
+    handleReprocessIncomplete,
   };
 };
