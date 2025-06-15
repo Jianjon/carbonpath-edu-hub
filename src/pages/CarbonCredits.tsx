@@ -5,6 +5,7 @@ import Navigation from '../components/Navigation';
 import CriteriaSelection from '../components/carbon-actions/CriteriaSelection';
 import ActionExplorer from '../components/carbon-actions/ActionExplorer';
 import ActionSummary from '../components/carbon-actions/ActionSummary';
+import Stepper from '../components/carbon-tax/Stepper';
 
 // Define types for better state management
 export type Industry = '餐飲業' | '零售業' | '製造業' | '營建業' | '運輸業' | '科技業' | '金融業' | '醫療保健' | '教育服務' | '旅宿業';
@@ -37,6 +38,8 @@ const CarbonActions = () => {
   const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<BudgetLevel | null>(null);
   const [selectedActionIds, setSelectedActionIds] = useState<string[]>([]);
+  
+  const carbonActionsSteps = ['選擇產業與預算', '探索減碳行動', '檢視行動計畫'];
 
   const handleCriteriaSelect = (industry: Industry, budget: BudgetLevel) => {
     setSelectedIndustry(industry);
@@ -64,21 +67,19 @@ const CarbonActions = () => {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 flex justify-center items-center gap-2">
-              <Puzzle className="h-8 w-8 text-white mr-2" /> 減碳行動
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 flex justify-center items-center gap-2">
+              <Puzzle className="h-8 w-8 text-green-600" />
+              減碳行動
             </h1>
-            <p className="text-xl text-green-100 max-w-2xl mx-auto font-medium">
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               探索符合您產業與規模的減碳方案，從四大面向建立您的永續策略。
             </p>
-          </div>
         </div>
-      </div>
+        
+        <Stepper currentStep={step} steps={carbonActionsSteps} themeColor="green" />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mt-8">
           {step === 1 && <CriteriaSelection onNext={handleCriteriaSelect} />}
           {step === 2 && selectedIndustry && selectedBudget && (
