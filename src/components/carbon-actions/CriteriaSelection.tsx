@@ -1,33 +1,31 @@
 
 import { useState } from 'react';
-import { Industry } from '../../pages/CarbonCredits';
+import { Industry, BusinessScale } from '../../pages/CarbonCredits';
+import { industries, businessScales } from '../../data/carbonActionsData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface Props {
-  onNext: (industry: Industry, emissions: number) => void;
+  onNext: (industry: Industry, scale: BusinessScale) => void;
 }
 
-const industries: Industry[] = ['餐飲業', '零售業', '製造業'];
-
-const IndustrySelection = ({ onNext }: Props) => {
+const CriteriaSelection = ({ onNext }: Props) => {
   const [industry, setIndustry] = useState<Industry | ''>('');
-  const [emissions, setEmissions] = useState('');
+  const [scale, setScale] = useState<BusinessScale | ''>('');
 
   const handleNext = () => {
-    if (industry && emissions) {
-      onNext(industry as Industry, Number(emissions));
+    if (industry && scale) {
+      onNext(industry as Industry, scale as BusinessScale);
     }
   };
 
   return (
     <Card className="animate-fade-in">
       <CardHeader>
-        <CardTitle>1. 選擇產業與目標</CardTitle>
-        <CardDescription>請選擇您的產業類別，並輸入近一年的總碳排放量（範疇一＋範疇二）。</CardDescription>
+        <CardTitle>1. 選擇產業與規模</CardTitle>
+        <CardDescription>請選擇您的產業類別與企業規模，我們將為您推薦合適的減碳思考方向。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -44,21 +42,24 @@ const IndustrySelection = ({ onNext }: Props) => {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="emissions">年排放量 (噸CO2e)</Label>
-          <Input 
-            id="emissions" 
-            type="number" 
-            placeholder="例如: 1000"
-            value={emissions}
-            onChange={(e) => setEmissions(e.target.value)}
-          />
+          <Label htmlFor="scale">企業規模</Label>
+          <Select onValueChange={(value: BusinessScale) => setScale(value)} value={scale}>
+            <SelectTrigger id="scale">
+              <SelectValue placeholder="請選擇您的企業規模" />
+            </SelectTrigger>
+            <SelectContent>
+              {businessScales.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Button onClick={handleNext} disabled={!industry || !emissions}>
-          顯示推薦減碳行動
+        <Button onClick={handleNext} disabled={!industry || !scale}>
+          開始探索減碳行動
         </Button>
       </CardContent>
     </Card>
   );
 };
 
-export default IndustrySelection;
+export default CriteriaSelection;

@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Leaf, Calculator, Puzzle, MessageSquare, ArrowRight, BookOpen, Users, Award } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -25,7 +24,7 @@ const Index = () => {
     },
     {
       title: '減碳行動',
-      description: '了解產業行動分區、組合模擬與主流策略類別',
+      description: '探索符合您產業規模的減碳方法，從四大面向建立永續策略',
       icon: Puzzle,
       path: '/carbon-credits',
       color: 'bg-yellow-500',

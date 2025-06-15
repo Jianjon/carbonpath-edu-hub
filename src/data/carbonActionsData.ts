@@ -1,23 +1,66 @@
 
-import { Action, Industry } from '../pages/CarbonCredits';
+import { Action, ActionAngle, Industry } from '../pages/CarbonCredits';
 
-export const actionsData: Record<Industry, Action[]> = {
-  '餐飲業': [
-    { id: 'restaurant-1', name: '換裝節能LED燈具', type: '能源', reduction: 5, investment: 50000, roi: 25, difficulty: '低' },
-    { id: 'restaurant-2', name: '引進廚餘高效堆肥機', type: '循環', reduction: 10, investment: 200000, roi: 15, difficulty: '中' },
-    { id: 'restaurant-3', name: '採用節水洗碗系統', type: '循環', reduction: 3, investment: 150000, roi: 10, difficulty: '中' },
-    { id: 'restaurant-4', name: '優化外送路線與包材', type: '製程', reduction: 2, investment: 20000, roi: 30, difficulty: '低' },
-  ],
-  '零售業': [
-    { id: 'retail-1', name: '更換為變頻節能空調', type: '能源', reduction: 20, investment: 500000, roi: 20, difficulty: '中' },
-    { id: 'retail-2', name: '導入智慧能源監控系統', type: '能源', reduction: 15, investment: 300000, roi: 22, difficulty: '中' },
-    { id: 'retail-3', name: '推動綠色包裝與回收', type: '循環', reduction: 8, investment: 80000, roi: 12, difficulty: '低' },
-    { id: 'retail-4', name: '優化物流配送路線', type: '製程', reduction: 12, investment: 100000, roi: 25, difficulty: '高' },
-  ],
-  '製造業': [
-    { id: 'manu-1', name: '建置工業餘熱回收系統', type: '製程', reduction: 100, investment: 2000000, roi: 18, difficulty: '高' },
-    { id: 'manu-2', name: '製程導入氣電共生設備', type: '能源', reduction: 150, investment: 5000000, roi: 15, difficulty: '高' },
-    { id: 'manu-3', name: '汰換老舊高耗能馬達', type: '能源', reduction: 50, investment: 800000, roi: 25, difficulty: '中' },
-    { id: 'manu-4', name: '實施廢棄物資源化處理', type: '循環', reduction: 30, investment: 400000, roi: 10, difficulty: '中' },
-  ],
+export const industries: Industry[] = ['餐飲業', '零售業', '製造業', '營建業', '運輸業', '科技業', '金融業', '醫療保健', '教育服務', '旅宿業'];
+export const businessScales = ['小型企業', '中型企業', '大型企業'];
+export const actionAngles: ActionAngle[] = ['能源管理', '循環經濟', '永續採購', '淨零管理'];
+
+type ActionData = Record<Industry, Record<ActionAngle, Action[]>>;
+
+export const actionsData: ActionData = {
+  '餐飲業': {
+    '能源管理': [
+      { id: 'rest-en-1', name: '換裝節能LED燈具', description: '將傳統燈具更換為高效率LED，可節省50-70%照明用電。', benefit: '中', investment: '低', difficulty: '低' },
+      { id: 'rest-en-2', name: '採用節能標章廚房設備', description: '選擇具備節能標章的冰箱、爐具等，從源頭降低能耗。', benefit: '中', investment: '中', difficulty: '低' },
+    ],
+    '循環經濟': [
+      { id: 'rest-ci-1', name: '引進廚餘高效堆肥機', description: '將廚餘轉化為有機肥料，減少廢棄物處理成本與甲烷排放。', benefit: '高', investment: '中', difficulty: '中' },
+      { id: 'rest-ci-2', name: '使用可重複清洗餐具', description: '減少一次性餐具使用，降低廢棄物量。', benefit: '中', investment: '低', difficulty: '低' },
+    ],
+    '永續採購': [
+      { id: 'rest-su-1', name: '優先採購在地食材', description: '縮短食物里程，減少運輸過程的碳排放。', benefit: '高', investment: '低', difficulty: '中' },
+    ],
+    '淨零管理': [
+       { id: 'rest-ne-1', name: '建立簡易碳盤查清冊', description: '初步盤點店內能源使用狀況，作為減量基準。', benefit: '中', investment: '低', difficulty: '中' },
+    ],
+  },
+  '零售業': {
+    '能源管理': [
+      { id: 'ret-en-1', name: '更換為變頻節能空調', description: '汰換老舊定頻空調，依據人流與氣溫智慧調節。', benefit: '高', investment: '高', difficulty: '中' },
+      { id: 'ret-en-2', name: '導入智慧能源監控系統', description: '即時監控賣場各區域用電，找出異常能耗點。', benefit: '高', investment: '中', difficulty: '中' },
+    ],
+    '循環經濟': [
+      { id: 'ret-ci-1', name: '推動綠色包裝與回收', description: '採用簡化、可回收、或生質材料包裝，並設置回收站點。', benefit: '中', investment: '中', difficulty: '中' },
+    ],
+    '永續採購': [
+      { id: 'ret-su-1', name: '引進具環保標章商品', description: '提供消費者更多綠色選擇，提升企業永續形象。', benefit: '中', investment: '低', difficulty: '低' },
+    ],
+    '淨零管理': [
+       { id: 'ret-ne-1', name: '規劃員工節能SOP', description: '制定開關燈、空調、設備使用的標準作業流程。', benefit: '低', investment: '低', difficulty: '低' },
+    ],
+  },
+  '製造業': {
+    '能源管理': [
+      { id: 'man-en-1', name: '汰換老舊高耗能馬達', description: '將IE1/IE2馬達汰換為IE3/IE4高效率馬達。', benefit: '高', investment: '高', difficulty: '中' },
+      { id: 'man-en-2', name: '建置能源管理系統 (EMS)', description: '全面監控廠區能源流，進行數據分析與優化。', benefit: '高', investment: '高', difficulty: '高' },
+    ],
+    '循環經濟': [
+      { id: 'man-ci-1', name: '實施廢棄物資源化處理', description: '將生產廢料回收再利用，或轉換為其他可用資源。', benefit: '高', investment: '高', difficulty: '高' },
+      { id: 'man-ci-2', name: '製程水回收再利用', description: '建置廢水回收系統，降低水資源消耗。', benefit: '中', investment: '高', difficulty: '高' },
+    ],
+    '永續採購': [
+      { id: 'man-su-1', name: '建立綠色供應鏈標準', description: '要求上游供應商提供產品碳足跡或相關環保認證。', benefit: '高', investment: '中', difficulty: '高' },
+    ],
+    '淨零管理': [
+      { id: 'man-ne-1', name: '執行組織型碳盤查 (ISO 14064-1)', description: '系統性鑑別與量化溫室氣體排放源。', benefit: '高', investment: '中', difficulty: '高' },
+    ]
+  },
+  // Add other industries with empty actions for now
+  '營建業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
+  '運輸業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
+  '科技業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
+  '金融業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
+  '醫療保健': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
+  '教育服務': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
+  '旅宿業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
 };
