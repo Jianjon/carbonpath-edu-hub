@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { MessageSquare, Send, Bot, User, Lightbulb, Zap, FileText, MessageCircle } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BotMessage } from '@/components/BotMessage';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([
@@ -218,7 +218,11 @@ const Chatbot = () => {
                       ? 'bg-blue-600 text-white' 
                       : 'bg-gray-100 text-gray-900'
                   }`}>
-                    <div className="text-sm whitespace-pre-line">{message.content}</div>
+                    {message.type === 'bot' ? (
+                      <BotMessage content={message.content} />
+                    ) : (
+                      <div className="text-sm whitespace-pre-line">{message.content}</div>
+                    )}
                   </div>
                 </div>
               </div>
