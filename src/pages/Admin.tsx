@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
@@ -15,6 +14,18 @@ const AdminPage = () => {
   const [loadingFiles, setLoadingFiles] = useState(true);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper function to sanitize file names
+  const sanitizeFileName = (fileName: string): string => {
+    // Remove Chinese characters and special characters, replace with underscores
+    const sanitized = fileName
+      .replace(/[^\w\s.-]/g, '_')  // Replace non-word characters (except spaces, dots, hyphens)
+      .replace(/\s+/g, '_')        // Replace spaces with underscores
+      .replace(/_+/g, '_')         // Replace multiple underscores with single
+      .replace(/^_|_$/g, '');      // Remove leading/trailing underscores
+    
+    return sanitized || 'document'; // Fallback if name becomes empty
+  };
 
   const fetchFiles = async () => {
     setLoadingFiles(true);
@@ -70,20 +81,42 @@ const AdminPage = () => {
 
   const handleUpload = async (file: File) => {
     setUploading(true);
-    const filePath = `${file.name}`;
-    const { error } = await supabase.storage.from('documents').upload(filePath, file, {
+    
+    // Get file extension
+    const fileExtension = file.name.split('.').pop() || '';
+    const baseName = file.name.replace(`.${fileExtension}`, '');
+    
+    // Sanitize the file name and add timestamp to avoid conflicts
+    const sanitizedBaseName = sanitizeFileName(baseName);
+    const timestamp = Date.now();
+    const sanitizedFileName = `${sanitizedBaseName}_${timestamp}.${fileExtension}`;
+    
+    console.log(`Original file name: ${file.name}`);
+    console.log(`Sanitized file name: ${sanitizedFileName}`);
+    
+    const { error } = await supabase.storage.from('documents').upload(sanitizedFileName, file, {
       cacheControl: '3600',
       upsert: true,
     });
+    
     setUploading(false);
 
     if (error) {
-      toast({ title: "上傳失敗", description: error.message, variant: "destructive" });
+      console.error('Upload error:', error);
+      toast({ 
+        title: "上傳失敗", 
+        description: `錯誤: ${error.message}`, 
+        variant: "destructive" 
+      });
     } else {
-      toast({ title: "上傳成功", description: `${file.name} 已成功上傳。` });
+      toast({ 
+        title: "上傳成功", 
+        description: `檔案已成功上傳為: ${sanitizedFileName}` 
+      });
       fetchFiles();
       fetchProcessingStatus();
     }
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -168,7 +201,9 @@ const AdminPage = () => {
         <Card>
           <CardHeader>
             <CardTitle>上傳新文件</CardTitle>
-            <CardDescription>選擇一個 PDF 文件上傳到知識庫。如果檔案名稱重複，將會覆蓋舊檔案。</CardDescription>
+            <CardDescription>
+              選擇一個 PDF 文件上傳到知識庫。檔案名稱會自動轉換為英文格式以確保相容性。
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
