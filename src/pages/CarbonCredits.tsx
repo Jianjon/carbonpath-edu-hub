@@ -73,14 +73,14 @@ const CarbonActions = () => {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
 
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 flex justify-center items-center gap-2">
               <Puzzle className="h-10 w-10" />
               減碳行動
             </h1>
-            <p className="text-xl text-green-100 max-w-2xl mx-auto">
+            <p className="text-xl text-orange-100 max-w-2xl mx-auto">
               探索符合您產業與規模的減碳方案，從四大面向建立您的永續策略。
             </p>
           </div>
@@ -88,7 +88,7 @@ const CarbonActions = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Stepper currentStep={step} steps={carbonActionsSteps} themeColor="green" />
+        <Stepper currentStep={step} steps={carbonActionsSteps} themeColor="orange" />
 
         <div className="mt-8">
           {step === 1 && (
@@ -107,7 +107,7 @@ const CarbonActions = () => {
                           </ul>
                       </span>
                   }
-                  themeColor="green"
+                  themeColor="orange"
                   className="mb-8"
               />
               <CriteriaSelection onNext={handleCriteriaSelect} />

@@ -63,13 +63,13 @@ const CarbonTax = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
       <Navigation />
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-sky-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               碳費模擬器
             </h1>
-            <p className="text-xl text-green-100 max-w-2xl mx-auto">
+            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
               估算您的潛在碳費成本，並評估減量措施的財務效益
             </p>
           </div>
@@ -77,7 +77,7 @@ const CarbonTax = () => {
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-12">
-          <Stepper currentStep={step} steps={carbonTaxSteps} themeColor="green" />
+          <Stepper currentStep={step} steps={carbonTaxSteps} themeColor="blue" />
         </div>
         
         {step === 1 && (
@@ -96,7 +96,7 @@ const CarbonTax = () => {
                             </ul>
                         </span>
                     }
-                    themeColor="green"
+                    themeColor="blue"
                 />
                 <ParameterForm 
                   form={form} 
@@ -112,7 +112,7 @@ const CarbonTax = () => {
                       } else {
                         form.trigger("annualEmissions");
                       }
-                    }} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto px-10">
+                    }} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto px-10">
                         查看計算結果
                     </Button>
                 </div>
@@ -138,7 +138,7 @@ const CarbonTax = () => {
                     reductionModel={reductionModel}
                 />
                 <div className="text-center">
-                    <Button size="lg" onClick={() => setStep(3)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto px-10">
+                    <Button size="lg" onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto px-10">
                         前往成本效益分析
                     </Button>
                 </div>
