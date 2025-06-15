@@ -7,12 +7,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Sparkles, Leaf, ShoppingBasket, Target, Wallet, Download, Zap, Calendar, Users, ListChecks } from 'lucide-react';
+import { Sparkles, Leaf, ShoppingBasket, Target, Wallet, Download, Zap, Calendar, Users, ListChecks, ArrowRight } from 'lucide-react';
 
 interface Props {
   industry: Industry;
   totalBudgetPoints: number;
   onBack: () => void;
+  onComplete: (selectedIds: string[]) => void;
 }
 
 const angleIcons: Record<ActionAngle, React.ReactNode> = {
@@ -46,7 +47,7 @@ const getDifficultyBadgeVariant = (level: Difficulty): 'outline' | 'secondary' |
   }
 };
 
-const ActionExplorer = ({ industry, totalBudgetPoints, onBack }: Props) => {
+const ActionExplorer = ({ industry, totalBudgetPoints, onBack, onComplete }: Props) => {
   const industryActions = actionsData[industry];
   const [selected, setSelected] = useState<Record<string, boolean>>({});
 
@@ -115,6 +116,13 @@ const ActionExplorer = ({ industry, totalBudgetPoints, onBack }: Props) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleComplete = () => {
+    const selectedIds = Object.entries(selected)
+      .filter(([, isSelected]) => isSelected)
+      .map(([actionId]) => actionId);
+    onComplete(selectedIds);
   };
 
   return (
@@ -236,8 +244,13 @@ const ActionExplorer = ({ industry, totalBudgetPoints, onBack }: Props) => {
             匯出試算表
           </Button>
         </div>
-        <div className="text-sm font-medium text-primary text-right">
-          已選擇 {selectedCount} 項行動，已使用 {usedBudgetPoints} 點預算
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-medium text-primary text-right">
+            已選擇 {selectedCount} 項行動，已使用 {usedBudgetPoints} 點預算
+          </div>
+          <Button onClick={handleComplete} disabled={selectedCount === 0}>
+            下一步 <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </CardFooter>
     </Card>
