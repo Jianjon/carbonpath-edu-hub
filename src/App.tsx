@@ -9,6 +9,7 @@ import CarbonPath from "./pages/CarbonPath";
 import CarbonTax from "./pages/CarbonTax";
 import CarbonCredits from "./pages/CarbonCredits";
 import Chatbot from "./pages/Chatbot";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/carbon-tax" element={<CarbonTax />} />
           <Route path="/carbon-credits" element={<CarbonCredits />} />
           <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

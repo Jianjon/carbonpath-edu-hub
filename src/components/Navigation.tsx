@@ -1,9 +1,11 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Leaf, Calculator, Coins, MessageSquare, Home } from 'lucide-react';
+import { Leaf, Calculator, Coins, MessageSquare, Home, Shield } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
 
 const Navigation = () => {
   const location = useLocation();
+  const { isAdmin } = useProfile();
 
   const navigationItems = [
     { name: '首頁', path: '/', icon: Home },
@@ -22,7 +24,7 @@ const Navigation = () => {
             <span className="text-xl font-bold text-gray-900">CarbonPath 教育平台</span>
           </div>
           
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center space-x-8">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -41,6 +43,19 @@ const Navigation = () => {
                 </Link>
               );
             })}
+            {isAdmin && (
+               <Link
+                to="/admin"
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location.pathname === '/admin'
+                    ? 'text-green-600 bg-green-50'
+                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                }`}
+              >
+                <Shield className="h-4 w-4" />
+                <span>管理後台</span>
+              </Link>
+            )}
           </nav>
 
           {/* Mobile menu button */}
