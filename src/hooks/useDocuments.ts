@@ -77,10 +77,10 @@ export const useDocuments = () => {
         table: 'document_processing'
       }, (payload: RealtimePostgresChangesPayload<DocumentProcessing>) => {
         fetchProcessingStatus();
-        if (payload.new?.status === 'completed' || payload.new?.status === 'failed') {
+        if ('status' in payload.new && (payload.new.status === 'completed' || payload.new.status === 'failed')) {
           setProgress(prev => {
             const newProgress = { ...prev };
-            if (payload.new.document_name) {
+            if ('document_name' in payload.new && payload.new.document_name) {
               delete newProgress[payload.new.document_name];
             }
             return newProgress;
@@ -96,8 +96,8 @@ export const useDocuments = () => {
         schema: 'public',
         table: 'document_chunks'
       }, (payload: RealtimePostgresChangesPayload<DocumentChunk>) => {
-        const docName = payload.new.document_name;
-        if (docName) {
+        if ('document_name' in payload.new && payload.new.document_name) {
+          const docName = payload.new.document_name;
           setProgress(prev => ({
             ...prev,
             [docName]: (prev[docName] || 0) + 1
