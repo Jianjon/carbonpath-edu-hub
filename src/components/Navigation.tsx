@@ -1,11 +1,25 @@
 
-import { Link, useLocation } from 'react-router-dom';
-import { Leaf, Calculator, Coins, MessageSquare, Home, Shield } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Leaf, Calculator, Coins, MessageSquare, Home, Shield, LogIn, LogOut } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from './ui/button';
+import { toast } from 'sonner';
 
 const Navigation = () => {
   const location = useLocation();
-  const { isAdmin } = useProfile();
+  const navigate = useNavigate();
+  const { user, isAdmin } = useProfile();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('登出失敗: ' + error.message);
+    } else {
+      toast.success('您已成功登出。');
+      navigate('/');
+    }
+  };
 
   const navigationItems = [
     { name: '首頁', path: '/', icon: Home },
@@ -24,7 +38,7 @@ const Navigation = () => {
             <span className="text-xl font-bold text-gray-900">CarbonPath 教育平台</span>
           </div>
           
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -56,6 +70,21 @@ const Navigation = () => {
                 <span>管理後台</span>
               </Link>
             )}
+            <div className="flex items-center space-x-2 pl-4">
+              {user ? (
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  登出
+                </Button>
+              ) : (
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/auth">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    登入 / 註冊
+                  </Link>
+                </Button>
+              )}
+            </div>
           </nav>
 
           {/* Mobile menu button */}
