@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Leaf, Calculator, Coins, MessageSquare, Home, Shield, LogIn, LogOut } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
@@ -9,7 +8,7 @@ import { toast } from 'sonner';
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin } = useProfile();
+  const { user } = useProfile();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -57,19 +56,17 @@ const Navigation = () => {
                 </Link>
               );
             })}
-            {isAdmin && (
-               <Link
-                to="/admin"
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.pathname === '/admin'
-                    ? 'text-green-600 bg-green-50'
-                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
-                }`}
-              >
-                <Shield className="h-4 w-4" />
-                <span>管理後台</span>
-              </Link>
-            )}
+            <Link
+              to="/admin"
+              className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                location.pathname === '/admin'
+                  ? 'text-green-600 bg-green-50'
+                  : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+              }`}
+            >
+              <Shield className="h-4 w-4" />
+              <span>管理後台</span>
+            </Link>
             <div className="flex items-center space-x-2 pl-4">
               {user ? (
                 <Button variant="ghost" size="sm" onClick={handleLogout}>

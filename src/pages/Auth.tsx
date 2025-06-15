@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Navigation from '@/components/Navigation';
 
 const authSchema = z.object({
   email: z.string().email({ message: '請輸入有效的電子郵件地址' }),
@@ -135,39 +135,42 @@ const Auth = () => {
   }, [navigate]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Tabs defaultValue="login" className="w-[400px]">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">登入</TabsTrigger>
-          <TabsTrigger value="signup">建立帳號</TabsTrigger>
-        </TabsList>
-        <TabsContent value="login">
-          <Card>
-            <CardHeader>
-              <CardTitle>管理員登入</CardTitle>
-              <CardDescription>
-                請輸入您的管理員帳號密碼以存取後台。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AuthForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="signup">
-          <Card>
-            <CardHeader>
-              <CardTitle>建立管理員帳號</CardTitle>
-              <CardDescription>
-                這是為您的管理後台進行的一次性設定。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AuthForm isSignUp />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navigation />
+      <div className="flex items-center justify-center pt-16 sm:pt-24">
+        <Tabs defaultValue="login" className="w-[400px]">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">登入</TabsTrigger>
+            <TabsTrigger value="signup">建立帳號</TabsTrigger>
+          </TabsList>
+          <TabsContent value="login">
+            <Card>
+              <CardHeader>
+                <CardTitle>管理員登入</CardTitle>
+                <CardDescription>
+                  請輸入您的管理員帳號密碼以存取後台。
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AuthForm />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="signup">
+            <Card>
+              <CardHeader>
+                <CardTitle>建立管理員帳號</CardTitle>
+                <CardDescription>
+                  這是為您的管理後台進行的一次性設定。
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AuthForm isSignUp />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
