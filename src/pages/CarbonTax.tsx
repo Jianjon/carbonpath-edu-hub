@@ -1,207 +1,258 @@
 
-import { useState } from 'react';
-import { Calculator, DollarSign, TrendingUp, BarChart3 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BookOpen, Sliders, BarChart3, Sparkles, Leaf, Coins, TrendingDown, Loader2 } from 'lucide-react';
+
 import Navigation from '../components/Navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { supabase } from '@/integrations/supabase/client';
+import { BotMessage } from '@/components/BotMessage';
+
+const formSchema = z.object({
+  annualEmissions: z.coerce.number().min(0, "年排放量不能為負數").default(30000),
+  feeRateOption: z.string().default('300'),
+  customFeeRate: z.coerce.number().optional(),
+  reductionPercentage: z.array(z.number()).default([10]),
+  hasOffset: z.enum(["yes", "no"]).default("no"),
+  offsetAmount: z.coerce.number().min(0, "抵繳量不能為負數").optional(),
+}).refine(data => {
+    if (data.feeRateOption === 'custom') {
+        return data.customFeeRate !== undefined && data.customFeeRate > 0;
+    }
+    return true;
+}, {
+    message: "請輸入有效的自訂費率",
+    path: ["customFeeRate"],
+});
 
 const CarbonTax = () => {
-  const [emissionData, setEmissionData] = useState({
-    scope1: '',
-    scope2: '',
-    scope3: '',
-    carbonPrice: '300'
+  const [gptExplanation, setGptExplanation] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      annualEmissions: 30000,
+      feeRateOption: '300',
+      reductionPercentage: [10],
+      hasOffset: 'no',
+      offsetAmount: 0,
+    },
   });
 
-  const [results, setResults] = useState({
-    totalEmissions: 0,
-    totalCost: 0,
-    scope1Cost: 0,
-    scope2Cost: 0,
-    scope3Cost: 0
-  });
+  const formValues = form.watch();
 
-  const handleCalculate = () => {
-    const scope1 = parseFloat(emissionData.scope1) || 0;
-    const scope2 = parseFloat(emissionData.scope2) || 0;
-    const scope3 = parseFloat(emissionData.scope3) || 0;
-    const price = parseFloat(emissionData.carbonPrice) || 0;
+  const calculatedResults = useMemo(() => {
+    const { annualEmissions, feeRateOption, customFeeRate, reductionPercentage, hasOffset, offsetAmount } = formValues;
+    
+    const feeRate = feeRateOption === 'custom' ? (customFeeRate || 0) : parseInt(feeRateOption, 10);
+    const reduction = (reductionPercentage?.[0] || 0) / 100;
+    const offset = hasOffset === 'yes' ? (offsetAmount || 0) : 0;
 
-    const totalEmissions = scope1 + scope2 + scope3;
-    const scope1Cost = scope1 * price;
-    const scope2Cost = scope2 * price;
-    const scope3Cost = scope3 * price;
-    const totalCost = totalEmissions * price;
+    const feeWithoutReduction = (annualEmissions || 0) * feeRate;
+    
+    const emissionsAfterReduction = (annualEmissions || 0) * (1 - reduction);
+    const finalEmissions = Math.max(0, emissionsAfterReduction - offset);
+    const feeAfterReduction = finalEmissions * feeRate;
 
-    setResults({
-      totalEmissions,
-      totalCost,
-      scope1Cost,
-      scope2Cost,
-      scope3Cost
-    });
+    const savings = feeWithoutReduction - feeAfterReduction;
+
+    return { feeWithoutReduction, feeAfterReduction, savings };
+  }, [formValues]);
+
+  const handleGenerateExplanation = async () => {
+    setIsGenerating(true);
+    setGptExplanation('');
+    const validation = await form.trigger();
+    if (!validation) {
+        setIsGenerating(false);
+        return;
+    }
+
+    try {
+        const { data, error } = await supabase.functions.invoke('carbon-tax-explainer', {
+            body: { ...form.getValues(), savings: calculatedResults.savings },
+        });
+
+        if (error) throw error;
+        setGptExplanation(data.explanation);
+    } catch (error) {
+        console.error('Error generating explanation:', error);
+        setGptExplanation('無法產生 AI 建議，請稍後再試。');
+    } finally {
+        setIsGenerating(false);
+    }
   };
 
-  const scenarios = [
-    { price: 200, description: '保守情境', year: '2024' },
-    { price: 300, description: '基準情境', year: '2025' },
-    { price: 500, description: '積極情境', year: '2026' },
-    { price: 800, description: '嚴格情境', year: '2027' }
+  const chartData = [
+    { name: '未減碳', '碳費成本': calculatedResults.feeWithoutReduction },
+    { name: '減碳後', '碳費成本': calculatedResults.feeAfterReduction },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 pb-20 font-sans">
       <Navigation />
-      
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              碳費模擬計算
-            </h1>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              精確計算碳費成本，協助企業進行財務規劃與減碳投資評估
-            </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Card className="mb-8 bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
+              <BookOpen className="mr-3 h-7 w-7 text-blue-600" />
+              碳費制度簡介
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-gray-600 space-y-2">
+            <p>台灣碳費制度由《氣候變遷因應法》規範，初期主要針對「年排放量超過 25,000 噸 CO₂e」的電力業及大型製造業。碳費的設立旨在以經濟誘因，鼓勵企業投資節能設備、採用低碳技術，或購買碳權來抵銷自身排放，進而達成國家整體的減碳目標。</p>
+            <p>目前預估費率約為每噸 300 元新台幣，未來將視國內外情勢滾動式調整。企業若能積極減碳，不僅能降低營運成本，更能提升在綠色供應鏈中的競爭力。</p>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-2">
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
+                  <Sliders className="mr-3 h-7 w-7 text-green-600" />
+                  輸入模擬參數
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form className="space-y-6">
+                    <FormField control={form.control} name="annualEmissions" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>年排放量 (噸 CO₂e)</FormLabel>
+                        <FormControl><Input type="number" placeholder="例如：30000" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="feeRateOption" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>碳費費率 (元/噸)</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="選擇費率" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            <SelectItem value="300">300元 (基準情境)</SelectItem>
+                            <SelectItem value="600">600元 (中度情境)</SelectItem>
+                            <SelectItem value="1000">1000元 (嚴格情境)</SelectItem>
+                            <SelectItem value="custom">自訂費率</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {form.watch('feeRateOption') === 'custom' && (
+                          <FormField control={form.control} name="customFeeRate" render={({ field }) => (
+                            <FormItem className="mt-2">
+                              <FormControl><Input type="number" placeholder="請輸入自訂費率" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        )}
+                      </FormItem>
+                    )} />
+                    
+                    <FormField control={form.control} name="reductionPercentage" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>採用節能措施可減碳 ({field.value?.[0] || 0}%)</FormLabel>
+                        <FormControl>
+                          <Slider min={0} max={50} step={1} defaultValue={field.value} onValueChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="hasOffset" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>是否有碳權抵繳？</FormLabel>
+                        <FormControl>
+                          <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
+                            <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="no" /></FormControl><FormLabel className="font-normal">無</FormLabel></FormItem>
+                            <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="yes" /></FormControl><FormLabel className="font-normal">有</FormLabel></FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        {form.watch('hasOffset') === 'yes' && (
+                          <FormField control={form.control} name="offsetAmount" render={({ field }) => (
+                            <FormItem className="mt-2">
+                              <FormLabel className="text-sm text-gray-600">抵繳量 (噸 CO₂e)</FormLabel>
+                              <FormControl><Input type="number" placeholder="輸入碳權數量" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        )}
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Calculator Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
-              <Calculator className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-bold text-gray-900">碳費計算器</h2>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  範疇一排放量 (公噸CO2e)
-                </label>
-                <input
-                  type="number"
-                  value={emissionData.scope1}
-                  onChange={(e) => setEmissionData({...emissionData, scope1: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="直接排放量"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  範疇二排放量 (公噸CO2e)
-                </label>
-                <input
-                  type="number"
-                  value={emissionData.scope2}
-                  onChange={(e) => setEmissionData({...emissionData, scope2: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="間接排放量"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  範疇三排放量 (公噸CO2e)
-                </label>
-                <input
-                  type="number"
-                  value={emissionData.scope3}
-                  onChange={(e) => setEmissionData({...emissionData, scope3: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="其他間接排放量"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  碳價 (NT$/噸CO2e)
-                </label>
-                <input
-                  type="number"
-                  value={emissionData.carbonPrice}
-                  onChange={(e) => setEmissionData({...emissionData, carbonPrice: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="300"
-                />
-              </div>
-
-              <button
-                onClick={handleCalculate}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                計算碳費
-              </button>
-            </div>
-          </div>
-
-          {/* Results Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
-              <BarChart3 className="h-6 w-6 text-green-600" />
-              <h2 className="text-2xl font-bold text-gray-900">計算結果</h2>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-600 mb-1">總排放量</div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {results.totalEmissions.toLocaleString()} 公噸CO2e
-                </div>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="text-sm text-blue-600 mb-1">總碳費成本</div>
-                <div className="text-2xl font-bold text-blue-600">
-                  NT$ {results.totalCost.toLocaleString()}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-red-50 p-3 rounded-lg text-center">
-                  <div className="text-xs text-red-600 mb-1">範疇一</div>
-                  <div className="text-sm font-semibold text-red-600">
-                    NT$ {results.scope1Cost.toLocaleString()}
+          <div className="lg:col-span-3 space-y-8">
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
+                  <BarChart3 className="mr-3 h-7 w-7 text-purple-600" />
+                  即時運算結果
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <p className="text-sm text-red-700 flex items-center justify-center"><Leaf className="mr-1 h-4 w-4" />未減碳碳費</p>
+                    <p className="text-xl font-bold text-red-900">NT$ {calculatedResults.feeWithoutReduction.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <p className="text-sm text-green-700 flex items-center justify-center"><TrendingDown className="mr-1 h-4 w-4" />減碳後碳費</p>
+                    <p className="text-xl font-bold text-green-900">NT$ {calculatedResults.feeAfterReduction.toLocaleString()}</p>
+                  </div>
+                   <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-blue-700 flex items-center justify-center"><Coins className="mr-1 h-4 w-4" />每年可節省</p>
+                    <p className="text-xl font-bold text-blue-900">NT$ {calculatedResults.savings.toLocaleString()}</p>
                   </div>
                 </div>
-                <div className="bg-yellow-50 p-3 rounded-lg text-center">
-                  <div className="text-xs text-yellow-600 mb-1">範疇二</div>
-                  <div className="text-sm font-semibold text-yellow-600">
-                    NT$ {results.scope2Cost.toLocaleString()}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2 text-center">成本比較圖</h3>
+                  <div className="w-full h-64">
+                    <ResponsiveContainer>
+                      <BarChart data={chartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis tickFormatter={(value) => `NT$${Number(value).toLocaleString()}`} />
+                        <Tooltip formatter={(value) => `NT$${Number(value).toLocaleString()}`} />
+                        <Legend />
+                        <Bar dataKey="碳費成本" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-                <div className="bg-green-50 p-3 rounded-lg text-center">
-                  <div className="text-xs text-green-600 mb-1">範疇三</div>
-                  <div className="text-sm font-semibold text-green-600">
-                    NT$ {results.scope3Cost.toLocaleString()}
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
+                  <Sparkles className="mr-3 h-7 w-7 text-yellow-500" />
+                  GPT 協助解說
+                </CardTitle>
+                <CardDescription>點擊按鈕，讓 AI 為您分析模擬結果並提供建議。</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={handleGenerateExplanation} disabled={isGenerating} className="w-full mb-4">
+                  {isGenerating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />產生中...</> : '產生 AI 建議'}
+                </Button>
+                {gptExplanation && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                    <BotMessage content={gptExplanation} />
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Scenarios Section */}
-        <div className="mt-12 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center space-x-2 mb-6">
-            <TrendingUp className="h-6 w-6 text-purple-600" />
-            <h2 className="text-2xl font-bold text-gray-900">碳價情境分析</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {scenarios.map((scenario, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4 text-center">
-                <div className="text-lg font-bold text-gray-900 mb-2">
-                  NT$ {scenario.price}
-                </div>
-                <div className="text-sm text-gray-600 mb-1">{scenario.description}</div>
-                <div className="text-xs text-gray-500">{scenario.year}</div>
-                <div className="mt-3 text-sm font-medium text-blue-600">
-                  總成本: NT$ {(results.totalEmissions * scenario.price).toLocaleString()}
-                </div>
-              </div>
-            ))}
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
