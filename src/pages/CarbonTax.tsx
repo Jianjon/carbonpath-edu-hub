@@ -1,4 +1,3 @@
-
 import { useState, useMemo, ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +7,7 @@ import Navigation from '../components/Navigation';
 import Introduction from '../components/carbon-tax/Introduction';
 import ParameterForm from '../components/carbon-tax/ParameterForm';
 import Results from '../components/carbon-tax/Results';
+import ParameterSummary from '../components/carbon-tax/ParameterSummary';
 import { Button } from '@/components/ui/button';
 
 interface Rate {
@@ -186,10 +186,11 @@ const CarbonTax = () => {
         {step === 2 && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-1 space-y-8">
-                    <ParameterForm form={form} reductionModel={reductionModel} setReductionModel={setReductionModel}/>
-                    <div className="flex justify-end lg:justify-start">
-                        <Button variant="outline" onClick={() => setStep(1)}>返回修改參數</Button>
-                    </div>
+                    <ParameterSummary 
+                        formValues={formValues} 
+                        reductionModel={reductionModel} 
+                        onEdit={() => setStep(1)} 
+                    />
                 </div>
             
                 <div className="lg:col-span-2 space-y-8">
