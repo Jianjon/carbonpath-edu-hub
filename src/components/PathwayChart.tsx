@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -128,165 +127,167 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="h-[420px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart 
-                data={dataWithAnnualReduction} 
-                syncId="carbonPathwaySync"
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="pathwayGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#1976D2" stopOpacity={0.7}/>
-                    <stop offset="100%" stopColor="#90caf9" stopOpacity={0.2}/>
-                  </linearGradient>
-                  <linearGradient id="residualGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#26C485" stopOpacity={0.5}/>
-                    <stop offset="100%" stopColor="#d1fae5" stopOpacity={0.18}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                
-                {/* 自訂模型階段背景色塊 */}
-                {refsArr.map((ph, idx) => (
-                  <ReferenceArea
-                    key={`phase-${idx}-${ph.label}`}
-                    x1={ph.x1}
-                    x2={ph.x2}
-                    stroke="none"
-                    fill={ph.color}
-                    fillOpacity={0.32}
-                    ifOverflow="extendDomain"
+          <div className="w-full overflow-x-auto">
+            <ChartContainer config={chartConfig} className="h-[420px] min-w-[600px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart 
+                  data={dataWithAnnualReduction} 
+                  syncId="carbonPathwaySync"
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="pathwayGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1976D2" stopOpacity={0.7}/>
+                      <stop offset="100%" stopColor="#90caf9" stopOpacity={0.2}/>
+                    </linearGradient>
+                    <linearGradient id="residualGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#26C485" stopOpacity={0.5}/>
+                      <stop offset="100%" stopColor="#d1fae5" stopOpacity={0.18}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  
+                  {/* 自訂模型階段背景色塊 */}
+                  {refsArr.map((ph, idx) => (
+                    <ReferenceArea
+                      key={`phase-${idx}-${ph.label}`}
+                      x1={ph.x1}
+                      x2={ph.x2}
+                      stroke="none"
+                      fill={ph.color}
+                      fillOpacity={0.32}
+                      ifOverflow="extendDomain"
+                    />
+                  ))}
+                  
+                  {/* 分界年標線 */}
+                  {modelType === 'custom-target' && customPhases?.nearTermTarget && (
+                    <ReferenceLine
+                      x={customPhases.nearTermTarget.year}
+                      stroke="#3b82f6"
+                      strokeDasharray="4 2"
+                      label={{
+                        position: 'top',
+                        fill: "#3b82f6",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        value: "近期結束",
+                      }}
+                    />
+                  )}
+                  {modelType === 'custom-target' && customPhases?.longTermTarget && (
+                    <ReferenceLine
+                      x={customPhases.longTermTarget.year}
+                      stroke="#26A485"
+                      label={{
+                        position: 'top',
+                        fill: "#26A485",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        value: "長期結束(目標年)",
+                      }}
+                    />
+                  )}
+                  
+                  <XAxis 
+                    dataKey="year" 
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tick={{ fontWeight: 500 }}
+                    domain={[firstChartYear, netZeroYear + extendedYears]}
+                    type="number"
+                    allowDataOverflow
                   />
-                ))}
-                
-                {/* 分界年標線 */}
-                {modelType === 'custom-target' && customPhases?.nearTermTarget && (
-                  <ReferenceLine
-                    x={customPhases.nearTermTarget.year}
-                    stroke="#3b82f6"
-                    strokeDasharray="4 2"
-                    label={{
-                      position: 'top',
-                      fill: "#3b82f6",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      value: "近期結束",
+                  <YAxis 
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    width={70}
+                  />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                     }}
                   />
-                )}
-                {modelType === 'custom-target' && customPhases?.longTermTarget && (
+                  
+                  {/* 主排放量區域圖 */}
+                  <Area 
+                    type="natural"
+                    dataKey="emissions"
+                    stroke={chartConfig.emissions.color}
+                    fill="url(#pathwayGradient)"
+                    fillOpacity={0.95}
+                    name="實際排放量"
+                    activeDot={{ r: 5, fill: chartConfig.emissions.color }}
+                    dot={false}
+                  />
+                  
+                  {/* 目標折線 */}
+                  <Line 
+                    type="natural" 
+                    dataKey="target" 
+                    stroke={chartConfig.target.color}
+                    strokeWidth={3}
+                    strokeDasharray="8 2"
+                    name="目標排放量"
+                    dot={false}
+                    activeDot={false}
+                  />
+                  
+                  {/* Net Zero年標線 */}
                   <ReferenceLine
-                    x={customPhases.longTermTarget.year}
+                    x={netZeroYear}
                     stroke="#26A485"
                     label={{
-                      position: 'top',
+                      position: 'insideTopRight',
+                      value: "Net Zero",
                       fill: "#26A485",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      value: "長期結束(目標年)",
-                    }}
-                  />
-                )}
-                
-                <XAxis 
-                  dataKey="year" 
-                  stroke="#6b7280"
-                  fontSize={12}
-                  tick={{ fontWeight: 500 }}
-                  domain={[firstChartYear, netZeroYear + extendedYears]}
-                  type="number"
-                  allowDataOverflow
-                />
-                <YAxis 
-                  stroke="#6b7280"
-                  fontSize={12}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                  width={70}
-                />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                  }}
-                />
-                
-                {/* 主排放量區域圖 */}
-                <Area 
-                  type="natural"
-                  dataKey="emissions"
-                  stroke={chartConfig.emissions.color}
-                  fill="url(#pathwayGradient)"
-                  fillOpacity={0.95}
-                  name="實際排放量"
-                  activeDot={{ r: 5, fill: chartConfig.emissions.color }}
-                  dot={false}
-                />
-                
-                {/* 目標折線 */}
-                <Line 
-                  type="natural" 
-                  dataKey="target" 
-                  stroke={chartConfig.target.color}
-                  strokeWidth={3}
-                  strokeDasharray="8 2"
-                  name="目標排放量"
-                  dot={false}
-                  activeDot={false}
-                />
-                
-                {/* Net Zero年標線 */}
-                <ReferenceLine
-                  x={netZeroYear}
-                  stroke="#26A485"
-                  label={{
-                    position: 'insideTopRight',
-                    value: "Net Zero",
-                    fill: "#26A485",
-                    fontWeight: 600,
-                    fontSize: 12,
-                  }}
-                />
-                
-                {/* 残留排放水平線 */}
-                <ReferenceLine
-                  y={lastEmission}
-                  stroke="#26C485"
-                  strokeWidth={2}
-                  strokeDasharray="7 6"
-                  label={{
-                    position: 'insideTopRight',
-                    fill: "#26C485",
-                    fontWeight: 700,
-                    fontSize: 11,
-                    value: `最終殘留 ${actualResidualPercentage}%`,
-                  }}
-                  ifOverflow="extendDomain"
-                />
-                
-                {/* 台灣目標年標線 */}
-                {showTaiwanMarks && taiwanMilestoneYears.map((milestone) => (
-                  <ReferenceLine
-                    key={`taiwan-${milestone.year}`}
-                    x={milestone.year}
-                    stroke={milestone.color}
-                    strokeWidth={2}
-                    label={{
-                      value: milestone.label,
-                      position: "top",
-                      fill: milestone.color,
+                      fontWeight: 600,
                       fontSize: 12,
-                      fontWeight: 600
                     }}
-                    ifOverflow="visible"
                   />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+                  
+                  {/* 残留排放水平線 */}
+                  <ReferenceLine
+                    y={lastEmission}
+                    stroke="#26C485"
+                    strokeWidth={2}
+                    strokeDasharray="7 6"
+                    label={{
+                      position: 'insideTopRight',
+                      fill: "#26C485",
+                      fontWeight: 700,
+                      fontSize: 11,
+                      value: `最終殘留 ${actualResidualPercentage}%`,
+                    }}
+                    ifOverflow="extendDomain"
+                  />
+                  
+                  {/* 台灣目標年標線 */}
+                  {showTaiwanMarks && taiwanMilestoneYears.map((milestone) => (
+                    <ReferenceLine
+                      key={`taiwan-${milestone.year}`}
+                      x={milestone.year}
+                      stroke={milestone.color}
+                      strokeWidth={2}
+                      label={{
+                        value: milestone.label,
+                        position: "top",
+                        fill: milestone.color,
+                        fontSize: 12,
+                        fontWeight: 600
+                      }}
+                      ifOverflow="visible"
+                    />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
         </CardContent>
       </Card>
       
@@ -296,7 +297,8 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
           <CardTitle>年度減量</CardTitle>
         </CardHeader>
         <CardContent>
-            <ChartContainer config={chartConfig} className="h-[260px]">
+          <div className="w-full overflow-x-auto">
+            <ChartContainer config={chartConfig} className="h-[260px] min-w-[600px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart 
                       data={dataWithAnnualReduction} 
@@ -345,6 +347,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
                     </AreaChart>
                 </ResponsiveContainer>
             </ChartContainer>
+          </div>
         </CardContent>
       </Card>
     </div>
