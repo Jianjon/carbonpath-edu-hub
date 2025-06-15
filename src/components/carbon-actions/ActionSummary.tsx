@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { PieChart, Pie, Cell } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Action, Industry, ActionAngle } from '../../pages/CarbonCredits';
 import { actionsData, actionAngles } from '../../data/carbonActionsData';
 import { Button } from '@/components/ui/button';
@@ -81,6 +81,40 @@ const ActionSummary = ({ industry, selectedActionIds, onBack, onReset }: Props) 
         return config as ChartConfig;
     }, [summaryData.chartData]);
 
+    const investmentMap: Record<'高' | '中' | '低', number> = { '低': 1, '中': 2, '高': 3 };
+    const difficultyMap: Record<'簡易' | '中等' | '複雜', number> = { '簡易': 1, '中等': 2, '複雜': 3 };
+    
+    const scatterDataByAngle = useMemo(() => {
+        return selectedActions.reduce((acc, action) => {
+            const angle = action.angle;
+            if (!acc[angle]) {
+                acc[angle] = [];
+            }
+            acc[angle].push({
+                x: investmentMap[action.investment],
+                y: difficultyMap[action.difficulty],
+                name: action.name,
+                investment: action.investment,
+                difficulty: action.difficulty,
+            });
+            return acc;
+        }, {} as Record<ActionAngle, { x: number; y: number; name: string, investment: string, difficulty: string }[]>);
+    }, [selectedActions]);
+
+    const CustomScatterTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="p-2 text-sm bg-background border rounded-lg shadow-lg">
+                    <p className="font-bold">{data.name}</p>
+                    <p className="text-muted-foreground">投資級距: {data.investment}</p>
+                    <p className="text-muted-foreground">執行難度: {data.difficulty}</p>
+                </div>
+            );
+        }
+        return null;
+    };
+
     const handleExport = () => {
         const headers = ['減碳面向', '減碳方向', '效益描述', '預估投資級距'];
         const csvRows = [headers.join(',')];
@@ -141,52 +175,48 @@ const ActionSummary = ({ industry, selectedActionIds, onBack, onReset }: Props) 
                         </Card>
                         <Card className="md:col-span-3">
                             <CardHeader>
-                                <CardTitle className="text-lg">行動分佈圖</CardTitle>
+                                <CardTitle className="text-lg">行動效益分析</CardTitle>
+                                <CardDescription>比較不同行動的投資與執行難度</CardDescription>
                             </CardHeader>
-                            <CardContent className="flex items-center justify-center h-[200px] pb-0">
-                                {summaryData.chartData.length > 1 ? (
+                            <CardContent className="h-[280px] pb-4">
+                                {selectedActions.length > 0 ? (
                                     <ChartContainer config={chartConfig} className="w-full h-full">
-                                        <PieChart>
-                                            <ChartTooltip 
-                                                cursor={false}
-                                                content={<ChartTooltipContent hideLabel />} 
+                                        <ScatterChart margin={{ top: 20, right: 40, bottom: 40, left: 20 }}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis 
+                                                type="number" 
+                                                dataKey="x" 
+                                                name="投資級距" 
+                                                domain={[0.5, 3.5]} 
+                                                ticks={[1, 2, 3]} 
+                                                tick={{ fontSize: 12 }}
+                                                tickFormatter={(value) => ({ 1: '低', 2: '中', 3: '高' }[value] || '')}
+                                                label={{ value: "投資級距", position: 'insideBottom', offset: -15, fontSize: 12 }}
                                             />
-                                            <Pie data={summaryData.chartData} dataKey="count" nameKey="angle" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2}>
-                                                {summaryData.chartData.map((entry) => (
-                                                   <Cell key={`cell-${entry.angle}`} fill={chartConfig[entry.angle]?.color} />
-                                                ))}
-                                            </Pie>
-                                            <ChartLegend 
-                                                content={<ChartLegendContent nameKey="angle" />} 
-                                                className="-translate-y-2 flex-wrap"
+                                            <YAxis 
+                                                type="number" 
+                                                dataKey="y" 
+                                                name="執行難度"
+                                                domain={[0.5, 3.5]}
+                                                ticks={[1, 2, 3]} 
+                                                tick={{ fontSize: 12 }}
+                                                tickFormatter={(value) => ({ 1: '簡易', 2: '中等', 3: '複雜' }[value] || '')}
+                                                label={{ value: "執行難度", angle: -90, position: 'insideLeft', offset: 0, fontSize: 12 }}
                                             />
-                                        </PieChart>
-                                    </ChartContainer>
-                                ) : summaryData.chartData.length === 1 ? (
-                                    (() => {
-                                        const singleAngle = summaryData.chartData[0];
-                                        const IconComponent = {
-                                            '能源管理': Zap,
-                                            '循環經濟': RefreshCw,
-                                            '永續採購': ListChecks,
-                                            '淨零管理': Target,
-                                        }[singleAngle.angle];
-
-                                        return (
-                                            <div className="flex flex-col items-center justify-center text-center h-full">
-                                                <IconComponent 
-                                                    className="h-12 w-12 mb-4" 
-                                                    style={{ color: chartConfig[singleAngle.angle]?.color }} 
+                                            <Tooltip content={<CustomScatterTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+                                            <Legend content={<ChartLegendContent />} verticalAlign="top" wrapperStyle={{paddingBottom: '20px'}} />
+                                            {Object.entries(scatterDataByAngle).map(([angle, data]) => (
+                                                <Scatter 
+                                                    key={angle} 
+                                                    name={angle} 
+                                                    data={data} 
+                                                    fill={chartConfig[angle as ActionAngle]?.color}
                                                 />
-                                                <p className="text-muted-foreground">所有行動皆集中於</p>
-                                                <p className="font-bold text-lg mt-1" style={{ color: chartConfig[singleAngle.angle]?.color }}>
-                                                    {singleAngle.angle}
-                                                </p>
-                                            </div>
-                                        );
-                                    })()
+                                            ))}
+                                        </ScatterChart>
+                                    </ChartContainer>
                                 ) : (
-                                    <div className="text-muted-foreground text-center">
+                                    <div className="flex items-center justify-center h-full text-muted-foreground text-center">
                                         <p>沒有足夠的數據來生成圖表。</p>
                                     </div>
                                 )}
