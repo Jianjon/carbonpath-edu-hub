@@ -47,8 +47,14 @@ export const calculateCustomTargetPath = (
   if (D > 0) {
     const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
     
-    console.log("自訂長期減排：使用平滑增長模型（向上凸）");
-    const annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
+    // 從近期階段的最後一年計算初始年度減排量，以確保曲線平滑銜接
+    let initialAnnualReduction = 0;
+    if (path.length > 1) {
+        initialAnnualReduction = path[path.length - 2].emissions - path[path.length - 1].emissions;
+    }
+    
+    console.log("自訂長期減排：使用中間達峰值的拋物線模型");
+    const annualReductions = calculateGrowthReductions(D, totalReductionNeeded, initialAnnualReduction);
       
     console.log(`長期減排總量: ${totalReductionNeeded.toFixed(0)} tCO2e`);
     console.log(`長期第一年減排量: ${annualReductions[0]?.toFixed(0) ?? 0} tCO2e`);
