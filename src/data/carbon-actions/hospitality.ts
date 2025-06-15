@@ -3,51 +3,735 @@ import { Action, ActionAngle } from '../../pages/CarbonCredits';
 
 export const hospitalityActions: Record<ActionAngle, Action[]> = {
   '能源管理': [
-    { id: 'hos-en-1', name: '房間智能節能系統（離房斷電）', description: '避免客房無人時能源浪費，顯著節電。', investment: '中' },
-    { id: 'hos-en-2', name: '高效能空調與熱水系統', description: '降低製冷/供暖與熱水能耗，減少營運成本。', investment: '中' },
-    { id: 'hos-en-3', name: 'LED照明', description: '顯著降低照明電費，延長燈具壽命。', investment: '低' },
-    { id: 'hos-en-4', name: '泳池與水療節能', description: '優化水泵、加熱系統，減少相關能耗。', investment: '中' },
-    { id: 'hos-en-5', name: '廚房設備節能', description: '採用高效能烹飪、製冷設備，降低廚房能耗。', investment: '中' },
-    { id: 'hos-en-6', name: '再生能源（屋頂太陽能）', description: '利用屋頂發電，降低外購電力和碳排放。', investment: '高' },
-    { id: 'hos-en-7', name: '能源監控', description: '精準掌握飯店各區域能耗，找出節能潛力。', investment: '中' },
-    { id: 'hos-en-8', name: '電梯節能', description: '導入電梯再生能源技術或智能調度系統。', investment: '中' },
-    { id: 'hos-en-9', name: '員工節能培訓', description: '提升員工節能意識，落實日常操作節能。', investment: '低' },
-    { id: 'hos-en-10', name: '綠色建築設計', description: '從設計階段融入節能元素，如自然通風採光。', investment: '高' },
+    {
+      id: 'hos-en-1',
+      name: '房間智能節能系統（離房斷電）',
+      description: '避免客房無人時能源浪費，顯著節電。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '評估現有房卡系統與客房電路。',
+        '選擇穩定可靠的智能節能系統供應商。',
+        '分區或分批進行客房安裝，減少對營運的影響。',
+        '對房務與工程人員進行系統操作與維護培訓。'
+      ],
+      tracking: [
+        '比較安裝前後客房區域的平均用電量。',
+        '追蹤系統的故障率與維護成本。'
+      ]
+    },
+    {
+      id: 'hos-en-2',
+      name: '高效能空調與熱水系統',
+      description: '降低製冷/供暖與熱水能耗，減少營運成本。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '委託專業顧問進行全面的能效評估。',
+        '根據評估結果，選擇合適的高效能主機與設備。',
+        '規劃施工期間的替代方案或分區施工計畫。',
+        '完成安裝後進行系統調適與效能驗證。'
+      ],
+      tracking: [
+        '監測空調與熱水系統的總耗電/耗氣量。',
+        '計算投資回收期與實際節能效益。'
+      ]
+    },
+    {
+      id: 'hos-en-3',
+      name: 'LED照明',
+      description: '顯著降低照明電費，延長燈具壽命。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '全面盤點飯店內所有照明燈具。',
+        '制定分區分批的汰換計畫。',
+        '採購適合不同區域氛圍與照度需求的LED燈具。'
+      ],
+      tracking: [
+        '追蹤每月電費單中照明用電的變化。',
+        '記錄燈具的故障率與更換頻率。'
+      ]
+    },
+    {
+      id: 'hos-en-4',
+      name: '泳池與水療節能',
+      description: '優化水泵、加熱系統，減少相關能耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '為泳池加裝保溫覆蓋，減少夜間熱量散失。',
+        '將水泵更換為變頻馬達，依需求調整轉速。',
+        '評估導入熱泵或太陽能作為加熱輔助。'
+      ],
+      tracking: [
+        '監測泳池與水療區域的電力與燃料消耗。',
+        '確保水溫與水質維持在設定標準。'
+      ]
+    },
+    {
+      id: 'hos-en-5',
+      name: '廚房設備節能',
+      description: '採用高效能烹飪、製冷設備，降低廚房能耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '盤點廚房現有設備的使用年限與能耗。',
+        '優先汰換老舊的爐具、烤箱、冰箱等。',
+        '採購具備節能標章的高效能設備。'
+      ],
+      tracking: [
+        '追蹤廚房的瓦斯與電力費用。',
+        '收集廚師團隊對新設備的使用回饋。'
+      ]
+    },
+    {
+      id: 'hos-en-6',
+      name: '再生能源（屋頂太陽能）',
+      description: '利用屋頂發電，降低外購電力和碳排放。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '評估飯店屋頂的結構安全與可裝設面積。',
+        '委託專業廠商進行系統規劃、設計與財務分析。',
+        '完成能源局備案與台電並網申請程序。',
+        '施工安裝並完成系統驗收。'
+      ],
+      tracking: [
+        '監測太陽能系統的每日發電量。',
+        '計算綠電自發自用比例與售電收入。'
+      ]
+    },
+    {
+      id: 'hos-en-7',
+      name: '能源監控',
+      description: '精準掌握飯店各區域能耗，找出節能潛力。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '安裝智慧電表監測主要耗能區域（如客房、公區、廚房）。',
+        '導入建築能源管理系統(BEMS)。',
+        '建立能耗儀表板，分析用電趨勢。'
+      ],
+      tracking: [
+        '定期產出能耗分析報告，找出異常用電時段或區域。',
+        '根據數據制定新的節能改善措施。'
+      ]
+    },
+    {
+      id: 'hos-en-8',
+      name: '電梯節能',
+      description: '導入電梯再生能源技術或智能調度系統。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '與電梯維護廠商討論節能改造方案。',
+        '評估安裝電力回生裝置的可行性。',
+        '導入目的樓層控制系統，優化電梯調度。'
+      ],
+      tracking: [
+        '比較改造前後電梯的耗電量。',
+        '評估對乘客等待時間的影響。'
+      ]
+    },
+    {
+      id: 'hos-en-9',
+      name: '員工節能培訓',
+      description: '提升員工節能意識，落實日常操作節能。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '制定各部門的節能標準作業程序(SOP)。',
+        '定期舉辦節能教育訓練。',
+        '建立節能提案獎勵制度。'
+      ],
+      tracking: [
+        '定期巡檢各區域的節能措施落實情況。',
+        '公開表揚節能表現優異的部門或員工。'
+      ]
+    },
+    {
+      id: 'hos-en-10',
+      name: '綠色建築設計',
+      description: '從設計階段融入節能元素，如自然通風採光。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需外聘顧問',
+      steps: [
+        '在新建或改建專案初期，即導入綠建築設計理念。',
+        '優化建築外殼的隔熱性能。',
+        '最大化利用自然採光與通風。',
+        '申請並取得綠建築標章認證。'
+      ],
+      tracking: [
+        '追蹤綠建築相關指標的達成情況。',
+        '監測建築完工後的實際能耗表現。'
+      ]
+    },
   ],
   '循環經濟': [
-    { id: 'hos-ci-1', name: '減少一次性備品', description: '大幅減少垃圾產生，降低採購與處理成本。', investment: '低' },
-    { id: 'hos-ci-2', name: '布草重複使用', description: '鼓勵房客重複使用毛巾、床單，節省水電。', investment: '低' },
-    { id: 'hos-ci-3', name: '廢棄物分類回收', description: '提高回收率，減少掩埋量。', investment: '低' },
-    { id: 'hos-ci-4', name: '廚餘回收', description: '將餐飲廢棄物轉化為堆肥或飼料。', investment: '低' },
-    { id: 'hos-ci-5', name: '水資源回收（中水、雨水）', description: '節省自來水，可用於沖廁、澆灌。', investment: '中' },
-    { id: 'hos-ci-6', name: '廢油回收', description: '將廢食用油轉化為生質燃料或其他產品。', investment: '低' },
-    { id: 'hos-ci-7', name: '舊家具回收再利用', description: '延長家具使用壽命，減少廢棄。', investment: '低' },
-    { id: 'hos-ci-8', name: '包裝減量', description: '減少食材、用品的包裝材料。', investment: '低' },
-    { id: 'hos-ci-9', name: '餐飲廢棄物管理', description: '優化食材採購與庫存，減少食物浪費。', investment: '低' },
-    { id: 'hos-ci-10', name: '鼓勵賓客自帶用品', description: '減少飯店一次性用品的消耗。', investment: '低' },
+    {
+      id: 'hos-ci-1',
+      name: '減少一次性備品',
+      description: '大幅減少垃圾產生，降低採購與處理成本。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '改用大瓶裝的洗沐用品。',
+        '不主動提供牙刷、刮鬍刀等一次性備品，改為房客索取制。',
+        '在訂房網站或房內明確告知此項政策。'
+      ],
+      tracking: [
+        '追蹤一次性備品的採購量與費用變化。',
+        '收集房客對此政策的回饋。'
+      ]
+    },
+    {
+      id: 'hos-ci-2',
+      name: '布草重複使用',
+      description: '鼓勵房客重複使用毛巾、床單，節省水電。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數天',
+      manpower: '少數員工即可',
+      steps: [
+        '在房內放置告示卡，邀請房客加入環保行列。',
+        '明確告知續住期間不更換床單的規則。',
+        '對房務人員進行相關流程培訓。'
+      ],
+      tracking: [
+        '統計參與此計畫的房客比例。',
+        '追蹤飯店的用水量、用電量與洗滌費用。'
+      ]
+    },
+    {
+      id: 'hos-ci-3',
+      name: '廢棄物分類回收',
+      description: '提高回收率，減少掩埋量。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在客房與公共區域設置分類回收桶。',
+        '對清潔人員進行確實分類的培訓。',
+        '與合法的回收清運業者合作。'
+      ],
+      tracking: [
+        '定期抽查回收桶的分類正確率。',
+        '追蹤一般垃圾與資源回收物的清運量。'
+      ]
+    },
+    {
+      id: 'hos-ci-4',
+      name: '廚餘回收',
+      description: '將餐飲廢棄物轉化為堆肥或飼料。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在廚房與餐廳設置廚餘回收桶。',
+        '與合法的廚餘回收業者簽約清運。',
+        '若有腹地，可評估自設小型堆肥設施。'
+      ],
+      tracking: [
+        '記錄每日的廚餘回收量。',
+        '分析廚餘的主要來源（如自助餐、宴會）。'
+      ]
+    },
+    {
+      id: 'hos-ci-5',
+      name: '水資源回收（中水、雨水）',
+      description: '節省自來水，可用於沖廁、澆灌。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '評估飯店的廢水產生量與水質。',
+        '委託專業廠商設計與安裝中水或雨水回收系統。',
+        '將回收水用於馬桶沖廁、景觀澆灌或外部清洗。'
+      ],
+      tracking: [
+        '計量回收水量。',
+        '比較安裝前後的自來水費帳單。'
+      ]
+    },
+    {
+      id: 'hos-ci-6',
+      name: '廢油回收',
+      description: '將廢食用油轉化為生質燃料或其他產品。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數天',
+      manpower: '少數員工即可',
+      steps: [
+        '設置專用的廢食用油收集桶。',
+        '與合法的廢油回收商簽訂合約。',
+        '確保回收過程符合環保法規。'
+      ],
+      tracking: [
+        '保存回收聯單，確保流向合法。',
+        '記錄廢油回收量。'
+      ]
+    },
+    {
+      id: 'hos-ci-7',
+      name: '舊家具回收再利用',
+      description: '延長家具使用壽命，減少廢棄。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在飯店改裝時，將狀況良好的舊家具整理。',
+        '將舊家具捐贈給社福團體。',
+        '與二手家具商或設計師合作，進行改造再利用。'
+      ],
+      tracking: [
+        '記錄捐贈或再利用的家具數量。',
+        '計算減少的廢棄物清運費用。'
+      ]
+    },
+    {
+      id: 'hos-ci-8',
+      name: '包裝減量',
+      description: '減少食材、用品的包裝材料。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '與供應商溝通，要求使用較少或可回收的包裝。',
+        '優先採購大包裝的食材或用品。',
+        '在內部物流中，使用可重複利用的容器。'
+      ],
+      tracking: [
+        '追蹤垃圾中包裝廢棄物的比例。',
+        '記錄與供應商的溝通與改善成果。'
+      ]
+    },
+    {
+      id: 'hos-ci-9',
+      name: '餐飲廢棄物管理',
+      description: '優化食材採購與庫存，減少食物浪費。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '需專案小組',
+      steps: [
+        '分析歷史銷售數據，精準預測食材需求。',
+        '建立先進先出的庫存管理原則。',
+        '利用食材邊角料研發新菜色或員工餐。'
+      ],
+      tracking: [
+        '每日秤重並記錄廚餘量。',
+        '計算食材廢棄率。'
+      ]
+    },
+    {
+      id: 'hos-ci-10',
+      name: '鼓勵賓客自帶用品',
+      description: '減少飯店一次性用品的消耗。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數天',
+      manpower: '少數員工即可',
+      steps: [
+        '在訂房時提供「環保住宿方案」（不提供一次性備品）並給予優惠。',
+        '鼓勵客人自備盥洗用品與拖鞋。',
+        '在飯店內設置飲水機，鼓勵客人自備水瓶。'
+      ],
+      tracking: [
+        '統計選擇環保住宿方案的客人比例。',
+        '計算因此節省的備品採購成本。'
+      ]
+    },
   ],
   '永續採購': [
-    { id: 'hos-su-1', name: '採購節能設備', description: '選擇具節能標章或高效能的廚房、客房設備。', investment: '中' },
-    { id: 'hos-su-2', name: '環保清潔用品', description: '選擇無毒、可生物降解的清潔劑。', investment: '低' },
-    { id: 'hos-su-3', name: '當地食材', description: '縮短食物里程，支持在地農業。', investment: '低' },
-    { id: 'hos-su-4', name: '永續認證的紡織品', description: '採購有機棉、回收材質或公平貿易的布草。', investment: '中' },
-    { id: 'hos-su-5', name: '可回收備品', description: '選擇由可回收材料製成的一次性備品（若無法避免）。', investment: '低' },
-    { id: 'hos-su-6', name: '環保建材', description: '飯店裝修或新建時，優先使用綠色建材。', investment: '中' },
-    { id: 'hos-su-7', name: '供應商ESG評估', description: '確保供應商符合環境、社會和公司治理標準。', investment: '中' },
-    { id: 'hos-su-8', name: '可生物降解的洗沐用品', description: '減少對水體和環境的污染。', investment: '低' },
-    { id: 'hos-su-9', name: '綠色能源採購', description: '購買綠色電力或再生能源證書。', investment: '中' },
-    { id: 'hos-su-10', name: '永續旅遊產品供應商', description: '選擇支持永續旅遊理念的合作夥伴。', investment: '中' },
+    {
+      id: 'hos-su-1',
+      name: '採購節能設備',
+      description: '選擇具節能標章或高效能的廚房、客房設備。',
+      investment: '中',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立設備採購的綠色規格。',
+        '在汰換設備時，將能效作為首要考量。',
+        '優先選擇具備節能標章的產品。'
+      ],
+      tracking: [
+        '記錄新設備的能效等級。',
+        '追蹤新設備的實際耗能表現。'
+      ]
+    },
+    {
+      id: 'hos-su-2',
+      name: '環保清潔用品',
+      description: '選擇無毒、可生物降解的清潔劑。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '盤點目前使用的清潔劑種類與成分。',
+        '尋找具有環保標章的替代產品。',
+        '測試新產品的清潔效果並逐步更換。'
+      ],
+      tracking: [
+        '計算環保清潔用品的採購比例。',
+        '確保廢水排放符合環保法規。'
+      ]
+    },
+    {
+      id: 'hos-su-3',
+      name: '當地食材',
+      description: '縮短食物里程，支持在地農業。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '與廚師團隊合作，盤點可替換為在地食材的品項。',
+        '尋找並拜訪在地的優質小農或供應商。',
+        '在菜單上標示食材來源，向客人溝通價值。'
+      ],
+      tracking: [
+        '計算在地食材佔總採購量的比例。',
+        '收集客人對在地食材菜色的回饋。'
+      ]
+    },
+    {
+      id: 'hos-su-4',
+      name: '永續認證的紡織品',
+      description: '採購有機棉、回收材質或公平貿易的布草。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '研究不同的紡織品永續認證（如GOTS, Oeko-Tex）。',
+        '要求布草供應商提供相關認證。',
+        '評估成本與品質，逐步導入。'
+      ],
+      tracking: [
+        '記錄永續認證紡織品的採購比例。',
+        '評估其耐用度與顧客的觸感回饋。'
+      ]
+    },
+    {
+      id: 'hos-su-5',
+      name: '可回收備品',
+      description: '選擇由可回收材料製成的一次性備品（若無法避免）。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '檢視現有一次性備品的材質。',
+        '尋找由單一、可回收材質製成的替代品。',
+        '確保使用後的備品能被正確分類回收。'
+      ],
+      tracking: [
+        '評估新備品的成本與顧客接受度。',
+        '追蹤備品回收的成效。'
+      ]
+    },
+    {
+      id: 'hos-su-6',
+      name: '環保建材',
+      description: '飯店裝修或新建時，優先使用綠色建材。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在工程發包時，將使用綠建材納入合約。',
+        '優先選擇低逸散性(VOC)、可回收的建材。',
+        '要求承包商提供綠建材標章證明。'
+      ],
+      tracking: [
+        '統計工程中綠建材的使用比例。',
+        '監測裝修後的室內空氣品質。'
+      ]
+    },
+    {
+      id: 'hos-su-7',
+      name: '供應商ESG評估',
+      description: '確保供應商符合環境、社會和公司治理標準。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '對主要的供應商（如食材、布草、清潔服務）建立ESG評估機制。',
+        '將供應商的永續表現納入合作決策。',
+        '與供應商共同設定永續改善目標。'
+      ],
+      tracking: [
+        '定期更新供應商的ESG評分。',
+        '追蹤供應商的改善進度。'
+      ]
+    },
+    {
+      id: 'hos-su-8',
+      name: '可生物降解的洗沐用品',
+      description: '減少對水體和環境的污染。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '尋找使用天然、可生物降解成分的洗沐用品供應商。',
+        '確認產品不含有害化學物質。',
+        '評估產品的品質與顧客反應。'
+      ],
+      tracking: [
+        '逐步更換為環保洗沐用品。',
+        '在文宣中強調對環境的友善。'
+      ]
+    },
+    {
+      id: 'hos-su-9',
+      name: '綠色能源採購',
+      description: '購買綠色電力或再生能源證書。',
+      investment: '中',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '了解飯店的年度總用電量。',
+        '研究國內的綠電交易市場與供應商。',
+        '簽訂購電合約(PPA)或購買再生能源憑證(T-REC)。'
+      ],
+      tracking: [
+        '確保每年取得足額的綠電或憑證。',
+        '在永續報告或官網上揭露綠電使用比例。'
+      ]
+    },
+    {
+      id: 'hos-su-10',
+      name: '永續旅遊產品供應商',
+      description: '選擇支持永續旅遊理念的合作夥伴。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '與合作的旅行社或在地體驗供應商溝通永續理念。',
+        '優先選擇同樣推動環保、支持在地社區的夥伴。',
+        '共同設計低碳的旅遊行程。'
+      ],
+      tracking: [
+        '建立永續供應商名單。',
+        '評估合作夥伴的永續表現。'
+      ]
+    },
   ],
   '淨零管理': [
-    { id: 'hos-ne-1', name: '碳盤查與目標', description: '全面了解飯店溫室氣體排放來源與熱點。', investment: '中' },
-    { id: 'hos-ne-2', name: '綠色住宿認證', description: '取得國際或國內綠色飯店認證，提升品牌形象。', investment: '中' },
-    { id: 'hos-ne-3', name: '員工永續意識', description: '透過培訓和活動，提升全員對永續的理解與參與度。', investment: '低' },
-    { id: 'hos-ne-4', name: '永續報告', description: '定期發布飯店永續發展報告，提升透明度。', investment: '中' },
-    { id: 'hos-ne-5', name: '碳抵銷方案', description: '透過購買碳權抵銷難以減除的碳排放。', investment: '中' },
-    { id: 'hos-ne-6', name: '與供應商共創綠色供應鏈', description: '與食材、用品供應商合作，共同推動減碳。', investment: '中' },
-    { id: 'hos-ne-7', name: '推廣低碳旅遊行程', description: '設計並推廣低碳旅行路線和活動。', investment: '低' },
-    { id: 'hos-ne-8', name: '智慧能源管理', description: '利用數據和AI優化飯店能源使用。', investment: '中' },
-    { id: 'hos-ne-9', name: '永續旅遊夥伴合作', description: '與支持永續旅遊的旅行社或平台合作。', investment: '低' },
-    { id: 'hos-ne-10', name: '社區回饋', description: '參與或支持當地社區的環保與永續發展活動。', investment: '低' },
+    {
+      id: 'hos-ne-1',
+      name: '碳盤查與目標',
+      description: '全面了解飯店溫室氣體排放來源與熱點。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '遵循ISO 14064-1標準進行組織碳盤查。',
+        '盤查範疇一、二、三的排放量。',
+        '根據盤查結果，設定科學基礎的減排目標(SBT)。'
+      ],
+      tracking: [
+        '每年定期執行盤查與查證。',
+        '每年追蹤減排目標的達成進度。'
+      ]
+    },
+    {
+      id: 'hos-ne-2',
+      name: '綠色住宿認證',
+      description: '取得國際或國內綠色飯店認證，提升品牌形象。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '研究並選擇適合飯店的綠色住宿認證（如環保標章旅館）。',
+        '根據認證標準，檢視並改善飯店的軟硬體設施。',
+        '準備申請文件並接受現場審核。'
+      ],
+      tracking: [
+        '確保認證的有效性並持續符合標準。',
+        '將綠色認證作為行銷重點。'
+      ]
+    },
+    {
+      id: 'hos-ne-3',
+      name: '員工永續意識',
+      description: '透過培訓和活動，提升全員對永續的理解與參與度。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '將永續發展納入新進員工的培訓課程。',
+        '定期舉辦環保講座或工作坊。',
+        '成立飯店的綠色小組，推動相關活動。'
+      ],
+      tracking: [
+        '評估培訓的參與率與成效。',
+        '觀察員工在日常工作中的行為改變。'
+      ]
+    },
+    {
+      id: 'hos-ne-4',
+      name: '永續報告',
+      description: '定期發布飯店永續發展報告，提升透明度。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '參考國際準則（如GRI）規劃報告書架構。',
+        '系統性地收集與整理ESG各面向的數據。',
+        '編撰並對外發布年度永續報告書。'
+      ],
+      tracking: [
+        '每年定期發布。',
+        '收集利害關係人對報告書的回饋。'
+      ]
+    },
+    {
+      id: 'hos-ne-5',
+      name: '碳抵銷方案',
+      description: '透過購買碳權抵銷難以減除的碳排放。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '計算剩餘的、難以透過自身努力減除的碳排放量。',
+        '選擇國際公認的高品質碳權專案進行購買。',
+        '向旅客提供加價購買碳權以抵銷住宿碳排的選項。'
+      ],
+      tracking: [
+        '確保碳權的品質與唯一性。',
+        '透明揭露碳抵銷的資訊。'
+      ]
+    },
+    {
+      id: 'hos-ne-6',
+      name: '與供應商共創綠色供應鏈',
+      description: '與食材、用品供應商合作，共同推動減碳。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '舉辦供應商大會，分享飯店的永續目標。',
+        '提供供應商減碳知識或資源。',
+        '建立聯合減碳專案，例如共同採購、物流優化。'
+      ],
+      tracking: [
+        '追蹤主要供應商的減碳表現。',
+        '評估供應鏈整體的碳排放變化。'
+      ]
+    },
+    {
+      id: 'hos-ne-7',
+      name: '推廣低碳旅遊行程',
+      description: '設計並推廣低碳旅行路線和活動。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '與在地社區合作，設計結合步行、自行車的深度旅遊。',
+        '推廣在地文化體驗與生態導覽。',
+        '提供旅客大眾運輸工具的資訊。'
+      ],
+      tracking: [
+        '統計參與低碳旅遊行程的客人數。',
+        '收集客人對行程的滿意度回饋。'
+      ]
+    },
+    {
+      id: 'hos-ne-8',
+      name: '智慧能源管理',
+      description: '利用數據和AI優化飯店能源使用。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '導入AI驅動的能源管理平台。',
+        '整合天氣預報、住房率等數據，預測能源需求。',
+        '自動優化空調、照明等系統的運轉設定。'
+      ],
+      tracking: [
+        '分析系統導入後的實際節能率。',
+        '持續優化AI模型的準確性。'
+      ]
+    },
+    {
+      id: 'hos-ne-9',
+      name: '永續旅遊夥伴合作',
+      description: '與支持永續旅遊的旅行社或平台合作。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '主動接觸推廣永續旅遊的線上旅行社(OTA)或實體旅行社。',
+        '在合作平台上突顯飯店的綠色特色與認證。',
+        '提供給永續夥伴專屬的優惠方案。'
+      ],
+      tracking: [
+        '追蹤來自永續旅遊夥伴的訂單量。',
+        '評估合作對提升飯店綠色形象的幫助。'
+      ]
+    },
+    {
+      id: 'hos-ne-10',
+      name: '社區回饋',
+      description: '參與或支持當地社區的環保與永續發展活動。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '支持在地的環保組織或社區營造計畫。',
+        '定期舉辦淨灘、淨山或社區清掃活動。',
+        '將部分營收回饋給當地社區發展基金。'
+      ],
+      tracking: [
+        '記錄社區回饋活動的投入與成果。',
+        '提升飯店與在地社區的良好關係。'
+      ]
+    },
   ],
 };

@@ -3,51 +3,735 @@ import { Action, ActionAngle } from '../../pages/CarbonCredits';
 
 export const educationActions: Record<ActionAngle, Action[]> = {
   '能源管理': [
-    { id: 'edu-en-1', name: '校園建築能源效率提升', description: '降低學校整體能耗，減少營運成本。', investment: '中' },
-    { id: 'edu-en-2', name: '智能照明與空調', description: '精確控制教室和辦公室環境，減少能源浪費。', investment: '中' },
-    { id: 'edu-en-3', name: '電腦教室節能', description: '選擇節能型電腦設備，優化使用模式。', investment: '低' },
-    { id: 'edu-en-4', name: '再生能源（太陽能校舍）', description: '利用校舍閒置空間發電，降低外購電力。', investment: '高' },
-    { id: 'edu-en-5', name: '廚房設備節能', description: '採用高效能廚房設備，減少餐飲能耗。', investment: '中' },
-    { id: 'edu-en-6', name: '鍋爐效率提升', description: '提高鍋爐燃燒效率，減少燃料消耗。', investment: '中' },
-    { id: 'edu-en-7', name: '熱水系統優化', description: '改善熱水供應效率，降低能源消耗。', investment: '低' },
-    { id: 'edu-en-8', name: '能源監控', description: '即時掌握校園能耗數據，找出節能潛力。', investment: '中' },
-    { id: 'edu-en-9', name: '師生節能行為教育', description: '培養師生節能意識，將節能融入日常。', investment: '低' },
-    { id: 'edu-en-10', name: '綠色交通鼓勵', description: '鼓勵師生步行、騎自行車或搭乘大眾運輸。', investment: '低' },
+    {
+      id: 'edu-en-1',
+      name: '校園建築能源效率提升',
+      description: '降低學校整體能耗，減少營運成本。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '進行校園能源審計，找出高耗能建築與設備。',
+        '規劃隔熱、空調、照明等系統的改善方案。',
+        '編列預算並分階段進行施工。',
+        '驗收改善成效並建立長期監測機制。'
+      ],
+      tracking: [
+        '追蹤每月總用電量與單位面積用電強度(EUI)。',
+        '比較改善前後的電費帳單。'
+      ]
+    },
+    {
+      id: 'edu-en-2',
+      name: '智能照明與空調',
+      description: '精確控制教室和辦公室環境，減少能源浪費。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '評估各教室與辦公室的使用模式與人數變化。',
+        '選擇合適的感應器與中央控制系統。',
+        '委託專業廠商進行安裝與設定。',
+        '教育師生如何使用與配合智能系統。'
+      ],
+      tracking: [
+        '分析智能系統後台的節能數據報告。',
+        '定期檢查感應器與控制器是否正常運作。'
+      ]
+    },
+    {
+      id: 'edu-en-3',
+      name: '電腦教室節能',
+      description: '選擇節能型電腦設備，優化使用模式。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '採購具備節能標章的電腦與螢幕。',
+        '設定電腦在閒置時自動進入休眠或關機。',
+        '導入中央管理軟體，統一控制電腦開關機。'
+      ],
+      tracking: [
+        '追蹤電腦教室的用電量變化。',
+        '確認節能設定是否被確實執行。'
+      ]
+    },
+    {
+      id: 'edu-en-4',
+      name: '再生能源（太陽能校舍）',
+      description: '利用校舍閒置空間發電，降低外購電力。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '評估校舍屋頂的結構與日照條件。',
+        '委託專業廠商進行系統規劃、設計與報價。',
+        '完成能源局備案與台電並網申請。',
+        '進行施工並完成系統驗收。'
+      ],
+      tracking: [
+        '監測每日與每月的太陽能發電量。',
+        '計算再生能源發電佔總用電量的比例。'
+      ]
+    },
+    {
+      id: 'edu-en-5',
+      name: '廚房設備節能',
+      description: '採用高效能廚房設備，減少餐飲能耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '盤點現有廚房設備的能耗與使用年限。',
+        '優先汰換老舊、耗能的設備。',
+        '採購具有節能標章的爐具、冰箱等。'
+      ],
+      tracking: [
+        '追蹤廚房的瓦斯與電力費用。',
+        '收集廚房工作人員對新設備的使用回饋。'
+      ]
+    },
+    {
+      id: 'edu-en-6',
+      name: '鍋爐效率提升',
+      description: '提高鍋爐燃燒效率，減少燃料消耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '需專案小組',
+      steps: [
+        '委託專業廠商對鍋爐進行能效檢測。',
+        '定期清潔爐管，防止積垢影響熱交換效率。',
+        '優化燃燒控制，確保空氣與燃料比例最佳化。'
+      ],
+      tracking: [
+        '記錄鍋爐的燃料使用量。',
+        '定期檢測排煙溫度與含氧量。'
+      ]
+    },
+    {
+      id: 'edu-en-7',
+      name: '熱水系統優化',
+      description: '改善熱水供應效率，降低能源消耗。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '為熱水管線確實包覆保溫材。',
+        '安裝定時器，避免非必要時段的加熱。',
+        '評估使用熱泵或太陽能熱水器作為輔助。'
+      ],
+      tracking: [
+        '追蹤熱水系統的燃料或電力消耗。',
+        '檢查管線保溫材是否有破損。'
+      ]
+    },
+    {
+      id: 'edu-en-8',
+      name: '能源監控',
+      description: '即時掌握校園能耗數據，找出節能潛力。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在主要用電迴路（如各棟建築、空調主機）安裝智慧電表。',
+        '導入能源管理系統(EMS)平台。',
+        '設定能耗基準線與分析儀表板。'
+      ],
+      tracking: [
+        '定期產出能耗分析報告，找出異常用電。',
+        '根據數據分析結果，制定新的節能措施。'
+      ]
+    },
+    {
+      id: 'edu-en-9',
+      name: '師生節能行為教育',
+      description: '培養師生節能意識，將節能融入日常。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '舉辦節能主題的講座或工作坊。',
+        '在校園內張貼節能標語。',
+        '舉辦班級節能競賽，並給予獎勵。'
+      ],
+      tracking: [
+        '觀察下課或放學後教室的關燈關冷氣情況。',
+        '透過問卷調查評估師生節能知識的提升。'
+      ]
+    },
+    {
+      id: 'edu-en-10',
+      name: '綠色交通鼓勵',
+      description: '鼓勵師生步行、騎自行車或搭乘大眾運輸。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '完善校園內的自行車停放設施。',
+        '提供大眾運輸路線與時刻表資訊。',
+        '舉辦綠色通勤日或相關活動。'
+      ],
+      tracking: [
+        '調查師生的主要通勤方式。',
+        '統計校內自行車停放數量。'
+      ]
+    },
   ],
   '循環經濟': [
-    { id: 'edu-ci-1', name: '廢紙回收再利用', description: '減少紙張消耗，促進資源循環。', investment: '低' },
-    { id: 'edu-ci-2', name: '校園垃圾分類', description: '提高可回收物比例，減少垃圾處理量。', investment: '低' },
-    { id: 'edu-ci-3', name: '舊教材圖書捐贈', description: '延長教材壽命，減少新購需求。', investment: '低' },
-    { id: 'edu-ci-4', name: '廚餘回收', description: '減少廚餘產生量，可用於堆肥或養殖。', investment: '低' },
-    { id: 'edu-ci-5', name: '水資源回收（雨水、中水）', description: '節省自來水，可用於灌溉或沖廁。', investment: '中' },
-    { id: 'edu-ci-6', name: '校園廢棄物減量', description: '從源頭減少各種校園廢棄物產生。', investment: '低' },
-    { id: 'edu-ci-7', name: '再生材料校園設施', description: '使用回收材料建造或維護校園設施。', investment: '中' },
-    { id: 'edu-ci-8', name: '廢棄物藝術創作', description: '將廢棄物轉化為教育資源，提升環保意識。', investment: '低' },
-    { id: 'edu-ci-9', name: '跳蚤市場/交換平台', description: '鼓勵物品交換與再利用，減少購買新物品。', investment: '低' },
-    { id: 'edu-ci-10', name: '循環餐具', description: '減少一次性餐具使用，促進餐具循環。', investment: '低' },
+    {
+      id: 'edu-ci-1',
+      name: '廢紙回收再利用',
+      description: '減少紙張消耗，促進資源循環。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數天',
+      manpower: '少數員工即可',
+      steps: [
+        '設置充足且標示清晰的紙類回收箱。',
+        '推廣雙面列印與電子化文件。',
+        '將回收的紙張交由合格回收商處理。'
+      ],
+      tracking: [
+        '記錄廢紙回收量。',
+        '追蹤影印紙的採購量變化。'
+      ]
+    },
+    {
+      id: 'edu-ci-2',
+      name: '校園垃圾分類',
+      description: '提高可回收物比例，減少垃圾處理量。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '規劃設置分類回收站。',
+        '對全校師生進行垃圾分類的教育宣導。',
+        '與清潔人員合作，確保分類落實。'
+      ],
+      tracking: [
+        '定期抽查回收桶的分類正確率。',
+        '追蹤一般垃圾與資源回收物的清運量。'
+      ]
+    },
+    {
+      id: 'edu-ci-3',
+      name: '舊教材圖書捐贈',
+      description: '延長教材壽命，減少新購需求。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '設立舊書回收箱或舉辦舊書回收週。',
+        '整理回收的書籍，將可用的捐贈給需要的單位或學弟妹。',
+        '建立校內二手書交換平台。'
+      ],
+      tracking: [
+        '統計回收與捐贈的書籍數量。',
+        '調查學生對二手書的需求與使用情況。'
+      ]
+    },
+    {
+      id: 'edu-ci-4',
+      name: '廚餘回收',
+      description: '減少廚餘產生量，可用於堆肥或養殖。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '若有供餐，應設置廚餘回收桶。',
+        '與合法的廚餘回收業者簽約。',
+        '若校園內有農園，可評估自設堆肥區。'
+      ],
+      tracking: [
+        '記錄廚餘回收量。',
+        '追蹤一般垃圾中廚餘的比例。'
+      ]
+    },
+    {
+      id: 'edu-ci-5',
+      name: '水資源回收（雨水、中水）',
+      description: '節省自來水，可用於灌溉或沖廁。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '評估校園內適合設置雨水收集或中水回收系統的地點。',
+        '委託專業廠商進行規劃與施工。',
+        '將回收水用於澆灌校園植物或沖洗廁所。'
+      ],
+      tracking: [
+        '計量回收水量。',
+        '比較安裝前後的自來水費帳單。'
+      ]
+    },
+    {
+      id: 'edu-ci-6',
+      name: '校園廢棄物減量',
+      description: '從源頭減少各種校園廢棄物產生。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '推廣使用環保杯、環保餐具。',
+        '鼓勵師生自備水瓶，減少瓶裝水消耗。',
+        '舉辦活動時，盡量避免使用一次性裝飾品。'
+      ],
+      tracking: [
+        '觀察校園內一次性用品的使用情況。',
+        '統計一般垃圾的總量變化。'
+      ]
+    },
+    {
+      id: 'edu-ci-7',
+      name: '再生材料校園設施',
+      description: '使用回收材料建造或維護校園設施。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在採購校園設施（如課桌椅、遊樂設施）時，將再生材料比例納入考量。',
+        '尋找使用回收塑膠、木材等製成產品的供應商。',
+        '確保產品的安全性與耐用度符合標準。'
+      ],
+      tracking: [
+        '記錄採購的再生材料設施數量。',
+        '評估其使用壽命與維護狀況。'
+      ]
+    },
+    {
+      id: 'edu-ci-8',
+      name: '廢棄物藝術創作',
+      description: '將廢棄物轉化為教育資源，提升環保意識。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '與美術或生活科技課程結合。',
+        '鼓勵學生利用回收物進行藝術創作。',
+        '舉辦廢棄物藝術展覽。'
+      ],
+      tracking: [
+        '記錄參與活動的學生人數。',
+        '展示學生作品，擴大宣導效果。'
+      ]
+    },
+    {
+      id: 'edu-ci-9',
+      name: '跳蚤市場/交換平台',
+      description: '鼓勵物品交換與再利用，減少購買新物品。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數天',
+      manpower: '少數員工即可',
+      steps: [
+        '定期舉辦校園跳蚤市場活動。',
+        '建立線上或實體的物品交換平台/布告欄。',
+        '鼓勵師生將閒置物品（文具、書籍、制服）拿出來交換。'
+      ],
+      tracking: [
+        '統計參與人數與交換的物品數量。',
+        '調查師生對活動的滿意度。'
+      ]
+    },
+    {
+      id: 'edu-ci-10',
+      name: '循環餐具',
+      description: '減少一次性餐具使用，促進餐具循環。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '與校內餐廳或合作社洽談。',
+        '評估導入循環餐具租賃系統。',
+        '設置歸還站點與清洗消毒設施。'
+      ],
+      tracking: [
+        '追蹤循環餐具的使用率與歸還率。',
+        '計算減少的一次性餐具數量。'
+      ]
+    },
   ],
   '永續採購': [
-    { id: 'edu-su-1', name: '採購節能設備', description: '選擇具節能標章或高效能的設備。', investment: '低' },
-    { id: 'edu-su-2', name: '環保文具與清潔用品', description: '選擇對環境友善的文具和清潔產品。', investment: '低' },
-    { id: 'edu-su-3', name: '永續食材（若有供餐）', description: '採購在地、當季、有機或有永續認證的食材。', investment: '低' },
-    { id: 'edu-su-4', name: '綠色建材', description: '校舍新建或修繕時，選擇環保建材。', investment: '中' },
-    { id: 'edu-su-5', name: '再生紙', description: '減少原生木漿消耗。', investment: '低' },
-    { id: 'edu-su-6', name: '當地供應商', description: '縮短供應鏈運輸距離，減少碳排放。', investment: '低' },
-    { id: 'edu-su-7', name: '永續校車服務', description: '選擇低排放或電動校車服務。', investment: '中' },
-    { id: 'edu-su-8', name: '環保家具', description: '採購使用再生材料或環保製程的家具。', investment: '低' },
-    { id: 'edu-su-9', name: '供應商ESG評估', description: '確保供應商符合環境、社會和公司治理標準。', investment: '中' },
-    { id: 'edu-su-10', name: '綠色資訊技術服務', description: '選擇使用再生能源或碳中和的IT服務供應商。', investment: '中' },
+    {
+      id: 'edu-su-1',
+      name: '採購節能設備',
+      description: '選擇具節能標章或高效能的設備。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立綠色採購指南，將節能標章列為優先條件。',
+        '在採購電器、電腦等設備時，優先選擇能效等級高的產品。',
+        '要求供應商提供產品能效證明。'
+      ],
+      tracking: [
+        '記錄新購設備的能效等級。',
+        '長期追蹤新設備的實際耗電表現。'
+      ]
+    },
+    {
+      id: 'edu-su-2',
+      name: '環保文具與清潔用品',
+      description: '選擇對環境友善的文具和清潔產品。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '盤點常用的文具與清潔用品。',
+        '尋找具有環保標章的替代品。',
+        '逐步替換現有庫存。'
+      ],
+      tracking: [
+        '計算環保產品佔總採購量的比例。',
+        '確保產品符合環保標準。'
+      ]
+    },
+    {
+      id: 'edu-su-3',
+      name: '永續食材（若有供餐）',
+      description: '採購在地、當季、有機或有永續認證的食材。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '與供餐廠商溝通，要求提高永續食材比例。',
+        '設計菜單時，優先考慮當季與在地食材。',
+        '向師生宣導永續飲食的觀念。'
+      ],
+      tracking: [
+        '追蹤永續食材的採購比例。',
+        '收集師生對菜色的回饋。'
+      ]
+    },
+    {
+      id: 'edu-su-4',
+      name: '綠色建材',
+      description: '校舍新建或修繕時，選擇環保建材。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在工程發包時，將使用綠建材納入合約要求。',
+        '優先選擇低逸散性、可回收的建材。',
+        '要求承包商提供綠建材標章證明。'
+      ],
+      tracking: [
+        '統計工程中使用的綠建材比例。',
+        '監測施工後的室內空氣品質。'
+      ]
+    },
+    {
+      id: 'edu-su-5',
+      name: '再生紙',
+      description: '減少原生木漿消耗。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在採購影印紙、衛生紙等紙製品時，優先選擇再生紙產品。',
+        '向供應商詢問再生紙漿的比例。',
+        '教育師生珍惜用紙。'
+      ],
+      tracking: [
+        '統計再生紙的採購比例。',
+        '追蹤總用紙量的變化。'
+      ]
+    },
+    {
+      id: 'edu-su-6',
+      name: '當地供應商',
+      description: '縮短供應鏈運輸距離，減少碳排放。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '盤點主要採購品項。',
+        '尋找並評估當地的供應商。',
+        '在品質與價格相當的情況下，優先選擇當地供應商。'
+      ],
+      tracking: [
+        '計算當地採購佔總採購金額的比例。',
+        '評估對本地經濟的貢獻。'
+      ]
+    },
+    {
+      id: 'edu-su-7',
+      name: '永續校車服務',
+      description: '選擇低排放或電動校車服務。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在校車服務招標時，將車輛的油耗與排放標準納入評分。',
+        '鼓勵廠商採用較新的環保車輛。',
+        '長期規劃導入電動校車的可能性。'
+      ],
+      tracking: [
+        '定期檢視校車的車齡與維護狀況。',
+        '評估校車路線的合理性與效率。'
+      ]
+    },
+    {
+      id: 'edu-su-8',
+      name: '環保家具',
+      description: '採購使用再生材料或環保製程的家具。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在採購課桌椅、櫥櫃等家具時，優先選擇有環保標章的產品。',
+        '避免購買過度包裝的家具。',
+        '選擇耐用、易維修的設計。'
+      ],
+      tracking: [
+        '記錄採購的環保家具數量。',
+        '評估家具的耐用年限。'
+      ]
+    },
+    {
+      id: 'edu-su-9',
+      name: '供應商ESG評估',
+      description: '確保供應商符合環境、社會和公司治理標準。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '對主要的供應商（如團膳、清潔、保全）建立ESG評估標準。',
+        '將供應商的永續表現納入合作決策。',
+        '與供應商共同設定永續改善目標。'
+      ],
+      tracking: [
+        '定期更新供應商的ESG評分。',
+        '追蹤供應商的改善進度。'
+      ]
+    },
+    {
+      id: 'edu-su-10',
+      name: '綠色資訊技術服務',
+      description: '選擇使用再生能源或碳中和的IT服務供應商。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在採購雲端服務、網站代管等服務時，詢問供應商的能源使用情況。',
+        '優先選擇已承諾使用100%再生能源的供應商。',
+        '將供應商的永續承諾納入考量。'
+      ],
+      tracking: [
+        '追蹤主要IT服務供應商的永續報告。',
+        '評估數位服務的範疇三碳排放。'
+      ]
+    },
   ],
   '淨零管理': [
-    { id: 'edu-ne-1', name: '校園碳盤查', description: '全面了解校園溫室氣體排放來源與熱點。', investment: '中' },
-    { id: 'edu-ne-2', name: '減排目標', description: '設定校園減碳目標，指導減碳行動。', investment: '低' },
-    { id: 'edu-ne-3', name: '永續教育課程整合', description: '將永續發展與氣候變遷知識融入各學科課程。', investment: '低' },
-    { id: 'edu-ne-4', name: '師生永續素養提升', description: '透過培訓和活動，提高師生對永續的理解與行動力。', investment: '低' },
-    { id: 'edu-ne-5', name: '碳抵銷專案', description: '透過購買碳權抵銷難以減除的校園碳排放。', investment: '中' },
-    { id: 'edu-ne-6', name: '綠色校園規劃', description: '從規劃層面考慮校園的永續發展和生態平衡。', investment: '中' },
-    { id: 'edu-ne-7', name: '永續報告', description: '定期發布校園永續發展報告，提升透明度。', investment: '中' },
-    { id: 'edu-ne-8', name: '社區減碳合作', description: '與周邊社區合作，共同推動減碳和環保。', investment: '低' },
-    { id: 'edu-ne-9', name: '氣候變遷研究', description: '鼓勵校內進行氣候變遷相關研究。', investment: '中' },
-    { id: 'edu-ne-10', name: '綠色金融導入', description: '尋求綠色貸款或資金，支持校園永續專案。', investment: '中' },
+    {
+      id: 'edu-ne-1',
+      name: '校園碳盤查',
+      description: '全面了解校園溫室氣體排放來源與熱點。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '遵循ISO 14064-1標準進行組織碳盤查。',
+        '收集電力、燃料、交通等活動數據。',
+        '計算範疇一、二、三的碳排放量。',
+        '取得第三方查證，增加數據可信度。'
+      ],
+      tracking: [
+        '每年定期執行盤查與查證。',
+        '根據盤查結果，找出主要的排放熱點。'
+      ]
+    },
+    {
+      id: 'edu-ne-2',
+      name: '減排目標',
+      description: '設定校園減碳目標，指導減碳行動。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '根據碳盤查結果，設定科學基礎的減排目標。',
+        '規劃達成目標的行動方案與資源投入。',
+        '對內外溝通減排承諾。'
+      ],
+      tracking: [
+        '每年追蹤減排目標的達成進度。',
+        '定期檢討減排路徑圖的有效性。'
+      ]
+    },
+    {
+      id: 'edu-ne-3',
+      name: '永續教育課程整合',
+      description: '將永續發展與氣候變遷知識融入各學科課程。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '成立跨領域的教師社群。',
+        '發展氣候變遷相關的教案與教材。',
+        '將永續議題融入既有課程中。'
+      ],
+      tracking: [
+        '統計開設或融入永續議題的課程數量。',
+        '評估學生在相關議題上的學習成效。'
+      ]
+    },
+    {
+      id: 'edu-ne-4',
+      name: '師生永續素養提升',
+      description: '透過培訓和活動，提高師生對永續的理解與行動力。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '邀請專家學者到校演講。',
+        '舉辦環保電影欣賞、工作坊等活動。',
+        '鼓勵成立學生環保社團。'
+      ],
+      tracking: [
+        '記錄各項活動的參與人次。',
+        '透過前後測問卷，評估師生永續素養的變化。'
+      ]
+    },
+    {
+      id: 'edu-ne-5',
+      name: '碳抵銷專案',
+      description: '透過購買碳權抵銷難以減除的校園碳排放。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在窮盡所有減量措施後，計算剩餘的碳排放量。',
+        '選擇國際公認的高品質碳權專案。',
+        '完成購買並在永續報告中透明揭露。'
+      ],
+      tracking: [
+        '確保碳權的品質與唯一性。',
+        '追蹤所抵換的排放量。'
+      ]
+    },
+    {
+      id: 'edu-ne-6',
+      name: '綠色校園規劃',
+      description: '從規劃層面考慮校園的永續發展和生態平衡。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '增加校園綠覆率，規劃生態多樣性的植栽。',
+        '設計透水鋪面，增加基地保水能力。',
+        '保留或營造校園內的生態棲地。'
+      ],
+      tracking: [
+        '計算校園的綠覆率與不透水面積比例。',
+        '定期進行校園生態調查。'
+      ]
+    },
+    {
+      id: 'edu-ne-7',
+      name: '永續報告',
+      description: '定期發布校園永續發展報告，提升透明度。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '參考GRI等準則，建立校園的永續績效指標。',
+        '系統性地收集與整理相關數據。',
+        '編撰並發布年度永續發展報告。'
+      ],
+      tracking: [
+        '每年定期發布。',
+        '根據利害關係人的回饋，持續改善報告內容。'
+      ]
+    },
+    {
+      id: 'edu-ne-8',
+      name: '社區減碳合作',
+      description: '與周邊社區合作，共同推動減碳和環保。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '開放校園環保設施（如回收站）給社區使用。',
+        '與社區共同舉辦環保市集或清掃活動。',
+        '分享校園的減碳經驗與成果。'
+      ],
+      tracking: [
+        '記錄社區合作活動的場次與參與人數。',
+        '評估合作對社區環境的正面影響。'
+      ]
+    },
+    {
+      id: 'edu-ne-9',
+      name: '氣候變遷研究',
+      description: '鼓勵校內進行氣候變遷相關研究。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數年',
+      manpower: '需專案小組',
+      steps: [
+        '提供資源支持教師進行氣候變遷相關的學術研究。',
+        '鼓勵學生以氣候變遷為主題進行專題研究或科展。',
+        '舉辦學術研討會，分享研究成果。'
+      ],
+      tracking: [
+        '統計氣候變遷相關的研究計畫與論文數量。',
+        '追蹤研究成果的影響力。'
+      ]
+    },
+    {
+      id: 'edu-ne-10',
+      name: '綠色金融導入',
+      description: '尋求綠色貸款或資金，支持校園永續專案。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '盤點校內可行的永續專案（如節能改造、再生能源）。',
+        '準備計畫書，向金融機構申請綠色貸款或永續連結貸款。',
+        '建立資金管理與效益追蹤機制。'
+      ],
+      tracking: [
+        '確保資金用途符合綠色金融框架。',
+        '定期對外揭露資金使用情況與環境效益。'
+      ]
+    },
   ],
 };
