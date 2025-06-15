@@ -1,8 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageSquare, Send, Bot, User, Lightbulb, Zap, FileText, MessageCircle } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([
@@ -16,15 +17,47 @@ const Chatbot = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ragMode, setRagMode] = useState(false);
+  const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
 
-  const quickQuestions = [
-    '如何制定企業減碳目標？',
-    '碳費計算方式是什麼？',
-    '自願性碳權有哪些類型？',
-    '範疇三排放如何盤查？',
-    'SBTi目標設定流程？',
-    '碳中和與淨零的差別？'
-  ];
+  useEffect(() => {
+    const fetchQuickQuestions = async () => {
+      setLoadingQuestions(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-quick-questions');
+
+        if (error) {
+          throw error;
+        }
+
+        const defaultQuestions = [
+            '如何制定企業減碳目標？',
+            '碳費計算方式是什麼？',
+            '自願性碳權有哪些類型？',
+            '範疇三排放如何盤查？',
+            'SBTi目標設定流程？',
+            '碳中和與淨零的差別？'
+        ];
+
+        setQuickQuestions(data.questions && data.questions.length > 0 ? data.questions : defaultQuestions);
+
+      } catch (err) {
+        console.error("Error fetching quick questions:", err);
+        setQuickQuestions([
+            '如何制定企業減碳目標？',
+            '碳費計算方式是什麼？',
+            '自願性碳權有哪些類型？',
+            '範疇三排放如何盤查？',
+            'SBTi目標設定流程？',
+            '碳中和與淨零的差別？'
+        ]);
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+
+    fetchQuickQuestions();
+  }, []);
 
   const sendMessage = async (messageContent: string) => {
     if (!messageContent.trim() || isTyping) return;
@@ -240,18 +273,24 @@ const Chatbot = () => {
             <h3 className="text-lg font-semibold text-gray-900">常見問題</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {quickQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => handleQuickQuestion(question)}
-                className="text-left p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-purple-300 transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm text-gray-700">{question}</span>
-                </div>
-              </button>
-            ))}
+            {loadingQuestions ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 w-full rounded-lg bg-gray-200" />
+              ))
+            ) : (
+              quickQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickQuestion(question)}
+                  className="text-left p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-purple-300 transition-colors"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Zap className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm text-gray-700">{question}</span>
+                  </div>
+                </button>
+              ))
+            )}
           </div>
         </div>
       </div>
