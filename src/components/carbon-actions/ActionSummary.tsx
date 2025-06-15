@@ -144,23 +144,52 @@ const ActionSummary = ({ industry, selectedActionIds, onBack, onReset }: Props) 
                                 <CardTitle className="text-lg">行動分佈圖</CardTitle>
                             </CardHeader>
                             <CardContent className="flex items-center justify-center h-[200px] pb-0">
-                                <ChartContainer config={chartConfig} className="w-full h-full">
-                                    <PieChart>
-                                        <ChartTooltip 
-                                            cursor={false}
-                                            content={<ChartTooltipContent hideLabel />} 
-                                        />
-                                        <Pie data={summaryData.chartData} dataKey="count" nameKey="angle" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2}>
-                                            {summaryData.chartData.map((entry) => (
-                                               <Cell key={`cell-${entry.angle}`} fill={chartConfig[entry.angle]?.color} />
-                                            ))}
-                                        </Pie>
-                                        <ChartLegend 
-                                            content={<ChartLegendContent nameKey="angle" />} 
-                                            className="-translate-y-2 flex-wrap"
-                                        />
-                                    </PieChart>
-                                </ChartContainer>
+                                {summaryData.chartData.length > 1 ? (
+                                    <ChartContainer config={chartConfig} className="w-full h-full">
+                                        <PieChart>
+                                            <ChartTooltip 
+                                                cursor={false}
+                                                content={<ChartTooltipContent hideLabel />} 
+                                            />
+                                            <Pie data={summaryData.chartData} dataKey="count" nameKey="angle" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2}>
+                                                {summaryData.chartData.map((entry) => (
+                                                   <Cell key={`cell-${entry.angle}`} fill={chartConfig[entry.angle]?.color} />
+                                                ))}
+                                            </Pie>
+                                            <ChartLegend 
+                                                content={<ChartLegendContent nameKey="angle" />} 
+                                                className="-translate-y-2 flex-wrap"
+                                            />
+                                        </PieChart>
+                                    </ChartContainer>
+                                ) : summaryData.chartData.length === 1 ? (
+                                    (() => {
+                                        const singleAngle = summaryData.chartData[0];
+                                        const IconComponent = {
+                                            '能源管理': Zap,
+                                            '循環經濟': RefreshCw,
+                                            '永續採購': ListChecks,
+                                            '淨零管理': Target,
+                                        }[singleAngle.angle];
+
+                                        return (
+                                            <div className="flex flex-col items-center justify-center text-center h-full">
+                                                <IconComponent 
+                                                    className="h-12 w-12 mb-4" 
+                                                    style={{ color: chartConfig[singleAngle.angle]?.color }} 
+                                                />
+                                                <p className="text-muted-foreground">所有行動皆集中於</p>
+                                                <p className="font-bold text-lg mt-1" style={{ color: chartConfig[singleAngle.angle]?.color }}>
+                                                    {singleAngle.angle}
+                                                </p>
+                                            </div>
+                                        );
+                                    })()
+                                ) : (
+                                    <div className="text-muted-foreground text-center">
+                                        <p>沒有足夠的數據來生成圖表。</p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
