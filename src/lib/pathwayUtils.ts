@@ -1,4 +1,3 @@
-
 import type { EmissionData, ReductionModel, CustomTargets, PathwayData } from '../pages/CarbonPath';
 
 export const calculatePathwayData = (
@@ -49,17 +48,17 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Long-Term with parabolic annual reduction (前期緩慢，中後期加速)
+    // Phase 2: Long-Term with parabolic annual reduction targeting residual emissions
     const emissionsAtNearTermEnd = tempEmissions;
     const D = targetYear - nearTermTarget.year;
 
     if (D > 0) {
-      const R_total_phase2 = emissionsAtNearTermEnd - residualEmissions;
+      console.log("長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
+      console.log(`起點: ${emissionsAtNearTermEnd.toLocaleString()}, 終點: ${residualEmissions.toLocaleString()}, 年數: ${D}`);
       
-      const lastYearOfPhase1 = path[path.length - 1];
-      const secondToLastYearOfPhase1 = path.length > 1 ? path[path.length - 2] : { emissions: totalEmissions };
-      const annualReductionAtTransition = secondToLastYearOfPhase1.emissions - lastYearOfPhase1.emissions;
-
+      // 總減排量 = 起點排放量 - 殘留排放量
+      const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
+      
       if (D === 1) {
         // Single year transition
         path.push({
@@ -69,50 +68,58 @@ export const calculatePathwayData = (
           target: residualEmissions,
         });
       } else {
-        console.log("長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
-        
-        // 使用拋物線函數：r(t) = at² + bt + c
+        // 設計拋物線年減排量：r(t) = at² + bt + c
         // 邊界條件：
-        // 1. r(1) = annualReductionAtTransition (與前期銜接)
-        // 2. r(D) 可以是較大值 (中後期加速)
-        // 3. 總減排量 = R_total_phase2
+        // 1. 前期緩慢：r(1) 較小
+        // 2. 中後期加速：r(D) 較大
+        // 3. 總和約束：∑r(t) = totalReductionNeeded
         
-        // 設定拋物線年減排量，讓前期緩慢，中後期加速
-        const minReduction = annualReductionAtTransition * 0.8; // 前期更緩慢
-        const maxReduction = R_total_phase2 * 2.5 / D; // 中後期加速係數
+        // 使用向下開口的拋物線，讓年減排量前期小，後期大
+        // 簡化設計：r(t) = a * t² + b，其中 a > 0
         
-        // 拋物線係數計算：r(t) = a*t² + b*t + c
-        // 讓年減排量呈現前期緩慢、中後期加速的拋物線
-        const a = (maxReduction - minReduction) / (D * D);
-        const b = 0;
-        const c = minReduction;
+        // 計算係數使總減排量符合需求
+        // ∑(t=1 to D) (a*t² + b) = totalReductionNeeded
+        // a * ∑t² + b * D = totalReductionNeeded
+        // a * D(D+1)(2D+1)/6 + b * D = totalReductionNeeded
         
-        console.log(`Custom Target - Phase 2 Parabolic Annual Reduction: D=${D}, min=${minReduction.toFixed(0)}, max=${maxReduction.toFixed(0)}, a=${a.toFixed(4)}`);
+        const sumT2 = D * (D + 1) * (2 * D + 1) / 6;
+        
+        // 設定前期減排量相對較小，後期較大的比例
+        const minReductionRatio = 0.3; // 前期減排量占平均值的比例
+        const avgReduction = totalReductionNeeded / D;
+        const minReduction = avgReduction * minReductionRatio;
+        
+        // 從 r(1) = a + b = minReduction 求解
+        // 和總量約束求解 a 和 b
+        const b = minReduction - (totalReductionNeeded - minReduction * D) / sumT2;
+        const a = (totalReductionNeeded - b * D) / sumT2;
+        
+        console.log(`拋物線參數: a=${a.toFixed(6)}, b=${b.toFixed(2)}`);
+        console.log(`預期最小年減排: ${minReduction.toFixed(0)}, 最大年減排: ${(a * D * D + b).toFixed(0)}`);
         
         let cumulativeReduction = 0;
         for (let t = 1; t <= D; t++) {
           // 計算當前年度的拋物線年減排量
-          const parabolicReduction = a * t * t + b * t + c;
+          const parabolicReduction = a * t * t + b;
           cumulativeReduction += parabolicReduction;
           
-          // 最後一年確保達到目標
+          // 計算當前排放量
+          let currentEmissions;
           if (t === D) {
-            const currentEmissions = residualEmissions;
-            path.push({
-              year: nearTermTarget.year + t,
-              emissions: currentEmissions,
-              reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-              target: currentEmissions,
-            });
+            // 最後一年確保達到殘留排放量
+            currentEmissions = residualEmissions;
           } else {
-            const currentEmissions = emissionsAtNearTermEnd - cumulativeReduction;
-            path.push({
-              year: nearTermTarget.year + t,
-              emissions: currentEmissions,
-              reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-              target: currentEmissions,
-            });
+            currentEmissions = emissionsAtNearTermEnd - cumulativeReduction;
+            // 確保不會低於殘留排放量
+            currentEmissions = Math.max(currentEmissions, residualEmissions);
           }
+          
+          path.push({
+            year: nearTermTarget.year + t,
+            emissions: currentEmissions,
+            reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
+            target: currentEmissions,
+          });
         }
       }
     }
@@ -204,7 +211,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Parabolic annual reduction from 2031 to target year (前期緩慢，中後期加速)
+    // Phase 2: Parabolic annual reduction from 2031 to target year targeting residual emissions
     if (emissionData.targetYear > 2030) {
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
@@ -212,12 +219,11 @@ export const calculatePathwayData = (
       console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
-        const R_total_phase2 = emissionsAt2030 - residualEmissions;
+        console.log("SBTi 長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
         
-        const lastYearOfPhase1 = pathway[pathway.length - 1];
-        const secondToLastYearOfPhase1 = pathway.length > 1 ? pathway[pathway.length - 2] : { year: emissionData.baseYear, emissions: totalEmissions };
-        const annualReductionAtTransition = secondToLastYearOfPhase1.emissions - lastYearOfPhase1.emissions;
-
+        // 總減排量 = 2030年排放量 - 殘留排放量
+        const totalReductionNeeded = emissionsAt2030 - residualEmissions;
+        
         if (D === 1) {
           pathway.push({
             year: 2031,
@@ -226,43 +232,44 @@ export const calculatePathwayData = (
             target: residualEmissions,
           });
         } else {
-          console.log("SBTi 長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
+          // 設計拋物線年減排量：r(t) = at² + bt + c
+          const sumT2 = D * (D + 1) * (2 * D + 1) / 6;
           
-          // 使用拋物線函數讓年減排量前期緩慢，中後期加速
-          const minReduction = annualReductionAtTransition * 0.8; // 前期更緩慢
-          const maxReduction = R_total_phase2 * 2.5 / D; // 中後期加速係數
+          // 設定前期減排量相對較小，後期較大的比例
+          const minReductionRatio = 0.3;
+          const avgReduction = totalReductionNeeded / D;
+          const minReduction = avgReduction * minReductionRatio;
           
-          // 拋物線係數計算：r(t) = a*t² + b*t + c
-          const a = (maxReduction - minReduction) / (D * D);
-          const b = 0;
-          const c = minReduction;
+          // 從 r(1) = a + b = minReduction 和總量約束求解 a 和 b
+          const b = minReduction - (totalReductionNeeded - minReduction * D) / sumT2;
+          const a = (totalReductionNeeded - b * D) / sumT2;
           
-          console.log(`SBTi - Phase 2 Parabolic Annual Reduction: D=${D}, min=${minReduction.toFixed(0)}, max=${maxReduction.toFixed(0)}, a=${a.toFixed(4)}`);
+          console.log(`SBTi 拋物線參數: a=${a.toFixed(6)}, b=${b.toFixed(2)}`);
+          console.log(`預期最小年減排: ${minReduction.toFixed(0)}, 最大年減排: ${(a * D * D + b).toFixed(0)}`);
           
           let cumulativeReduction = 0;
           for (let t = 1; t <= D; t++) {
             // 計算當前年度的拋物線年減排量
-            const parabolicReduction = a * t * t + b * t + c;
+            const parabolicReduction = a * t * t + b;
             cumulativeReduction += parabolicReduction;
             
-            // 最後一年確保達到目標
+            // 計算當前排放量
+            let currentEmissions;
             if (t === D) {
-              const currentEmissions = residualEmissions;
-              pathway.push({
-                year: 2030 + t,
-                emissions: currentEmissions,
-                reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-                target: currentEmissions,
-              });
+              // 最後一年確保達到殘留排放量
+              currentEmissions = residualEmissions;
             } else {
-              const currentEmissions = emissionsAt2030 - cumulativeReduction;
-              pathway.push({
-                year: 2030 + t,
-                emissions: currentEmissions,
-                reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
-                target: currentEmissions,
-              });
+              currentEmissions = emissionsAt2030 - cumulativeReduction;
+              // 確保不會低於殘留排放量
+              currentEmissions = Math.max(currentEmissions, residualEmissions);
             }
+            
+            pathway.push({
+              year: 2030 + t,
+              emissions: currentEmissions,
+              reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
+              target: currentEmissions,
+            });
           }
         }
       }
