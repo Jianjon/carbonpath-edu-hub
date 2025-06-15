@@ -1,7 +1,8 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // Helper function to sanitize file names
 const sanitizeFileName = (fileName: string): string => {
@@ -12,6 +13,9 @@ const sanitizeFileName = (fileName: string): string => {
     .replace(/^_|_$/g, '');
   return sanitized || 'document';
 };
+
+type DocumentProcessing = Database['public']['Tables']['document_processing']['Row'];
+type DocumentChunk = Database['public']['Tables']['document_chunks']['Row'];
 
 export const useDocuments = () => {
   const [files, setFiles] = useState<any[]>([]);
@@ -71,7 +75,7 @@ export const useDocuments = () => {
         event: '*',
         schema: 'public',
         table: 'document_processing'
-      }, (payload) => {
+      }, (payload: RealtimePostgresChangesPayload<DocumentProcessing>) => {
         fetchProcessingStatus();
         if (payload.new?.status === 'completed' || payload.new?.status === 'failed') {
           setProgress(prev => {
@@ -91,7 +95,7 @@ export const useDocuments = () => {
         event: 'INSERT',
         schema: 'public',
         table: 'document_chunks'
-      }, (payload) => {
+      }, (payload: RealtimePostgresChangesPayload<DocumentChunk>) => {
         const docName = payload.new.document_name;
         if (docName) {
           setProgress(prev => ({
