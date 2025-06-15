@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Action, Industry, ActionAngle } from '../../pages/CarbonCredits';
+import { Action, Industry, ActionAngle, Difficulty } from '../../pages/CarbonCredits';
 import { actionsData, actionAngles } from '../../data/carbonActionsData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Sparkles, Leaf, ShoppingBasket, Target, Wallet, Download } from 'lucide-react';
+import { Sparkles, Leaf, ShoppingBasket, Target, Wallet, Download, Zap, Calendar, Users, ListChecks } from 'lucide-react';
 
 interface Props {
   industry: Industry;
@@ -33,6 +33,15 @@ const getBadgeVariant = (level: '高' | '中' | '低'): 'destructive' | 'seconda
     case '高': return 'destructive';
     case '中': return 'secondary';
     case '低': return 'outline';
+    default: return 'outline';
+  }
+};
+
+const getDifficultyBadgeVariant = (level: Difficulty): 'outline' | 'secondary' | 'destructive' => {
+  switch (level) {
+    case '簡易': return 'outline';
+    case '中等': return 'secondary';
+    case '複雜': return 'destructive';
     default: return 'outline';
   }
 };
@@ -130,7 +139,7 @@ const ActionExplorer = ({ industry, totalBudgetPoints, onBack }: Props) => {
           <Accordion type="multiple" defaultValue={actionAngles} className="w-full">
             {actionAngles.map(angle => {
               const actions = industryActions[angle];
-              if (actions.length === 0) return null;
+              if (!actions || actions.length === 0) return null;
 
               return (
                 <AccordionItem value={angle} key={angle}>
@@ -161,8 +170,47 @@ const ActionExplorer = ({ industry, totalBudgetPoints, onBack }: Props) => {
                               <Label htmlFor={action.id} className={`font-semibold text-base ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>{action.name}</Label>
                               <p className="text-sm text-muted-foreground mt-1">{action.description}</p>
                               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                <Badge variant={getBadgeVariant(action.investment)}>投資點數: {cost}</Badge>
+                                <Badge variant={getBadgeVariant(action.investment)}>
+                                    <Wallet className="h-3 w-3 mr-1" />
+                                    投資點數: {cost}
+                                </Badge>
+                                <Badge variant={getDifficultyBadgeVariant(action.difficulty)}>
+                                    <Zap className="h-3 w-3 mr-1" />
+                                    {action.difficulty}
+                                </Badge>
+                                <Badge variant="secondary">
+                                    <Calendar className="h-3 w-3 mr-1" />
+                                    {action.time}
+                                </Badge>
+                                <Badge variant="secondary">
+                                    <Users className="h-3 w-3 mr-1" />
+                                    {action.manpower}
+                                </Badge>
                               </div>
+
+                              <Accordion type="single" collapsible className="w-full mt-2">
+                                  <AccordionItem value="details" className="border-none">
+                                      <AccordionTrigger className="text-sm p-0 flex justify-start hover:no-underline text-muted-foreground data-[state=open]:text-primary font-normal">
+                                          顯示執行細節
+                                      </AccordionTrigger>
+                                      <AccordionContent className="pt-2 pb-0">
+                                          <div className="space-y-3">
+                                              <div>
+                                                  <h4 className="font-semibold flex items-center text-sm mb-1"><ListChecks className="h-4 w-4 mr-2 text-primary" />執行步驟</h4>
+                                                  <ul className="list-decimal list-inside space-y-1 text-sm text-muted-foreground pl-2">
+                                                      {action.steps.map((step, i) => <li key={i}>{step}</li>)}
+                                                  </ul>
+                                              </div>
+                                              <div>
+                                                  <h4 className="font-semibold flex items-center text-sm mb-1"><Target className="h-4 w-4 mr-2 text-primary" />後續追蹤</h4>
+                                                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground pl-2">
+                                                      {action.tracking.map((track, i) => <li key={i}>{track}</li>)}
+                                                  </ul>
+                                              </div>
+                                          </div>
+                                      </AccordionContent>
+                                  </AccordionItem>
+                              </Accordion>
                             </div>
                           </div>
                         )
