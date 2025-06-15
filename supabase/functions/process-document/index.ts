@@ -63,19 +63,28 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let documentName: string | undefined;
+
   try {
-    const { documentName } = await req.json();
+    const body = await req.json();
+    documentName = body.documentName;
     
+    if (!documentName) {
+      throw new Error("documentName is required");
+    }
+
     console.log(`Processing document: ${documentName}`);
 
-    // Update processing status
+    // Update processing status, clear previous errors and chunk counts
     await supabase
       .from('document_processing')
       .upsert({
         document_name: documentName,
         status: 'processing',
+        chunks_count: 0,
+        error_message: null,
         updated_at: new Date().toISOString()
-      });
+      }, { onConflict: 'document_name' });
 
     // Get file from storage
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -91,15 +100,16 @@ serve(async (req) => {
     const text = await extractTextFromPDF(fileBuffer);
     
     if (!text || text.length < 50) {
+      const errorMessage = 'No readable text found in document';
       await supabase
         .from('document_processing')
         .update({
           status: 'failed',
-          error_message: 'No readable text found in document',
+          error_message: errorMessage,
           updated_at: new Date().toISOString()
         })
         .eq('document_name', documentName);
-      throw new Error('No readable text found in document');
+      throw new Error(errorMessage);
     }
 
     console.log(`Extracted text length: ${text.length}`);
@@ -107,6 +117,15 @@ serve(async (req) => {
     // Split into chunks
     const chunks = chunkText(text);
     console.log(`Created ${chunks.length} chunks`);
+
+    // Update total chunks to provide progress feedback
+    await supabase
+      .from('document_processing')
+      .update({
+        chunks_count: chunks.length,
+        updated_at: new Date().toISOString()
+      })
+      .eq('document_name', documentName);
 
     // Delete existing chunks for this document
     await supabase
@@ -144,7 +163,6 @@ serve(async (req) => {
       .from('document_processing')
       .update({
         status: 'completed',
-        chunks_count: chunks.length,
         updated_at: new Date().toISOString()
       })
       .eq('document_name', documentName);
@@ -161,15 +179,6 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing document:', error);
-    
-    // Check if req.json() can be parsed, otherwise documentName will be undefined.
-    let documentName: string | undefined;
-    try {
-      const body = await req.json();
-      documentName = body.documentName;
-    } catch (_) {
-      // Ignore parsing error if body is empty or already consumed
-    }
     
     if (documentName) {
       await supabase

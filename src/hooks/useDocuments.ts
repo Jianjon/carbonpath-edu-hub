@@ -16,6 +16,7 @@ const sanitizeFileName = (fileName: string): string => {
 export const useDocuments = () => {
   const [files, setFiles] = useState<any[]>([]);
   const [processing, setProcessing] = useState<any[]>([]);
+  const [progress, setProgress] = useState<Record<string, number>>({});
   const [uploading, setUploading] = useState(false);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const { toast } = useToast();
@@ -40,7 +41,23 @@ export const useDocuments = () => {
     if (error) {
       console.error('Error fetching processing status:', error);
     } else {
-      setProcessing(data || []);
+      const processingData = data || [];
+      setProcessing(processingData);
+
+      const processingDocs = processingData.filter(d => d.status === 'processing' && d.chunks_count > 0);
+      for (const doc of processingDocs) {
+        const { count } = await supabase
+          .from('document_chunks')
+          .select('id', { count: 'exact', head: true })
+          .eq('document_name', doc.document_name);
+        
+        if (count !== null) {
+          setProgress(prev => ({
+            ...prev,
+            [doc.document_name]: count,
+          }));
+        }
+      }
     }
   }, []);
 
@@ -48,19 +65,46 @@ export const useDocuments = () => {
     fetchFiles();
     fetchProcessingStatus();
     
-    const channel = supabase
+    const processingChannel = supabase
       .channel('processing-updates')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'document_processing'
-      }, () => {
+      }, (payload) => {
         fetchProcessingStatus();
+        if (payload.new?.status === 'completed' || payload.new?.status === 'failed') {
+          setProgress(prev => {
+            const newProgress = { ...prev };
+            if (payload.new.document_name) {
+              delete newProgress[payload.new.document_name];
+            }
+            return newProgress;
+          });
+        }
+      })
+      .subscribe();
+      
+    const chunksChannel = supabase
+      .channel('document-chunks-inserts')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'document_chunks'
+      }, (payload) => {
+        const docName = payload.new.document_name;
+        if (docName) {
+          setProgress(prev => ({
+            ...prev,
+            [docName]: (prev[docName] || 0) + 1
+          }));
+        }
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(processingChannel);
+      supabase.removeChannel(chunksChannel);
     };
   }, [fetchFiles, fetchProcessingStatus]);
 
@@ -120,6 +164,13 @@ export const useDocuments = () => {
       await supabase.from('document_chunks').delete().eq('document_name', fileName);
       
       toast({ title: "刪除成功", description: `${fileName} 已被刪除。` });
+      
+      setProgress(prev => {
+        const newProgress = {...prev};
+        delete newProgress[fileName];
+        return newProgress;
+      });
+
       await fetchFiles();
       await fetchProcessingStatus();
     }
@@ -145,6 +196,7 @@ export const useDocuments = () => {
   return {
     files,
     processing,
+    progress,
     uploading,
     loadingFiles,
     handleUpload,

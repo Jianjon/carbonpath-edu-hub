@@ -8,6 +8,7 @@ const AdminPage = () => {
   const {
     files,
     processing,
+    progress,
     uploading,
     loadingFiles,
     handleUpload,
@@ -24,6 +25,7 @@ const AdminPage = () => {
           <FileList
             files={files}
             processing={processing}
+            progress={progress}
             isLoading={loadingFiles}
             onProcess={handleProcessDocument}
             onDelete={handleDelete}

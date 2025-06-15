@@ -6,12 +6,13 @@ import FileListItem from './FileListItem';
 interface FileListProps {
   files: any[];
   processing: any[];
+  progress: Record<string, number>;
   isLoading: boolean;
   onProcess: (fileName: string) => void;
   onDelete: (fileName: string) => void;
 }
 
-const FileList = ({ files, processing, isLoading, onProcess, onDelete }: FileListProps) => {
+const FileList = ({ files, processing, progress, isLoading, onProcess, onDelete }: FileListProps) => {
   
   const getProcessingStatus = (fileName: string) => {
     return processing.find(p => p.document_name === fileName);
@@ -35,6 +36,7 @@ const FileList = ({ files, processing, isLoading, onProcess, onDelete }: FileLis
                 key={file.id}
                 file={file}
                 processingInfo={getProcessingStatus(file.name)}
+                processedCount={progress[file.name]}
                 onProcess={onProcess}
                 onDelete={onDelete}
               />

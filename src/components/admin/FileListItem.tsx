@@ -1,10 +1,12 @@
 
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { FileText, Trash2, Loader2, Brain, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 interface FileListItemProps {
   file: any;
   processingInfo: any;
+  processedCount?: number;
   onProcess: (fileName: string) => void;
   onDelete: (fileName: string) => void;
 }
@@ -36,37 +38,54 @@ const getStatusText = (status: string) => {
 };
 
 
-const FileListItem = ({ file, processingInfo, onProcess, onDelete }: FileListItemProps) => {
+const FileListItem = ({ file, processingInfo, processedCount, onProcess, onDelete }: FileListItemProps) => {
+  const isProcessing = processingInfo?.status === 'processing';
+  const totalChunks = processingInfo?.chunks_count || 0;
+  const showProgress = isProcessing && totalChunks > 0 && processedCount !== undefined;
+  const progressValue = totalChunks > 0 ? ((processedCount || 0) / totalChunks) * 100 : 0;
+
   return (
-    <li className="flex items-center justify-between py-4">
-      <div className="flex items-center space-x-3">
-        <FileText className="h-5 w-5 text-gray-500" />
-        <div>
-          <span className="text-sm font-medium text-gray-800 break-all">{file.name}</span>
-          {processingInfo && (
-            <div className="flex items-center space-x-2 mt-1">
+    <li className="flex items-center justify-between py-4 gap-4">
+      <div className="flex-grow flex items-center space-x-3 min-w-0">
+        <FileText className="h-5 w-5 text-gray-500 flex-shrink-0" />
+        <div className="flex-grow min-w-0 space-y-1">
+          <span className="text-sm font-medium text-gray-800 break-words">{file.name}</span>
+          
+          {showProgress ? (
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <Progress value={progressValue} className="h-2 flex-grow" />
+                <Loader2 className="h-4 w-4 text-blue-500 animate-spin flex-shrink-0" />
+              </div>
+              <span className="text-xs text-gray-600">
+                處理中... ({processedCount}/{totalChunks} 片段)
+              </span>
+            </div>
+          ) : processingInfo ? (
+            <div className="flex items-center space-x-2">
               {getStatusIcon(processingInfo.status)}
               <span className="text-xs text-gray-600">
                 {getStatusText(processingInfo.status)}
-                {processingInfo.chunks_count > 0 && ` (${processingInfo.chunks_count} 片段)`}
+                {processingInfo.status === 'completed' && processingInfo.chunks_count > 0 && ` (${processingInfo.chunks_count} 片段)`}
               </span>
             </div>
-          )}
+          ) : null}
+
           {processingInfo?.error_message && (
-            <div className="text-xs text-red-600 mt-1">
+            <div className="text-xs text-red-600 truncate" title={processingInfo.error_message}>
               錯誤: {processingInfo.error_message}
             </div>
           )}
         </div>
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 flex-shrink-0">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onProcess(file.name)}
-          disabled={processingInfo?.status === 'processing'}
+          disabled={isProcessing}
         >
-          {processingInfo?.status === 'processing' ? (
+          {isProcessing ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
             <Brain className="h-4 w-4 mr-2" />
