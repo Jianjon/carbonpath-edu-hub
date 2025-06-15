@@ -184,9 +184,9 @@ export const calculatePathwayData = (
     finalPathway = pathway;
   } 
   
-  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後拋物線型年減排量
+  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後向下拋物線型年減排量
   else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後拋物線年減排量');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後向下拋物線年減排量');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -211,7 +211,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Parabolic annual reduction from 2031 to target year targeting residual emissions
+    // Phase 2: Downward parabolic annual reduction from 2031 to target year targeting residual emissions
     if (emissionData.targetYear > 2030) {
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
@@ -219,7 +219,7 @@ export const calculatePathwayData = (
       console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
-        console.log("SBTi 長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
+        console.log("SBTi 長期減排模式：向下拋物線型年減排量（前期減排量大，後期減排量小）");
         
         // 總減排量 = 2030年排放量 - 残留排放量
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
@@ -232,34 +232,41 @@ export const calculatePathwayData = (
             target: residualEmissions,
           });
         } else {
-          // 設計真正的拋物線型年減排量，前期小，後期大，逐年遞增
-          // 使用簡單的二次函數：r(t) = a * t^2 + b * t + c
-          // 邊界條件：
-          // 1. r(1) 較小（前期減排量小）
-          // 2. r(D) 較大（後期減排量大）
-          // 3. 總和 = totalReductionNeeded
-          // 4. 所有值都為正數且遞增
-          
-          // 為了確保拋物線型且逐年遞增，使用簡化的方法
-          // r(t) = baseReduction + growthFactor * (t-1)^2
+          // 設計向下的拋物線型年減排量：前期大，後期小
+          // 使用 r(t) = maxReduction - k * (t-1)^2 的形式
+          // 其中 t 從 1 到 D，確保年減排量逐年遞減
           
           const avgReduction = totalReductionNeeded / D;
-          const baseReduction = avgReduction * 0.4; // 第一年減排量設為平均值的40%
           
-          // 計算成長因子，確保總和等於totalReductionNeeded
-          // ∑(t=1 to D) [baseReduction + growthFactor * (t-1)^2] = totalReductionNeeded
-          // baseReduction * D + growthFactor * ∑(t=1 to D)(t-1)^2 = totalReductionNeeded
-          // ∑(t=1 to D)(t-1)^2 = ∑(k=0 to D-1)k^2 = (D-1)*D*(2D-1)/6
+          // 設定第一年的減排量為平均值的1.5倍，最後一年為平均值的0.5倍
+          const firstYearReduction = avgReduction * 1.5;
+          const lastYearReduction = avgReduction * 0.5;
           
-          const sumSquares = (D - 1) * D * (2 * D - 1) / 6;
-          const growthFactor = (totalReductionNeeded - baseReduction * D) / sumSquares;
+          // 計算拋物線係數 k
+          // r(1) = maxReduction = firstYearReduction
+          // r(D) = maxReduction - k * (D-1)^2 = lastYearReduction
+          // 所以 k = (firstYearReduction - lastYearReduction) / (D-1)^2
           
-          console.log(`SBTi 拋物線參數: baseReduction=${baseReduction.toFixed(2)}, growthFactor=${growthFactor.toFixed(6)}`);
+          const maxReduction = firstYearReduction;
+          const k = (firstYearReduction - lastYearReduction) / ((D - 1) * (D - 1));
+          
+          console.log(`SBTi 向下拋物線參數: maxReduction=${maxReduction.toFixed(2)}, k=${k.toFixed(6)}`);
+          console.log(`第一年減排: ${firstYearReduction.toFixed(0)}, 最後一年減排: ${lastYearReduction.toFixed(0)}`);
+          
+          // 調整係數以確保總減排量正確
+          let totalCalculated = 0;
+          for (let t = 1; t <= D; t++) {
+            const reduction = maxReduction - k * (t - 1) * (t - 1);
+            totalCalculated += reduction;
+          }
+          
+          const adjustmentFactor = totalReductionNeeded / totalCalculated;
+          console.log(`調整係數: ${adjustmentFactor.toFixed(4)}`);
           
           let cumulativeReduction = 0;
           for (let t = 1; t <= D; t++) {
-            // 計算當前年度的拋物線年減排量
-            const parabolicReduction = baseReduction + growthFactor * (t - 1) * (t - 1);
+            // 計算當前年度的向下拋物線年減排量
+            const parabolicReduction = (maxReduction - k * (t - 1) * (t - 1)) * adjustmentFactor;
             cumulativeReduction += parabolicReduction;
             
             console.log(`Year ${2030 + t}: 年減排量 ${parabolicReduction.toFixed(0)}, 累積減排 ${cumulativeReduction.toFixed(0)}`);
