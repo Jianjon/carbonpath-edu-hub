@@ -24,8 +24,8 @@ const Index = () => {
       textColor: 'text-blue-600'
     },
     {
-      title: '自願性碳權',
-      description: '了解碳權市場運作機制與投資策略',
+      title: '減碳行動',
+      description: '了解產業行動分區、組合模擬與主流策略類別',
       icon: Coins,
       path: '/carbon-credits',
       color: 'bg-yellow-500',

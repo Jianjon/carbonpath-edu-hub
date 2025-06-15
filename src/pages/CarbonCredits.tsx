@@ -1,8 +1,7 @@
-
-import { Coins, TrendingUp, Shield, Globe } from 'lucide-react';
+import { Puzzle, Target, ClipboardCheck, BarChartBig, Brain, Bolt, RefreshCcw, Factory, Users } from 'lucide-react';
 import Navigation from '../components/Navigation';
 
-const CarbonCredits = () => {
+const CarbonActions = () => {
   const creditTypes = [
     {
       title: '再生能源憑證',
@@ -79,132 +78,106 @@ const CarbonCredits = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white">
+      <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              自願性碳權市場
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 flex justify-center items-center gap-2">
+              <Puzzle className="h-8 w-8 text-white mr-2" /> 減碳行動
             </h1>
-            <p className="text-xl text-yellow-100 max-w-2xl mx-auto">
-              深入了解碳權市場機制，掌握投資策略與風險管理
+            <p className="text-xl text-green-100 max-w-2xl mx-auto font-medium">
+              🧩 分為四大功能區，協助企業規劃具體可行減碳方案與效益模擬
             </p>
           </div>
         </div>
       </div>
 
-      {/* Market Stats */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">市場概況</h2>
-          <p className="text-lg text-gray-600">全球碳權市場最新動態與趨勢分析</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {marketStats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-              <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-              <div className="text-sm text-gray-600 mb-2">{stat.title}</div>
-              <div className="flex items-center justify-center space-x-2">
-                <span className={`text-sm font-medium ${
-                  stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {stat.change}
-                </span>
-                <span className="text-xs text-gray-500">{stat.description}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Carbon Credit Types */}
-        <div className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">碳權類型</h2>
-            <p className="text-lg text-gray-600">了解不同類型碳權的特性與價值</p>
+      {/* 四大功能區說明 */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-10 animate-fade-in">
+          <div className="mb-6 flex items-center gap-2">
+            <BarChartBig className="text-green-500 w-7 h-7" />
+            <h2 className="text-2xl font-bold text-gray-900">減碳行動：四大功能區</h2>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {creditTypes.map((credit, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="text-4xl">{credit.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{credit.title}</h3>
-                    <p className="text-gray-600 mb-4">{credit.description}</p>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-sm text-gray-500">市場價格</div>
-                        <div className="text-lg font-semibold text-green-600">{credit.price}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500">驗證標準</div>
-                        <div className="text-sm font-medium text-blue-600">{credit.verification}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto mt-5">
+            <table className="min-w-full border border-gray-100 rounded-lg">
+              <thead>
+                <tr className="bg-teal-50">
+                  <th className="py-2 px-3 border-b text-left font-semibold">區塊</th>
+                  <th className="py-2 px-3 border-b text-left font-semibold">目的</th>
+                  <th className="py-2 px-3 border-b text-left font-semibold">功能設計</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="py-2 px-3"><Target className="inline mr-1 text-green-600" /> 選擇產業與目標</td>
+                  <td className="py-2 px-3">產業篩選與減碳目標導入</td>
+                  <td className="py-2 px-3">使用者選擇產業、設定年排放量或減碳目標（可選）</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3"><ClipboardCheck className="inline mr-1 text-green-600" /> 顯示推薦減碳行動</td>
+                  <td className="py-2 px-3">對應行業的行動卡片（3~6 個）</td>
+                  <td className="py-2 px-3">包含行動類型（能源/循環/製程）、減碳效益、投資、ROI、難度</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3"><BarChartBig className="inline mr-1 text-green-600" /> 行動模擬器</td>
+                  <td className="py-2 px-3">組合模擬、效益分折</td>
+                  <td className="py-2 px-3">勾選組合、即時計算總減碳與平均ROI，自動摘要與比較圖表</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3"><Brain className="inline mr-1 text-green-600" /> 行動建議語句</td>
+                  <td className="py-2 px-3">生成專業建議</td>
+                  <td className="py-2 px-3">GPT 提供總結語句（如：回本年限&年減碳噸數）</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Investment Strategies */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">投資策略</h2>
-            <p className="text-lg text-gray-600">專業的碳權投資策略建議</p>
+        {/* 策略類別介紹 */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-fade-in">
+          <div className="mb-6 flex items-center gap-2">
+            <Bolt className="text-teal-500 w-7 h-7" />
+            <h2 className="text-2xl font-bold text-gray-900">減碳策略類別</h2>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {investmentStrategies.map((strategy, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{strategy.title}</h3>
-                <p className="text-gray-600 mb-4">{strategy.description}</p>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="text-sm text-gray-500">風險等級</div>
-                    <div className={`text-sm font-medium ${
-                      strategy.risk === '低' ? 'text-green-600' :
-                      strategy.risk === '中' ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {strategy.risk}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500">預期報酬</div>
-                    <div className="text-sm font-medium text-blue-600">{strategy.return}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <table className="min-w-full border border-gray-100 rounded-lg mb-7">
+            <thead>
+              <tr className="bg-teal-50">
+                <th className="py-2 px-3 border-b text-left font-semibold">策略分類</th>
+                <th className="py-2 px-3 border-b text-left font-semibold">說明</th>
+                <th className="py-2 px-3 border-b text-left font-semibold">代表技術/方法</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-2 px-3"><Bolt className="inline mr-1 text-green-500" /> 能源效率改善</td>
+                <td className="py-2 px-3">以減少耗能為主，投資回本快</td>
+                <td className="py-2 px-3">LED 換裝、變頻空調、智慧監控</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3"><RefreshCcw className="inline mr-1 text-green-500" /> 循環經濟與資源再利用</td>
+                <td className="py-2 px-3">減少廢棄與物料耗損</td>
+                <td className="py-2 px-3">廚餘堆肥、洗碗系統、水回收</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3"><Factory className="inline mr-1 text-green-500" /> 製程技術改善</td>
+                <td className="py-2 px-3">大型製造業適用，改善熱能、排氣</td>
+                <td className="py-2 px-3">餘熱回收、氣電共生、製程簡化</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3"><Users className="inline mr-1 text-green-500" /> 精實管理與行為改變</td>
+                <td className="py-2 px-3">不見得需花大錢，靠制度與文化改變</td>
+                <td className="py-2 px-3">員工節能SOP、動線優化、運輸整合</td>
+              </tr>
+            </tbody>
+          </table>
+          <div className="text-sm text-gray-600 px-1">
+            上述四大主軸可依產業特性彈性組合應用，提高減碳行動效益與可執行性。
           </div>
-        </div>
-
-        {/* Key Features */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[
-            { icon: Shield, title: '品質保證', description: '國際認證標準驗證' },
-            { icon: Globe, title: '全球市場', description: '連接國際碳權交易' },
-            { icon: TrendingUp, title: '價格追蹤', description: '即時市場價格資訊' },
-            { icon: Coins, title: '投資組合', description: '專業投資建議服務' }
-          ].map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div key={index} className="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-4">
-                  <Icon className="h-6 w-6 text-yellow-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-600">{feature.description}</p>
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>
   );
 };
-
-export default CarbonCredits;
+export default CarbonActions;
