@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
-import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
+import { Calculator, TrendingDown, FileBarChart, Download, BarChart3 } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import EmissionDataInput from '../components/EmissionDataInput';
 import ModelSelection from '../components/ModelSelection';
 import PathwayChart from '../components/PathwayChart';
 import PathwayTable from '../components/PathwayTable';
 import ReportExport from '../components/ReportExport';
+import SBTiStyleChart from '../components/SBTiStyleChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { calculatePathwayData } from '../lib/pathwayUtils';
 
 export interface EmissionData {
@@ -136,7 +139,44 @@ const CarbonPath = () => {
             );
           })}
         </div>
+        
         <div className="max-w-4xl mx-auto">
+          {/* Add SBTi Demo Chart section */}
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  SBTi 路徑示範圖表
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="demo" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="demo">SBTi 示範圖表</TabsTrigger>
+                    <TabsTrigger value="planning">路徑規劃工具</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="demo" className="mt-6">
+                    <SBTiStyleChart />
+                  </TabsContent>
+                  <TabsContent value="planning" className="mt-6">
+                    <div className="text-center py-8">
+                      <p className="text-gray-600 mb-4">
+                        使用下方的步驟來建立您企業的專屬減碳路徑規劃
+                      </p>
+                      <Button 
+                        onClick={() => setStep(1)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        開始規劃
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+
           {step === 1 && (
             <EmissionDataInput 
               onNext={(data) => {
