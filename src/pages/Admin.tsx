@@ -1,16 +1,13 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
-import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { Upload, FileText, Trash2, Loader2, ShieldX } from 'lucide-react';
+import { Upload, FileText, Trash2, Loader2 } from 'lucide-react';
 
 const AdminPage = () => {
-  const { user, isAdmin, loading } = useProfile();
   const [files, setFiles] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [loadingFiles, setLoadingFiles] = useState(true);
@@ -30,12 +27,8 @@ const AdminPage = () => {
   };
 
   useEffect(() => {
-    if (!loading && isAdmin) {
-      fetchFiles();
-    } else if (!loading && !isAdmin) {
-      setLoadingFiles(false);
-    }
-  }, [isAdmin, loading]);
+    fetchFiles();
+  }, []);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -74,31 +67,6 @@ const AdminPage = () => {
   };
 
   const PageContent = () => {
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-        </div>
-      );
-    }
-
-    if (!user || !isAdmin) {
-      return (
-        <Card className="text-center">
-          <CardHeader>
-            <CardTitle>權限不足</CardTitle>
-            <CardDescription>只有管理員可以存取此頁面。</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center space-y-4">
-              <ShieldX className="h-16 w-16 text-red-500" />
-              <p>請使用管理員帳號登入以繼續。</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
     return (
       <div className="space-y-8">
         <Card>
