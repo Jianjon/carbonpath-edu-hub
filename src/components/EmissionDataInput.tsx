@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { EmissionData } from '../types/carbon';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen } from 'lucide-react';
 
 interface EmissionDataInputProps {
   onNext: (data: EmissionData) => void;
@@ -124,6 +124,17 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
 
   return (
     <div className="space-y-6">
+      <Card className="bg-white shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
+            <BookOpen className="mr-3 h-7 w-7 text-blue-600" />
+            淨零排放目標與基礎資料設定說明
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-gray-600">
+          <p>為協助企業規劃符合科學原則的減碳路徑，本模組提供淨零排放目標模擬與年度減量計算功能。請輸入您企業的範疇一與範疇二碳排放數據，以及基準年與預計達成淨零的目標年。系統將依據所選模型自動產生可行減碳路徑，並作為後續策略評估與報告基礎。</p>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>輸入基準排放數據</CardTitle>
@@ -309,7 +320,7 @@ const EmissionDataInput: React.FC<EmissionDataInputProps> = ({ onNext }) => {
                   總排放量：{(parseFloat(formData.scope1 || '0') + parseFloat(formData.scope2 || '0')).toLocaleString()} tCO2e
                 </p>
                 <p className="text-green-700">
-                  殘留排放：{formData.residualEmissionPercentage}%
+                  残留排放：{formData.residualEmissionPercentage}%
                 </p>
                 {formData.enableRenewableTarget && formData.renewableTargetType && (
                   <p className="text-green-700">
