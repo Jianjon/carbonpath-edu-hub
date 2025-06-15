@@ -1,68 +1,6 @@
 import type { EmissionData, ReductionModel, CustomTargets, PathwayData } from '../pages/CarbonPath';
 
 /**
- * 計算U形年度減排量分佈，並盡力達成與前期平滑銜接
- * @param D - 長期階段的持續年期
- * @param totalReductionNeeded - 此階段總減排需求
- * @param lastYearPhase1Reduction - 前一階段最後一年的年減排量，用於平滑化
- * @returns 成功則返回年度減排量陣列，否則返回 null，觸發後備模型
- */
-const calculateUShapedReductions = (
-  D: number,
-  totalReductionNeeded: number,
-  lastYearPhase1Reduction: number
-): number[] | null => {
-  const t_min_years = 4; // 最後幾年減排量開始回升
-  if (D <= t_min_years || totalReductionNeeded <= 0 || lastYearPhase1Reduction <= 0) {
-    return null;
-  }
-
-  const t_min = D - t_min_years;
-  const avgReduction = totalReductionNeeded / D;
-  
-  // 為了形成U形曲線(先降後升)，起始點的減排量必須大於平均減排量
-  // 我們以`lastYearPhase1Reduction`為目標，但若它太低，則無法形成U形
-  const initialTargetReduction = lastYearPhase1Reduction;
-  if (initialTargetReduction <= avgReduction) {
-    console.warn(
-      `前期減排量(${initialTargetReduction.toFixed(0)})低於長期平均需求(${avgReduction.toFixed(0)})，` +
-      `無法達成平滑U形曲線。將使用後備指數衰減模型以確保路徑合理。`
-    );
-    // 返回null將觸發指數衰減後備方案，這比強制產生一個有跳躍的U形曲線更安全
-    return null;
-  }
-
-  // 解算拋物線 r(t) = S * ((t - t_min)^2 + c) 的參數 S 和 c
-  const t_min_sq = t_min ** 2;
-  const sum_sq_diff_from_min = Array.from({ length: D }, (_, t) => (t - t_min) ** 2).reduce((s, v) => s + v, 0);
-  const denominator_for_S = sum_sq_diff_from_min - D * t_min_sq;
-
-  if (Math.abs(denominator_for_S) < 1e-9) return null;
-
-  const S = (totalReductionNeeded - D * initialTargetReduction) / denominator_for_S;
-  if (S <= 0) {
-    // 如果初始目標過高，可能導致此問題
-    console.warn(`U形模型計算S時出錯 (S <= 0)，可能因初始目標過高。將使用後備模型。`);
-    return null;
-  }
-
-  const c = (initialTargetReduction / S) - t_min_sq;
-  if (c <= 0) {
-    console.warn(`U形模型計算c時出錯 (c <= 0)。將使用後備模型。`);
-    return null;
-  }
-
-  const annualReductions = Array.from({ length: D }, (_, t) => S * ((t - t_min) ** 2 + c));
-  
-  // 最終縮放以確保總和精確
-  const calculatedSum = annualReductions.reduce((sum, r) => sum + r, 0);
-  if (calculatedSum <= 0) return null;
-  
-  const scalingFactor = totalReductionNeeded / calculatedSum;
-  return annualReductions.map(r => r * scalingFactor);
-};
-
-/**
  * 後備方案：計算平滑增長的年度減排量
  * 當U形曲線無法達成時（例如前期減排量過低），使用此模型確保減排路徑平滑向上，避免初期出現不合理的峰值。
  */
@@ -89,40 +27,6 @@ const calculateGrowthReductions = (D: number, totalReductionNeeded: number): num
     
     console.log(
         `長期階段後備方案：使用平滑增長模型（因無法達成U形）。` +
-        `第一年減排 ${finalReductions[0]?.toFixed(0)}, ` +
-        `最後一年減排 ${finalReductions[D - 1]?.toFixed(0)}`
-    );
-
-    return finalReductions;
-};
-
-/**
- * 後備方案：計算前置式減排的年度減排量 (凸面向上)
- * 當U形曲線無法達成時，使用此模型確保早期減排量較大，然後平滑遞減，避免後期出現不合理的減排高峰。
- */
-const calculateFrontLoadedReductions = (D: number, totalReductionNeeded: number): number[] => {
-    if (D <= 0) return [];
-    // If reduction is not needed or even negative, distribute linearly.
-    if (totalReductionNeeded <= 0) {
-        return Array(D).fill(totalReductionNeeded / D || 0);
-    }
-    
-    // 使用反向二次方衰減 f(t) = (D-t)^2 + 1，確保早期減排量較大
-    const baseReductions = Array.from({ length: D }, (_, t) => (D - t) ** 2 + 1);
-
-    const totalBaseReduction = baseReductions.reduce((sum, val) => sum + val, 0);
-
-    // This should not happen with this formula but as a safeguard.
-    if (totalBaseReduction <= 0) {
-        return Array(D).fill(totalReductionNeeded / D);
-    }
-
-    const scalingFactor = totalReductionNeeded / totalBaseReduction;
-    
-    const finalReductions = baseReductions.map(base => base * scalingFactor);
-    
-    console.log(
-        `長期階段後備方案：使用前置式減排模型（凸面向上）。` +
         `第一年減排 ${finalReductions[0]?.toFixed(0)}, ` +
         `最後一年減排 ${finalReductions[D - 1]?.toFixed(0)}`
     );
@@ -179,25 +83,18 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Long-Term with U-shaped or growth reduction
+    // Phase 2: Long-Term with growth reduction (向上凸)
     const emissionsAtNearTermEnd = tempEmissions;
     const D = targetYear - nearTermTarget.year;
 
     if (D > 0) {
       const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
-      const nearTermFinalAnnualReduction = path.length > 1 ? path[path.length - 2].emissions - path[path.length - 1].emissions : 0;
       
-      let annualReductions = calculateUShapedReductions(D, totalReductionNeeded, nearTermFinalAnnualReduction);
-
-      if (annualReductions) {
-        console.log("自訂長期減排：使用U形減排模型");
-      } else {
-        console.log("自訂長期減排：使用後備平滑增長模型（向上凸）");
-        annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
-      }
+      console.log("自訂長期減排：使用平滑增長模型（向上凸）");
+      const annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
         
       console.log(`長期減排總量: ${totalReductionNeeded.toFixed(0)} tCO2e`);
-      console.log(`長期第一年減排量 (峰值): ${annualReductions[0]?.toFixed(0) ?? 0} tCO2e`);
+      console.log(`長期第一年減排量: ${annualReductions[0]?.toFixed(0) ?? 0} tCO2e`);
       console.log(`長期最後一年減排量: ${annualReductions[D - 1]?.toFixed(0) ?? 0} tCO2e`);
 
       // Apply reductions to build the pathway
@@ -271,9 +168,9 @@ export const calculatePathwayData = (
     finalPathway = pathway;
   } 
   
-  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後採U形或平滑增長
+  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後採平滑增長
   else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採U形或平滑增長');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採平滑增長');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -298,7 +195,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: U-shaped or growth reduction from 2031 to target year
+    // Phase 2: Growth reduction from 2031 to target year
     if (emissionData.targetYear > 2030) {
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
@@ -308,18 +205,8 @@ export const calculatePathwayData = (
       if (D > 0) {
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
         
-        const emissionsAt2029 = pathway.length > 1 ? pathway[pathway.length - 2].emissions : emissionsAt2030;
-        const actual2030Reduction = emissionsAt2029 - emissionsAt2030;
-        console.log(`2030年實際年減排量 (銜接點): ${actual2030Reduction.toFixed(0)} tCO2e`);
-        
-        let annualReductions = calculateUShapedReductions(D, totalReductionNeeded, actual2030Reduction);
-
-        if (annualReductions) {
-            console.log("SBTi 長期減排模式：使用U形減排模型");
-        } else {
-            console.log("SBTi 長期減排模式：使用後備平滑增長模型（向上凸）");
-            annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
-        }
+        console.log("SBTi 長期減排模式：使用平滑增長模型（向上凸）");
+        const annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
 
         // Apply reductions
         let currentEmissions = emissionsAt2030;
