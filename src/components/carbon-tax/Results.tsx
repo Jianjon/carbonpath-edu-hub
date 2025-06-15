@@ -5,8 +5,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReductionModel } from '@/pages/CarbonTax';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 
 interface Rate {
   value: number;
@@ -26,11 +24,10 @@ interface ResultsProps {
   setSelectedRate: (rate: number) => void;
   feeProjection: FeeProjection[];
   leakageCoefficient: number;
-  setLeakageCoefficient: (value: number) => void;
   reductionModel: ReductionModel;
 }
 
-const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, leakageCoefficient, setLeakageCoefficient, reductionModel }: ResultsProps) => {
+const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, leakageCoefficient, reductionModel }: ResultsProps) => {
   const totalFee = feeProjection.reduce((acc, item) => acc + item.fee, 0);
   const selectedRateDetails = rates.find(r => r.value === selectedRate);
 
@@ -76,31 +73,6 @@ const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, leakageC
             於 {rates.find(r => r.value === selectedRate)?.label} 情境下
           </p>
         </div>
-
-        <Card>
-            <CardHeader className="pb-4">
-                <Label className="font-semibold text-base">高碳洩漏風險模式</Label>
-                <p className="text-sm text-muted-foreground">若貴公司屬於高碳洩漏風險產業，請選擇對應的風險係數。</p>
-            </CardHeader>
-            <CardContent>
-                <RadioGroup
-                    value={String(leakageCoefficient)}
-                    onValueChange={(value) => setLeakageCoefficient(Number(value))}
-                    className="space-y-3"
-                >
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="0" id="leakage-off" />
-                        <Label htmlFor="leakage-off">關閉（非高洩漏風險產業）</Label>
-                    </div>
-                    {[0.2, 0.4, 0.6].map(coeff => (
-                        <div key={coeff} className="flex items-center space-x-2">
-                            <RadioGroupItem value={String(coeff)} id={`leakage-${coeff}`} />
-                            <Label htmlFor={`leakage-${coeff}`}>啟用，風險係數 {coeff}</Label>
-                        </div>
-                    ))}
-                </RadioGroup>
-            </CardContent>
-        </Card>
 
         <Card>
             <CardHeader className="flex-row items-center space-x-3 space-y-0 pb-2">

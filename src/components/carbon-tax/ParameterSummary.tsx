@@ -4,11 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
 import { ReductionModel } from '@/pages/CarbonTax';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface ParameterSummaryProps {
   formValues: CarbonTaxFormValues;
   reductionModel: ReductionModel;
   onEdit: () => void;
+  leakageCoefficient: number;
+  setLeakageCoefficient: (value: number) => void;
 }
 
 const reductionModelLabels: Record<ReductionModel, string> = {
@@ -17,8 +21,15 @@ const reductionModelLabels: Record<ReductionModel, string> = {
   taiwan: '台灣淨零路徑 (年減約2.8%)',
 };
 
-const ParameterSummary = ({ formValues, reductionModel, onEdit }: ParameterSummaryProps) => {
-  const { annualEmissions, isHighLeakageRisk } = formValues;
+const ParameterSummary = ({ formValues, reductionModel, onEdit, leakageCoefficient, setLeakageCoefficient }: ParameterSummaryProps) => {
+  const { annualEmissions } = formValues;
+
+  const leakageOptions = [
+    { value: 0, label: "關閉 (非高洩漏風險產業)" },
+    { value: 0.2, label: "啟用，風險係數 0.2" },
+    { value: 0.4, label: "啟用，風險係數 0.4" },
+    { value: 0.6, label: "啟用，風險係數 0.6" },
+  ];
 
   return (
     <Card className="bg-white shadow-sm">
@@ -41,11 +52,23 @@ const ParameterSummary = ({ formValues, reductionModel, onEdit }: ParameterSumma
           <span className="text-gray-600">減量情境</span>
           <span className="font-medium">{reductionModelLabels[reductionModel]}</span>
         </div>
-        <div className="flex justify-between items-center pt-2">
-          <span className="text-gray-600">高碳洩漏風險</span>
-          <span className={`font-medium px-2 py-1 rounded-full text-xs ${isHighLeakageRisk ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'}`}>
-            {isHighLeakageRisk ? '是' : '否'}
-          </span>
+        <div className="space-y-2 pt-2">
+          <Label htmlFor="leakage-select" className="text-gray-600">高碳洩漏風險模式</Label>
+          <Select
+            value={String(leakageCoefficient)}
+            onValueChange={(value) => setLeakageCoefficient(Number(value))}
+          >
+            <SelectTrigger id="leakage-select" className="w-full">
+              <SelectValue placeholder="選擇風險係數..." />
+            </SelectTrigger>
+            <SelectContent>
+              {leakageOptions.map(option => (
+                <SelectItem key={option.value} value={String(option.value)}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardContent>
     </Card>

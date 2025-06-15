@@ -198,6 +198,8 @@ const CarbonTax = () => {
                         formValues={formValues} 
                         reductionModel={reductionModel} 
                         onEdit={() => setStep(1)} 
+                        leakageCoefficient={leakageCoefficient}
+                        setLeakageCoefficient={setLeakageCoefficient}
                     />
                 </div>
             
@@ -208,7 +210,6 @@ const CarbonTax = () => {
                         setSelectedRate={setSelectedRate}
                         feeProjection={feeProjection}
                         leakageCoefficient={leakageCoefficient}
-                        setLeakageCoefficient={setLeakageCoefficient}
                         reductionModel={reductionModel}
                     />
                     <div className="text-center pt-4">
