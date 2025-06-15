@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { MessageSquare, Send, Bot, User, Lightbulb, Zap } from 'lucide-react';
+import { MessageSquare, Send, Bot, User, Lightbulb, Zap, FileText, MessageCircle } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -8,12 +9,13 @@ const Chatbot = () => {
     {
       id: 1,
       type: 'bot',
-      content: '您好！我是CarbonPath減碳智能助手。我可以幫您解答關於減碳策略、碳費計算、碳權投資等問題。請問有什麼我能協助您的嗎？'
+      content: '您好！我是CarbonPath減碳智能助手。我可以幫您解答關於減碳策略、碳費計算、碳權投資等問題。您可以切換到「文件模式」來基於已上傳的PDF文件進行問答。請問有什麼我能協助您的嗎？'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ragMode, setRagMode] = useState(false);
 
   const quickQuestions = [
     '如何制定企業減碳目標？',
@@ -39,10 +41,13 @@ const Chatbot = () => {
     setError(null);
 
     try {
+      // 選擇要使用的 Edge Function
+      const functionName = ragMode ? 'rag-search' : 'ai-chat';
+      
       // 傳送除了第一條歡迎訊息之外的對話歷史，作為上下文
       const contextMessages = newMessages.slice(1).map(({ type, content }) => ({ type, content }));
 
-      const { data, error: functionError } = await supabase.functions.invoke('ai-chat', {
+      const { data, error: functionError } = await supabase.functions.invoke(functionName, {
         body: { messages: contextMessages },
       });
 
@@ -54,17 +59,26 @@ const Chatbot = () => {
         throw new Error(data.error);
       }
 
+      let botResponseContent = data.reply;
+      
+      // 如果是 RAG 模式，添加來源信息
+      if (ragMode && data.sources_count > 0) {
+        botResponseContent += `\n\n💡 此回答基於 ${data.sources_count} 個相關文件片段`;
+      }
+
       const botResponse = {
         id: newMessages.length + 1,
         type: 'bot',
-        content: data.reply,
+        content: botResponseContent,
       };
 
       setMessages(prev => [...prev, botResponse]);
 
     } catch (err: any) {
       console.error("Error sending message:", err);
-      const errorMessage = "抱歉，我現在遇到了一些問題，請稍後再試。";
+      const errorMessage = ragMode 
+        ? "抱歉，我在搜尋文件時遇到了問題，請稍後再試。" 
+        : "抱歉，我現在遇到了一些問題，請稍後再試。";
       setError(errorMessage);
       const errorResponse = {
         id: newMessages.length + 1,
@@ -84,6 +98,18 @@ const Chatbot = () => {
 
   const handleQuickQuestion = (question: string) => {
     sendMessage(question);
+  };
+
+  const handleModeSwitch = (newRagMode: boolean) => {
+    setRagMode(newRagMode);
+    const modeMessage = {
+      id: messages.length + 1,
+      type: 'bot',
+      content: newRagMode 
+        ? '已切換到文件模式！我現在會基於已上傳的PDF文件來回答您的問題。' 
+        : '已切換到一般模式！我會使用我的通用知識來回答您的問題。'
+    };
+    setMessages(prev => [...prev, modeMessage]);
   };
 
   return (
@@ -107,13 +133,37 @@ const Chatbot = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-[600px] flex flex-col">
           {/* Chat Header */}
-          <div className="flex items-center space-x-3 p-4 border-b border-gray-200">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <Bot className="h-6 w-6 text-purple-600" />
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <Bot className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">CarbonPath AI Assistant</h3>
+                <p className="text-sm text-green-600">● 在線中</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">CarbonPath AI Assistant</h3>
-              <p className="text-sm text-green-600">● 在線中</p>
+            
+            {/* Mode Switch */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleModeSwitch(false)}
+                className={`flex items-center space-x-1 px-3 py-1 rounded-md text-sm transition-colors ${
+                  !ragMode ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>一般模式</span>
+              </button>
+              <button
+                onClick={() => handleModeSwitch(true)}
+                className={`flex items-center space-x-1 px-3 py-1 rounded-md text-sm transition-colors ${
+                  ragMode ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                <span>文件模式</span>
+              </button>
             </div>
           </div>
 
@@ -167,7 +217,7 @@ const Chatbot = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !isTyping && handleSendMessage()}
-                placeholder="輸入您的問題..."
+                placeholder={ragMode ? "基於文件內容提問..." : "輸入您的問題..."}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                 disabled={isTyping}
               />
