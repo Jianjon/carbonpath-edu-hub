@@ -1,3 +1,4 @@
+
 import type { EmissionData, ReductionModel, CustomTargets, PathwayData } from '../pages/CarbonPath';
 
 export const calculatePathwayData = (
@@ -30,7 +31,7 @@ export const calculatePathwayData = (
     const { nearTermTarget } = customTargets;
     const nearTermAnnualRate = nearTermTarget.annualReductionRate / 100;
 
-    // Phase 1: Near-Term Geometric Reduction
+    // Phase 1: Near-Term Geometric Reduction (此處已是等比減少)
     path.push({
       year: baseYear,
       emissions: tempEmissions,
@@ -48,12 +49,12 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Long-Term with parabolic annual reduction targeting residual emissions
+    // Phase 2: Long-Term with smooth exponential decay for annual reduction
     const emissionsAtNearTermEnd = tempEmissions;
     const D = targetYear - nearTermTarget.year;
 
     if (D > 0) {
-      console.log("長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
+      console.log("長期減排模式：平滑指數衰減年減排量");
       console.log(`起點: ${emissionsAtNearTermEnd.toLocaleString()}, 終點: ${residualEmissions.toLocaleString()}, 年數: ${D}`);
       
       const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
@@ -66,31 +67,51 @@ export const calculatePathwayData = (
           target: residualEmissions,
         });
       } else {
-        const sumT2 = D * (D + 1) * (2 * D + 1) / 6;
-        const minReductionRatio = 0.3;
-        const avgReduction = totalReductionNeeded / D;
-        const minReduction = avgReduction * minReductionRatio;
-        const b = minReduction - (totalReductionNeeded - minReduction * D) / sumT2;
-        const a = (totalReductionNeeded - b * D) / sumT2;
+        // 計算近期最後一年的年減排量，以確保平滑過渡
+        const emissionsOneYearPrior = emissionsAtNearTermEnd / (1 - nearTermAnnualRate);
+        const lastNearTermAnnualReduction = emissionsOneYearPrior - emissionsAtNearTermEnd;
+        console.log(`近期最後一年減排量: ${lastNearTermAnnualReduction.toFixed(0)} tCO2e`);
+
+        // 使用純指數衰減模型 R(t) = A * e^(-k*t)
+        const k = 0.1; // 設定一個溫和的衰減係數，讓曲線更平滑
+        const exponentialSum = Array.from({ length: D }, (_, t) => Math.exp(-k * t)).reduce((sum, val) => sum + val, 0);
         
-        console.log(`拋物線參數: a=${a.toFixed(6)}, b=${b.toFixed(2)}`);
-        console.log(`預期最小年減排: ${minReduction.toFixed(0)}, 最大年減排: ${(a * D * D + b).toFixed(0)}`);
+        // 根據總減排需求計算初始係數A
+        let A = (totalReductionNeeded) / exponentialSum;
         
-        let cumulativeReduction = 0;
-        for (let t = 1; t <= D; t++) {
-          const parabolicReduction = a * t * t + b;
-          cumulativeReduction += parabolicReduction;
+        // 為了平滑過渡，長期第一年的減排量 (A) 不應劇烈跳躍
+        // 如果計算出的A遠大於近期最後一年的減排量，則以近期為基礎，避免曲線突增
+        const maxFirstYearReduction = lastNearTermAnnualReduction * 1.05; // 允許5%的彈性
+        if (A > maxFirstYearReduction) {
+          console.log(`長期初始年減排量(${A.toFixed(0)})過高，進行平滑化調整`);
+          A = maxFirstYearReduction;
           
-          let currentEmissions;
-          if (t === D) {
+          // 如果A被調整，需重新計算總量並等比例縮放以滿足最終目標
+          const adjustedTotalReduction = A * exponentialSum;
+          if (adjustedTotalReduction > 0) {
+            const scalingFactor = totalReductionNeeded / adjustedTotalReduction;
+            A *= scalingFactor;
+          }
+        }
+        
+        console.log(`最終指數衰減參數: A=${A.toFixed(0)}, k=${k}`);
+        console.log(`長期第一年減排量: ${A.toFixed(0)}`);
+        console.log(`長期最後年減排量: ${(A * Math.exp(-k * (D - 1))).toFixed(0)}`);
+        
+        let currentEmissions = emissionsAtNearTermEnd;
+        for (let t = 0; t < D; t++) {
+          const annualReduction = A * Math.exp(-k * t);
+          currentEmissions -= annualReduction;
+          
+          // 在最後一年直接設定為目標殘留量，確保精準達標
+          if (t === D - 1) {
             currentEmissions = residualEmissions;
           } else {
-            currentEmissions = emissionsAtNearTermEnd - cumulativeReduction;
             currentEmissions = Math.max(currentEmissions, residualEmissions);
           }
           
           path.push({
-            year: nearTermTarget.year + t,
+            year: nearTermTarget.year + 1 + t,
             emissions: currentEmissions,
             reduction: ((totalEmissions - currentEmissions) / totalEmissions) * 100,
             target: currentEmissions,
