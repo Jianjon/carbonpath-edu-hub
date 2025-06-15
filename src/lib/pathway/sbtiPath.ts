@@ -1,4 +1,3 @@
-
 import type { PathwayData, EmissionData } from '../../types/carbon';
 import { calculateGrowthReductions } from './calculateGrowthReductions';
 
@@ -7,7 +6,7 @@ export const calculateSbtiPath = (
   totalEmissions: number,
   residualEmissions: number
 ): PathwayData[] => {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採平滑增長模型');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採拋物線減排模型');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -42,10 +41,13 @@ export const calculateSbtiPath = (
       if (D > 0) {
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
         
-        // 為了與自訂模式的計算方法保持一致，這裡不傳入初始減排量，
-        // 讓 calculateGrowthReductions 採用其預設的平滑增長模型(t^2+1)。
-        // 這可以避免因銜接第一階段結尾的較低減排量而導致的圖表波谷。
-        const annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
+        let initialAnnualReduction = 0;
+        // 如果 pathway 包含前一年的數據，計算其減排量以確保曲線連續
+        if (pathway.length > 1) {
+            initialAnnualReduction = pathway[pathway.length - 2].emissions - pathway[pathway.length - 1].emissions;
+        }
+        
+        const annualReductions = calculateGrowthReductions(D, totalReductionNeeded, initialAnnualReduction);
 
         // Apply reductions
         let currentEmissions = emissionsAt2030;
