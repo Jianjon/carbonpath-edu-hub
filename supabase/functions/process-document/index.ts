@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -133,11 +132,9 @@ serve(async (req) => {
       .delete()
       .eq('document_name', documentName);
 
-    // Process chunks and generate embeddings
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      console.log(`Processing chunk ${i + 1}/${chunks.length}`);
-      
+    // Process chunks and generate embeddings in parallel
+    console.log(`Processing ${chunks.length} chunks for ${documentName} in parallel...`);
+    const chunkPromises = chunks.map(async (chunk, i) => {
       try {
         const embedding = await generateEmbedding(chunk);
         
@@ -149,14 +146,13 @@ serve(async (req) => {
             chunk_index: i,
             embedding: JSON.stringify(embedding)
           });
-        
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
-        console.error(`Error processing chunk ${i}:`, error);
-        // We can decide to continue or stop on chunk error. Let's continue.
+        // Log chunk-specific errors but don't fail the whole process
+        console.error(`Error processing chunk ${i + 1}/${chunks.length} for ${documentName}:`, error.message);
       }
-    }
+    });
+
+    await Promise.all(chunkPromises);
 
     // Update processing status to completed
     await supabase
