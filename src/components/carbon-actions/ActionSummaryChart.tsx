@@ -1,5 +1,4 @@
-
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceArea, Customized } from 'recharts';
 import { ActionAngle } from '../../pages/CarbonCredits';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -34,6 +33,36 @@ const CustomScatterTooltip = ({ active, payload }: any) => {
     return null;
 };
 
+const renderQuadrantLabels = (props: any) => {
+    const { xAxisMap, yAxisMap } = props;
+    const xAxis = xAxisMap[0];
+    const yAxis = yAxisMap[0];
+    
+    if (!xAxis || !yAxis) return null;
+
+    const labels = [
+        { x: 1.5, y: 1.5, name: "速效方案", desc: "低投資/低難度" },
+        { x: 3, y: 1.5, name: "高CP值方案", desc: "高投資/低難度" },
+        { x: 1.5, y: 3, name: "策略投資", desc: "低投資/高難度" },
+        { x: 3, y: 3, name: "重大專案", desc: "高投資/高難度" },
+    ];
+
+    return (
+        <g>
+            {labels.map(label => (
+                <g key={label.name} transform={`translate(${xAxis.scale(label.x)}, ${yAxis.scale(label.y)})`}>
+                    <text x={0} y={0} dy={-8} textAnchor="middle" className="text-base font-bold fill-foreground/70">
+                        {label.name}
+                    </text>
+                     <text x={0} y={0} dy={12} textAnchor="middle" className="text-xs fill-muted-foreground">
+                        {label.desc}
+                    </text>
+                </g>
+            ))}
+        </g>
+    );
+};
+
 const ActionSummaryChart = ({ scatterDataByAngle, chartConfig }: Props) => {
     const hasData = Object.keys(scatterDataByAngle).length > 0;
 
@@ -41,13 +70,19 @@ const ActionSummaryChart = ({ scatterDataByAngle, chartConfig }: Props) => {
         <Card className="md:col-span-3">
             <CardHeader>
                 <CardTitle className="text-lg">行動效益分析</CardTitle>
-                <CardDescription>比較不同行動的投資與執行難度</CardDescription>
+                <CardDescription>2x2矩陣分析：投資級距 vs. 執行難度</CardDescription>
             </CardHeader>
-            <CardContent className="h-[280px] pb-4">
+            <CardContent className="h-[400px] pb-4">
                 {hasData ? (
                     <ChartContainer config={chartConfig} className="w-full h-full">
-                        <ScatterChart margin={{ top: 20, right: 40, bottom: 40, left: 20 }}>
+                        <ScatterChart margin={{ top: 20, right: 40, bottom: 60, left: 20 }}>
                             <CartesianGrid strokeDasharray="3 3" />
+
+                            <ReferenceArea x1={0.5} x2={2.5} y1={0.5} y2={2.5} stroke="none" fill="hsl(var(--chart-1))" fillOpacity={0.08} />
+                            <ReferenceArea x1={2.5} x2={3.5} y1={0.5} y2={2.5} stroke="none" fill="hsl(var(--chart-2))" fillOpacity={0.08} />
+                            <ReferenceArea x1={0.5} x2={2.5} y1={2.5} y2={3.5} stroke="none" fill="hsl(var(--chart-3))" fillOpacity={0.08} />
+                            <ReferenceArea x1={2.5} x2={3.5} y1={2.5} y2={3.5} stroke="none" fill="hsl(var(--chart-4))" fillOpacity={0.08} />
+                            
                             <XAxis 
                                 type="number" 
                                 dataKey="x" 
@@ -56,7 +91,9 @@ const ActionSummaryChart = ({ scatterDataByAngle, chartConfig }: Props) => {
                                 ticks={[1, 2, 3]} 
                                 tick={{ fontSize: 12 }}
                                 tickFormatter={(value) => ({ 1: '低', 2: '中', 3: '高' }[value] || '')}
-                                label={{ value: "投資級距", position: 'insideBottom', offset: -15, fontSize: 12 }}
+                                label={{ value: "投資級距", position: 'insideBottom', offset: -25, fontSize: 14, fontWeight: 'bold' }}
+                                axisLine={false}
+                                tickLine={false}
                             />
                             <YAxis 
                                 type="number" 
@@ -66,10 +103,15 @@ const ActionSummaryChart = ({ scatterDataByAngle, chartConfig }: Props) => {
                                 ticks={[1, 2, 3]} 
                                 tick={{ fontSize: 12 }}
                                 tickFormatter={(value) => ({ 1: '簡易', 2: '中等', 3: '複雜' }[value] || '')}
-                                label={{ value: "執行難度", angle: -90, position: 'insideLeft', offset: 0, fontSize: 12 }}
+                                label={{ value: "執行難度", angle: -90, position: 'insideLeft', offset: 10, fontSize: 14, fontWeight: 'bold' }}
+                                axisLine={false}
+                                tickLine={false}
                             />
                             <Tooltip content={<CustomScatterTooltip />} cursor={{ strokeDasharray: '3 3' }} />
                             <Legend content={<ChartLegendContent />} verticalAlign="top" wrapperStyle={{paddingBottom: '20px'}} />
+                            
+                            <Customized component={renderQuadrantLabels} />
+
                             {Object.entries(scatterDataByAngle).map(([angle, data]) => (
                                 <Scatter 
                                     key={angle} 

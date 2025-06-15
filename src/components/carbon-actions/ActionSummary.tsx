@@ -21,7 +21,8 @@ const ActionSummary = ({ industry, selectedActionIds, onBack, onReset }: Props) 
         selectedActions,
         summaryData,
         chartConfig,
-        scatterDataByAngle
+        scatterDataByAngle,
+        actionsByAngle,
     } = useActionSummaryData(industry, selectedActionIds);
 
     const handleExport = () => {
@@ -40,7 +41,7 @@ const ActionSummary = ({ industry, selectedActionIds, onBack, onReset }: Props) 
                         <div className="mb-8 grid gap-6 md:grid-cols-5">
                             <ActionSummaryHeader
                                 totalActions={summaryData.totalActions}
-                                angleCounts={summaryData.angleCounts}
+                                actionsByAngle={actionsByAngle}
                             />
                             <ActionSummaryChart
                                 scatterDataByAngle={scatterDataByAngle}

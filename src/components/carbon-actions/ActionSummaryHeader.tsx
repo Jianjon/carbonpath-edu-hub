@@ -1,14 +1,16 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ActionAngle } from '../../pages/CarbonCredits';
+import { Action, ActionAngle } from '../../pages/CarbonCredits';
 import { BarChart3 } from 'lucide-react';
 
 interface Props {
     totalActions: number;
-    angleCounts: Record<ActionAngle, number>;
+    actionsByAngle: Record<ActionAngle, (Action & { angle: ActionAngle })[]>;
 }
 
-const ActionSummaryHeader = ({ totalActions, angleCounts }: Props) => {
+const ActionSummaryHeader = ({ totalActions, actionsByAngle }: Props) => {
+    const sortedAngles = Object.keys(actionsByAngle).sort() as ActionAngle[];
+
     return (
         <Card className="md:col-span-2">
             <CardHeader>
@@ -22,13 +24,19 @@ const ActionSummaryHeader = ({ totalActions, angleCounts }: Props) => {
                     {totalActions}
                     <span className="ml-2 text-lg font-normal text-muted-foreground">項行動</span>
                 </p>
-                <div className="space-y-2">
-                    <h4 className="font-semibold">各面向分佈：</h4>
-                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                        {Object.entries(angleCounts).map(([angle, count]) => (
-                            <li key={angle}><span className="font-medium text-foreground">{angle}</span>: {count} 項</li>
-                        ))}
-                    </ul>
+                <div className="space-y-4">
+                     {sortedAngles.map(angle => (
+                        <div key={angle}>
+                            <h4 className="font-semibold text-base mb-1">{angle}</h4>
+                            <ul className="list-disc list-inside space-y-1 text-sm">
+                                {actionsByAngle[angle].map(action => (
+                                    <li key={action.id} className="text-foreground">
+                                        {action.name}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
                 </div>
             </CardContent>
         </Card>

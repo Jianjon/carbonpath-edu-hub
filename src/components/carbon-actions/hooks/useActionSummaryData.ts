@@ -74,8 +74,8 @@ export const useActionSummaryData = (industry: Industry, selectedActionIds: stri
                 acc[angle] = [];
             }
             acc[angle].push({
-                x: investmentMap[action.investment],
-                y: difficultyMap[action.difficulty],
+                x: investmentMap[action.investment] + (Math.random() - 0.5) * 0.2, // Add jitter
+                y: difficultyMap[action.difficulty] + (Math.random() - 0.5) * 0.2, // Add jitter
                 name: action.name,
                 investment: action.investment,
                 difficulty: action.difficulty,
@@ -84,10 +84,22 @@ export const useActionSummaryData = (industry: Industry, selectedActionIds: stri
         }, {} as Record<ActionAngle, { x: number; y: number; name: string, investment: string, difficulty: string }[]>);
     }, [selectedActions]);
 
+    const actionsByAngle = useMemo(() => {
+        return selectedActions.reduce((acc, action) => {
+            const angle = action.angle;
+            if (!acc[angle]) {
+                acc[angle] = [];
+            }
+            acc[angle].push(action);
+            return acc;
+        }, {} as Record<ActionAngle, (Action & { angle: ActionAngle })[]>);
+    }, [selectedActions]);
+
     return {
         selectedActions,
         summaryData,
         chartConfig,
-        scatterDataByAngle
+        scatterDataByAngle,
+        actionsByAngle,
     };
 };
