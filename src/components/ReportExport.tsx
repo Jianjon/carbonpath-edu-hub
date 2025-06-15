@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Download, RotateCcw, Copy } from 'lucide-react';
-import { EmissionData, ReductionModel, PathwayData } from '../pages/CarbonPath';
+import type { EmissionData, ReductionModel, PathwayData } from '../types/carbon';
 import { useToast } from '@/hooks/use-toast';
 
 interface ReportExportProps {

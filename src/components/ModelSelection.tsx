@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import ThreePhaseTargets from './ThreePhaseTargets';
-import { ReductionModel, CustomTargets } from '../pages/CarbonPath';
+import type { ReductionModel, CustomTargets } from '../types/carbon';
 
 interface ModelSelectionProps {
   onNext: (model: ReductionModel, customTargets?: CustomTargets) => void;

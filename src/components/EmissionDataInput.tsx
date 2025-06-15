@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { EmissionData } from '../pages/CarbonPath';
+import type { EmissionData } from '../types/carbon';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
 interface EmissionDataInputProps {
