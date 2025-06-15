@@ -1,45 +1,65 @@
 import type { EmissionData, ReductionModel, CustomTargets, PathwayData } from '../pages/CarbonPath';
 
 /**
- * 計算U形年度減排量分佈 (新版，更穩定)
+ * 計算U形年度減排量分佈，並盡力達成與前期平滑銜接
  * @param D - 長期階段的持續年期
  * @param totalReductionNeeded - 此階段總減排需求
- * @returns 成功則返回年度減排量陣列，否則返回 null
+ * @param lastYearPhase1Reduction - 前一階段最後一年的年減排量，用於平滑化
+ * @returns 成功則返回年度減排量陣列，否則返回 null，觸發後備模型
  */
 const calculateUShapedReductions = (
   D: number,
-  totalReductionNeeded: number
+  totalReductionNeeded: number,
+  lastYearPhase1Reduction: number
 ): number[] | null => {
   const t_min_years = 4; // 最後幾年減排量開始回升
-  if (D <= t_min_years) return null;
-  
+  if (D <= t_min_years || totalReductionNeeded <= 0 || lastYearPhase1Reduction <= 0) {
+    return null;
+  }
+
   const t_min = D - t_min_years;
-
-  // 使用 r(t) = S * ((t - t_min)^2 + c) 模型
-  // 設定 c 來決定 U 形的深度。c > 0 確保最低點減排量為正。
-  // 這裡的c值是根據拋物線形狀調整的經驗值，確保曲線平滑。
-  const c = 0.25 * (t_min ** 2) + 0.1;
+  const avgReduction = totalReductionNeeded / D;
   
-  const baseReductions = Array.from({ length: D }, (_, t) => (t - t_min) ** 2 + c);
-  const totalBaseReduction = baseReductions.reduce((sum, val) => sum + val, 0);
-
-  if (totalBaseReduction <= 0) {
-      console.warn("U形模型計算出非正基數減排量，將使用後備模型。");
-      return null;
+  // 為了形成U形曲線(先降後升)，起始點的減排量必須大於平均減排量
+  // 我們以`lastYearPhase1Reduction`為目標，但若它太低，則無法形成U形
+  const initialTargetReduction = lastYearPhase1Reduction;
+  if (initialTargetReduction <= avgReduction) {
+    console.warn(
+      `前期減排量(${initialTargetReduction.toFixed(0)})低於長期平均需求(${avgReduction.toFixed(0)})，` +
+      `無法達成平滑U形曲線。將使用後備指數衰減模型以確保路徑合理。`
+    );
+    // 返回null將觸發指數衰減後備方案，這比強制產生一個有跳躍的U形曲線更安全
+    return null;
   }
 
-  // 總減排需求必須為正
-  if (totalReductionNeeded <= 0) {
-      // 這通常發生在長期目標的排放量高於近期目標結束時的排放量
-      console.warn("U形模型不適用，因總減排需求非正。將使用後備模型。");
-      return null;
+  // 解算拋物線 r(t) = S * ((t - t_min)^2 + c) 的參數 S 和 c
+  const t_min_sq = t_min ** 2;
+  const sum_sq_diff_from_min = Array.from({ length: D }, (_, t) => (t - t_min) ** 2).reduce((s, v) => s + v, 0);
+  const denominator_for_S = sum_sq_diff_from_min - D * t_min_sq;
+
+  if (Math.abs(denominator_for_S) < 1e-9) return null;
+
+  const S = (totalReductionNeeded - D * initialTargetReduction) / denominator_for_S;
+  if (S <= 0) {
+    // 如果初始目標過高，可能導致此問題
+    console.warn(`U形模型計算S時出錯 (S <= 0)，可能因初始目標過高。將使用後備模型。`);
+    return null;
   }
 
-  const scalingFactor = totalReductionNeeded / totalBaseReduction;
+  const c = (initialTargetReduction / S) - t_min_sq;
+  if (c <= 0) {
+    console.warn(`U形模型計算c時出錯 (c <= 0)。將使用後備模型。`);
+    return null;
+  }
 
-  const annualReductions = baseReductions.map(r => r * scalingFactor);
+  const annualReductions = Array.from({ length: D }, (_, t) => S * ((t - t_min) ** 2 + c));
   
-  return annualReductions;
+  // 最終縮放以確保總和精確
+  const calculatedSum = annualReductions.reduce((sum, r) => sum + r, 0);
+  if (calculatedSum <= 0) return null;
+  
+  const scalingFactor = totalReductionNeeded / calculatedSum;
+  return annualReductions.map(r => r * scalingFactor);
 };
 
 /**
@@ -117,7 +137,7 @@ export const calculatePathwayData = (
       const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
       const nearTermFinalAnnualReduction = path.length > 1 ? path[path.length - 2].emissions - path[path.length - 1].emissions : 0;
       
-      let annualReductions = calculateUShapedReductions(D, totalReductionNeeded);
+      let annualReductions = calculateUShapedReductions(D, totalReductionNeeded, nearTermFinalAnnualReduction);
 
       if (annualReductions) {
         console.log("自訂長期減排：使用U形減排模型");
@@ -242,7 +262,7 @@ export const calculatePathwayData = (
         const actual2030Reduction = emissionsAt2029 - emissionsAt2030;
         console.log(`2030年實際年減排量 (銜接點): ${actual2030Reduction.toFixed(0)} tCO2e`);
         
-        let annualReductions = calculateUShapedReductions(D, totalReductionNeeded);
+        let annualReductions = calculateUShapedReductions(D, totalReductionNeeded, actual2030Reduction);
 
         if (annualReductions) {
             console.log("SBTi 長期減排模式：使用U形減排模型");
