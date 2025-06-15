@@ -1,9 +1,10 @@
 
 import { ReactNode } from 'react';
-import { AlertTriangle, Info } from 'lucide-react';
+import { AlertTriangle, Info, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ReductionModel } from '@/pages/CarbonTax';
 
 interface Rate {
   value: number;
@@ -11,15 +12,24 @@ interface Rate {
   description: ReactNode;
 }
 
+interface FeeProjection {
+    year: number;
+    emissions: number;
+    fee: number;
+}
+
 interface ResultsProps {
   rates: Rate[];
   selectedRate: number;
   setSelectedRate: (rate: number) => void;
-  calculatedFee: number;
+  feeProjection: FeeProjection[];
   isHighLeakageRisk: boolean;
+  reductionModel: ReductionModel;
 }
 
-const Results = ({ rates, selectedRate, setSelectedRate, calculatedFee, isHighLeakageRisk }: ResultsProps) => {
+const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, isHighLeakageRisk, reductionModel }: ResultsProps) => {
+  const totalFee = feeProjection.reduce((acc, item) => acc + item.fee, 0);
+
   return (
     <Card className="bg-white shadow-sm">
       <CardHeader>
@@ -37,14 +47,43 @@ const Results = ({ rates, selectedRate, setSelectedRate, calculatedFee, isHighLe
         </div>
         
         <div className="text-center bg-gray-50 p-6 rounded-lg border">
-          <p className="text-lg text-gray-600">預估應繳碳費</p>
+          <p className="text-lg text-gray-600">預估5年累計碳費</p>
           <p className="text-4xl font-bold text-indigo-600 mt-2">
-            NT$ {calculatedFee.toLocaleString()}
+            NT$ {totalFee.toLocaleString()}
           </p>
           <p className="text-sm text-gray-500 mt-2">
             於 {rates.find(r => r.value === selectedRate)?.label} 情境下
           </p>
         </div>
+
+        <Card>
+            <CardHeader className="flex-row items-center space-x-3 space-y-0 pb-2">
+                <TrendingUp className="h-6 w-6 text-gray-500" />
+                <CardTitle>五年費用預測</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-100/80">
+                            <tr>
+                                <th className="p-3 font-medium">年度</th>
+                                <th className="p-3 font-medium text-right">預估排放量 (噸)</th>
+                                <th className="p-3 font-medium text-right">預估碳費</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {feeProjection.map((item) => (
+                                <tr key={item.year} className="border-b last:border-none">
+                                    <td className="p-3">{item.year}</td>
+                                    <td className="p-3 text-right">{item.emissions.toLocaleString()}</td>
+                                    <td className="p-3 text-right font-semibold">NT$ {item.fee.toLocaleString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </CardContent>
+        </Card>
 
         <div className="space-y-4 pt-4 border-t">
           <h4 className="font-semibold text-center text-gray-700">費率適用條件說明</h4>
@@ -54,6 +93,11 @@ const Results = ({ rates, selectedRate, setSelectedRate, calculatedFee, isHighLe
                   <div>
                       <h5 className="font-semibold">{rate.label}</h5>
                       <div className="text-sm text-gray-600 mt-2">{rate.description}</div>
+                      {rate.value === 100 && (reductionModel === 'sbti' || reductionModel === 'taiwan') && (
+                          <div className="mt-3 p-2 bg-green-50 text-green-900 border-l-4 border-green-400 text-xs rounded-r-md">
+                              <b>提示：</b>您選擇的減量路徑是達成此優惠費率的良好方向。請確保您的自主減量計畫符合法規並通過審核。
+                          </div>
+                      )}
                   </div>
               </div>
           ))}

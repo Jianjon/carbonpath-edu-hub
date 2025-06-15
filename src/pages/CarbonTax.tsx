@@ -16,6 +16,8 @@ interface Rate {
   description: ReactNode;
 }
 
+export type ReductionModel = 'none' | 'sbti' | 'taiwan';
+
 const rates: Rate[] = [
     {
         value: 300,
@@ -70,6 +72,7 @@ const rates: Rate[] = [
 const CarbonTax = () => {
   const [step, setStep] = useState(1);
   const [selectedRate, setSelectedRate] = useState(rates[0].value);
+  const [reductionModel, setReductionModel] = useState<ReductionModel>('none');
 
   const form = useForm<CarbonTaxFormValues>({
     resolver: zodResolver(carbonTaxFormSchema),
@@ -81,25 +84,56 @@ const CarbonTax = () => {
 
   const formValues = form.watch();
 
-  const calculatedFee = useMemo(() => {
+  const feeProjection = useMemo(() => {
     const { annualEmissions, isHighLeakageRisk } = formValues;
-    const emissions = annualEmissions || 0;
+    const baseEmissions = annualEmissions || 0;
     const rate = selectedRate;
     const threshold = 25000;
+    const projectionYears = 5;
 
-    if (isHighLeakageRisk) {
-        return (emissions * 0.2) * rate;
+    let emissionsPath: number[] = [];
+    let currentEmissions = baseEmissions;
+
+    for (let i = 0; i < projectionYears; i++) {
+        if (i === 0) {
+            emissionsPath.push(currentEmissions);
+            continue;
+        }
+
+        switch (reductionModel) {
+            case 'sbti':
+                currentEmissions *= (1 - 0.042); // SBTi: 4.2% annual reduction
+                break;
+            case 'taiwan':
+                currentEmissions *= (1 - 0.028); // Simplified Taiwan Target: ~2.8% annual reduction
+                break;
+            case 'none':
+            default:
+                // No change in emissions
+                break;
+        }
+        emissionsPath.push(currentEmissions);
     }
-
-    if (emissions > threshold) {
-        return (emissions - threshold) * rate;
-    }
-
-    return 0;
-  }, [formValues, selectedRate]);
+    
+    return emissionsPath.map((emissions, index) => {
+        let fee = 0;
+        if (isHighLeakageRisk) {
+            fee = (emissions * 0.2) * rate;
+        } else {
+            if (emissions > threshold) {
+                fee = (emissions - threshold) * rate;
+            }
+        }
+        return {
+            year: new Date().getFullYear() + index,
+            emissions: Math.round(emissions),
+            fee: Math.round(fee),
+        };
+    });
+  }, [formValues, selectedRate, reductionModel]);
 
   const Stepper = ({ currentStep }: { currentStep: number }) => {
-    const steps = ['簡介', '輸入參數', '查看結果'];
+    const steps = ['參數與情境設定', '結果分析'];
     return (
         <div className="flex items-center justify-center space-x-4 sm:space-x-8 mb-12">
             {steps.map((title, index) => {
@@ -134,30 +168,27 @@ const CarbonTax = () => {
         <Stepper currentStep={step} />
         
         {step === 1 && (
-            <div className="max-w-4xl mx-auto">
-                <Introduction />
-                <div className="text-center mt-8">
-                    <Button size="lg" onClick={() => setStep(2)} className="bg-blue-600 hover:bg-blue-700">開始試算</Button>
+            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div>
+                  <Introduction />
+                </div>
+                <div className="space-y-8">
+                    <ParameterForm form={form} reductionModel={reductionModel} setReductionModel={setReductionModel} />
+                    <div className="text-center">
+                        <Button size="lg" onClick={() => setStep(2)} className="bg-blue-600 hover:bg-blue-700 w-full">
+                            查看結果分析
+                        </Button>
+                    </div>
                 </div>
             </div>
         )}
         
         {step === 2 && (
-            <div className="max-w-2xl mx-auto">
-                <ParameterForm form={form} />
-                <div className="flex justify-between mt-8">
-                     <Button variant="outline" onClick={() => setStep(1)}>返回上一步</Button>
-                     <Button onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700">查看結果</Button>
-                </div>
-            </div>
-        )}
-
-        {step === 3 && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-1 space-y-8">
-                    <ParameterForm form={form} />
+                    <ParameterForm form={form} reductionModel={reductionModel} setReductionModel={setReductionModel}/>
                     <div className="flex justify-end lg:justify-start">
-                        <Button variant="outline" onClick={() => setStep(2)}>返回修改參數</Button>
+                        <Button variant="outline" onClick={() => setStep(1)}>返回修改參數</Button>
                     </div>
                 </div>
             
@@ -166,8 +197,9 @@ const CarbonTax = () => {
                         rates={rates}
                         selectedRate={selectedRate}
                         setSelectedRate={setSelectedRate}
-                        calculatedFee={calculatedFee}
+                        feeProjection={feeProjection}
                         isHighLeakageRisk={!!formValues.isHighLeakageRisk}
+                        reductionModel={reductionModel}
                     />
                 </div>
             </div>
