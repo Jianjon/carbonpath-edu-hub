@@ -5,8 +5,6 @@ import { FeeProjectionItem, ReductionModel } from '@/lib/carbon-tax/types';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import InvestmentGuide from './InvestmentGuide';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 interface CostBenefitAnalysisProps {
   feeProjection: FeeProjectionItem[];
@@ -65,11 +63,6 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
     };
   });
 
-  const chartConfig = {
-    baselineFee: { label: "情境A: 維持現狀碳費", color: "#f87171" }, // red-400
-    scenarioFee: { label: `情境B: 減量後碳費`, color: "#4ade80" }, // green-400
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -82,33 +75,6 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <Card>
-            <CardHeader>
-                <CardTitle>費用比較圖</CardTitle>
-                <CardDescription>視覺化比較兩種情境下的年度碳費差異。</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                    <ResponsiveContainer>
-                        <BarChart data={analysisData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="year" fontSize={12} />
-                            <YAxis fontSize={12} tickFormatter={(value) => `NT$${(Number(value) / 1000000).toFixed(1)}M`} />
-                            <Tooltip 
-                                cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
-                                content={<ChartTooltipContent formatter={(value, name) => 
-                                  <span>{formatCurrency(value as number)} <span className="text-muted-foreground text-xs">({name})</span></span>
-                                } />} 
-                            />
-                            <Legend />
-                            <Bar dataKey="baselineFee" name={chartConfig.baselineFee.label} fill={`var(--color-baselineFee)`} radius={4} />
-                            <Bar dataKey="scenarioFee" name={`情境B: 減量後碳費 (${selectedRate}元/噸)`} fill={`var(--color-scenarioFee)`} radius={4} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </ChartContainer>
-            </CardContent>
-        </Card>
-        
         <Card>
             <CardHeader>
                 <CardTitle>逐年效益分析</CardTitle>
