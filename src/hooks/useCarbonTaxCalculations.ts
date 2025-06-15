@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
 import { ReductionModel } from '@/lib/carbon-tax/types';
@@ -74,7 +75,7 @@ export const useCarbonTaxCalculations = ({
   const baselineFeeProjection = useMemo(() => {
     const { annualEmissions } = formValues;
     const baseEmissions = annualEmissions || 0;
-    const rate = selectedRate;
+    const rate = 300; // Use fixed 300 for baseline scenario
     const threshold = 25000;
     const projectionYears = Math.max(1, 2035 - new Date().getFullYear() + 1);
 
@@ -95,7 +96,7 @@ export const useCarbonTaxCalculations = ({
             fee: Math.round(fee),
         };
     });
-  }, [formValues, selectedRate, leakageCoefficient]);
+  }, [formValues, leakageCoefficient]);
 
   return { feeProjection, baselineFeeProjection };
 };

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign } from 'lucide-react';
 import { FeeProjectionItem, ReductionModel } from '@/lib/carbon-tax/types';
@@ -43,18 +42,11 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
 
   const analysisData = feeProjection.map((item, index) => {
     const baselineItem = baselineFeeProjection[index];
-    const threshold = 25000;
-
-    let baselineFee: number;
-    let scenarioFee: number;
-
-    if (leakageCoefficient > 0) {
-      baselineFee = baselineItem.emissions * leakageCoefficient * 300;
-      scenarioFee = item.emissions * leakageCoefficient * selectedRate;
-    } else {
-      baselineFee = Math.max(0, (baselineItem.emissions - threshold) * 300);
-      scenarioFee = Math.max(0, (item.emissions - threshold) * selectedRate);
-    }
+    
+    // The baseline fee is now correctly calculated in the hook.
+    const baselineFee = baselineItem.fee;
+    // The scenario fee is also pre-calculated.
+    const scenarioFee = item.fee; 
 
     const annualSavings = baselineFee - scenarioFee;
     const annualEmissionsReduced = baselineItem.emissions - item.emissions;
