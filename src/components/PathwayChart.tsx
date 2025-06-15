@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -129,7 +130,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[420px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dataWithAnnualReduction}>
+              <AreaChart data={dataWithAnnualReduction} syncId="carbonPathwaySync">
                 <defs>
                   <linearGradient id="pathwayGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#1976D2" stopOpacity={0.7}/>
@@ -293,7 +294,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
         <CardContent>
             <ChartContainer config={chartConfig} className="h-[260px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dataWithAnnualReduction.filter(d => d.annualReduction !== null)}>
+                    <AreaChart data={dataWithAnnualReduction} syncId="carbonPathwaySync">
                         <defs>
                             <linearGradient id="annualReductionGradient" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.7} />
