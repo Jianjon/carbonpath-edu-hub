@@ -1,4 +1,5 @@
 
+import { ReactNode } from 'react';
 import { AlertTriangle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 interface Rate {
   value: number;
   label: string;
-  description: string;
+  description: ReactNode;
 }
 
 interface ResultsProps {
@@ -48,11 +49,11 @@ const Results = ({ rates, selectedRate, setSelectedRate, calculatedFee, isHighLe
         <div className="space-y-4 pt-4 border-t">
           <h4 className="font-semibold text-center text-gray-700">費率適用條件說明</h4>
           {rates.map((rate) => (
-              <div key={rate.value} className={cn("flex items-start gap-3 p-3 rounded-md", { "bg-blue-50 border border-blue-200": selectedRate === rate.value, "bg-gray-50": selectedRate !== rate.value })}>
-                  <Info className={cn("h-5 w-5 mt-0.5", { "text-blue-700": selectedRate === rate.value, "text-gray-500": selectedRate !== rate.value })} />
+              <div key={rate.value} className={cn("flex items-start gap-3 p-3 rounded-md transition-colors", { "bg-blue-50 border border-blue-200": selectedRate === rate.value, "bg-gray-50": selectedRate !== rate.value })}>
+                  <Info className={cn("h-5 w-5 mt-1 flex-shrink-0", { "text-blue-700": selectedRate === rate.value, "text-gray-500": selectedRate !== rate.value })} />
                   <div>
                       <h5 className="font-semibold">{rate.label}</h5>
-                      <p className="text-sm text-gray-600">{rate.description}</p>
+                      <div className="text-sm text-gray-600 mt-2">{rate.description}</div>
                   </div>
               </div>
           ))}
