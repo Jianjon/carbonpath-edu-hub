@@ -80,7 +80,7 @@ const Navigation = () => {
                 <Button asChild variant="ghost" size="sm">
                   <Link to="/auth">
                     <LogIn className="mr-2 h-4 w-4" />
-                    登入 / 註冊
+                    管理員登入
                   </Link>
                 </Button>
               )}
