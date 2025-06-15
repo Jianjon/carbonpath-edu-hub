@@ -56,11 +56,9 @@ export const calculatePathwayData = (
       console.log("長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
       console.log(`起點: ${emissionsAtNearTermEnd.toLocaleString()}, 終點: ${residualEmissions.toLocaleString()}, 年數: ${D}`);
       
-      // 總減排量 = 起點排放量 - 残留排放量
       const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
       
       if (D === 1) {
-        // Single year transition
         path.push({
           year: nearTermTarget.year + 1,
           emissions: residualEmissions,
@@ -68,29 +66,10 @@ export const calculatePathwayData = (
           target: residualEmissions,
         });
       } else {
-        // 設計拋物線年減排量：r(t) = at² + bt + c
-        // 邊界條件：
-        // 1. 前期緩慢：r(1) 較小
-        // 2. 中後期加速：r(D) 較大
-        // 3. 總和約束：∑r(t) = totalReductionNeeded
-        
-        // 使用向下開口的拋物線，讓年減排量前期小，後期大
-        // 簡化設計：r(t) = a * t² + b，其中 a > 0
-        
-        // 計算係數使總減排量符合需求
-        // ∑(t=1 to D) (a*t² + b) = totalReductionNeeded
-        // a * ∑t² + b * D = totalReductionNeeded
-        // a * D(D+1)(2D+1)/6 + b * D = totalReductionNeeded
-        
         const sumT2 = D * (D + 1) * (2 * D + 1) / 6;
-        
-        // 設定前期減排量相對較小，後期較大的比例
-        const minReductionRatio = 0.3; // 前期減排量占平均值的比例
+        const minReductionRatio = 0.3;
         const avgReduction = totalReductionNeeded / D;
         const minReduction = avgReduction * minReductionRatio;
-        
-        // 從 r(1) = a + b = minReduction 求解
-        // 和總量約束求解 a 和 b
         const b = minReduction - (totalReductionNeeded - minReduction * D) / sumT2;
         const a = (totalReductionNeeded - b * D) / sumT2;
         
@@ -99,18 +78,14 @@ export const calculatePathwayData = (
         
         let cumulativeReduction = 0;
         for (let t = 1; t <= D; t++) {
-          // 計算當前年度的拋物線年減排量
           const parabolicReduction = a * t * t + b;
           cumulativeReduction += parabolicReduction;
           
-          // 計算當前排放量
           let currentEmissions;
           if (t === D) {
-            // 最後一年確保達到殘留排放量
             currentEmissions = residualEmissions;
           } else {
             currentEmissions = emissionsAtNearTermEnd - cumulativeReduction;
-            // 確保不會低於殘留排放量
             currentEmissions = Math.max(currentEmissions, residualEmissions);
           }
           
@@ -137,7 +112,6 @@ export const calculatePathwayData = (
     console.log('使用台灣目標 - 從基線到殘留量:', residualEmissions.toLocaleString());
     let pathway: PathwayData[] = [];
     
-    // 計算各階段目標排放量（以殘留量為最終目標）
     const totalReductionNeeded = totalEmissions - residualEmissions;
     
     for (let i = 0; i <= years; i++) {
@@ -147,28 +121,22 @@ export const calculatePathwayData = (
       if (currentYear === emissionData.baseYear) {
         targetEmissions = totalEmissions;
       } else if (currentYear === emissionData.targetYear) {
-        targetEmissions = residualEmissions; // 最終必須達到殘留量
+        targetEmissions = residualEmissions;
       } else {
-        // 按台灣目標階段計算，但最終指向殘留量
         let reductionProgress = 0;
         
         if (currentYear <= 2030) {
-          // 到2030年28%減排
           reductionProgress = (currentYear - emissionData.baseYear) / (2030 - emissionData.baseYear) * 0.28;
         } else if (currentYear <= 2032) {
-          // 2030-2032年從28%到32%
           reductionProgress = 0.28 + (currentYear - 2030) / (2032 - 2030) * (0.32 - 0.28);
         } else if (currentYear <= 2035) {
-          // 2032-2035年從32%到38%
           reductionProgress = 0.32 + (currentYear - 2032) / (2035 - 2032) * (0.38 - 0.32);
         } else {
-          // 2035年後線性減排到殘留量
           const finalReductionRatio = (totalEmissions - residualEmissions) / totalEmissions;
           reductionProgress = 0.38 + (currentYear - 2035) / (emissionData.targetYear - 2035) * (finalReductionRatio - 0.38);
         }
         
         targetEmissions = totalEmissions * (1 - reductionProgress);
-        // 確保不會低於殘留排放量
         targetEmissions = Math.max(targetEmissions, residualEmissions);
       }
       
@@ -184,9 +152,9 @@ export const calculatePathwayData = (
     finalPathway = pathway;
   } 
   
-  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後指數衰減年減排量
+  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後平滑指數衰減年減排量
   else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量指數衰減');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量平滑指數衰減');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -211,7 +179,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Exponential decay curve for annual reduction from 2031 to target year
+    // Phase 2: Smooth exponential decay for annual reduction from 2031 to target year
     if (emissionData.targetYear > 2030) {
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
@@ -219,9 +187,8 @@ export const calculatePathwayData = (
       console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
-        console.log("SBTi 長期減排模式：指數衰減年減排量（2030年峰值，之後平滑下降）");
+        console.log("SBTi 長期減排模式：平滑指數衰減年減排量（2030年峰值，之後平緩下降）");
         
-        // 總減排量 = 2030年排放量 - 残留排放量
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
         
         if (D === 1) {
@@ -232,51 +199,45 @@ export const calculatePathwayData = (
             target: residualEmissions,
           });
         } else {
-          // 指數衰減法：年減排量(t) = A × e^(-k×t) + C
-          // 其中 t = 0, 1, 2, ... (2030年後的第0年、第1年...)
-          
-          // 計算2030年的年減排量作為起始峰值
+          // 計算2030年的實際年減排量作為起始參考
           let emissionsAt2029 = totalEmissions;
           for (let y = emissionData.baseYear + 1; y <= 2029; y++) {
             emissionsAt2029 *= (1 - sbtiRate);
           }
-          const peak2030Reduction = emissionsAt2029 - emissionsAt2030; // 2030年實際年減排量（峰值）
+          const actual2030Reduction = emissionsAt2029 - emissionsAt2030;
           
-          // 設定最終年減排量為峰值的30%
-          const finalReduction = peak2030Reduction * 0.3;
+          console.log(`2030年實際年減排量: ${actual2030Reduction.toFixed(0)} tCO2e`);
           
-          // 指數衰減公式：R(t) = A × e^(-k×t) + C
-          // 邊界條件：
-          // t=0: R(0) = A + C = peak2030Reduction
-          // t=D-1: R(D-1) = A × e^(-k×(D-1)) + C = finalReduction
-          // 總和約束：∑R(t) = totalReductionNeeded
+          // 設計平滑指數衰減：R(t) = A × e^(-k×t) + C
+          // 確保 R(0) ≤ actual2030Reduction，避免跳躍
           
+          // 設定最終年減排量為2030年的30%
+          const finalReduction = actual2030Reduction * 0.3;
           const C = finalReduction;
-          const A = peak2030Reduction - C;
           
-          // 通過最後一年的約束求k
-          // A × e^(-k×(D-1)) + C = finalReduction
-          // A × e^(-k×(D-1)) = 0
-          // 由於A > 0，所以需要調整，改用：
-          // e^(-k×(D-1)) = (finalReduction - C) / A = 0 / A = 0
-          // 這會導致k趨於無窮，不合理
+          // 設定衰減係數，控制下降速度
+          const k = 0.08; // 較溫和的衰減係數
           
-          // 修正方法：設定合理的衰減係數
-          const k = 0.1; // 衰減係數，可調整
-          
-          // 重新計算A和C，確保總和約束
+          // 通過總和約束計算A
           const exponentialSum = Array.from({ length: D }, (_, t) => Math.exp(-k * t)).reduce((sum, val) => sum + val, 0);
-          const adjustedA = (totalReductionNeeded - C * D) / exponentialSum;
+          let A = (totalReductionNeeded - C * D) / exponentialSum;
+          
+          // 確保第一年（t=0）不超過2030年實際減排量
+          const maxFirstYearReduction = actual2030Reduction * 0.95; // 稍微小於2030年
+          if (A + C > maxFirstYearReduction) {
+            A = maxFirstYearReduction - C;
+            console.log(`調整A以避免跳躍: A=${A.toFixed(0)}`);
+          }
           
           console.log(`指數衰減參數:`);
-          console.log(`2030年峰值減排: ${peak2030Reduction.toFixed(0)} tCO2e`);
-          console.log(`最小減排量: ${C.toFixed(0)} tCO2e`);
-          console.log(`調整後A: ${adjustedA.toFixed(0)}, k: ${k}, C: ${C.toFixed(0)}`);
+          console.log(`A: ${A.toFixed(0)}, k: ${k}, C: ${C.toFixed(0)}`);
+          console.log(`第一年減排量: ${(A + C).toFixed(0)} (2030年: ${actual2030Reduction.toFixed(0)})`);
+          console.log(`最後年減排量: ${(A * Math.exp(-k * (D-1)) + C).toFixed(0)}`);
           
           let cumulativeReduction = 0;
           for (let t = 0; t < D; t++) {
-            // 計算當前年度的指數衰減年減排量
-            const exponentialReduction = adjustedA * Math.exp(-k * t) + C;
+            // 計算當前年度的平滑指數衰減年減排量
+            const exponentialReduction = A * Math.exp(-k * t) + C;
             cumulativeReduction += exponentialReduction;
             
             console.log(`Year ${2031 + t}: 年減排量 ${exponentialReduction.toFixed(0)}, 累積減排 ${cumulativeReduction.toFixed(0)}`);
