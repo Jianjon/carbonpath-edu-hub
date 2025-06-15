@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Action, Industry, ActionAngle } from '../../pages/CarbonCredits';
 import { actionsData, actionAngles } from '../../data/carbonActionsData';
@@ -8,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Sparkles, Leaf, ShoppingBasket, Target, Wallet } from 'lucide-react';
+import { Sparkles, Leaf, ShoppingBasket, Target, Wallet, Download } from 'lucide-react';
 
 interface Props {
   industry: Industry;
@@ -69,6 +68,45 @@ const ActionExplorer = ({ industry, totalBudgetPoints, onBack }: Props) => {
   
   const selectedCount = Object.values(selected).filter(Boolean).length;
   const totalActions = Object.values(industryActions).flat().length;
+
+  const handleExport = () => {
+    const selectedActionDetails: (Action & { angle: ActionAngle })[] = [];
+    actionAngles.forEach(angle => {
+        const actions = industryActions[angle];
+        if (actions) {
+            actions.forEach(action => {
+                if (selected[action.id]) {
+                    selectedActionDetails.push({ ...action, angle: angle as ActionAngle });
+                }
+            });
+        }
+    });
+
+    const headers = ['減碳面向', '減碳方向', '效益描述', '預估投資級距'];
+    const csvRows = [headers.join(',')];
+
+    selectedActionDetails.forEach(action => {
+        const row = [
+            `"${action.angle}"`,
+            `"${action.name}"`,
+            `"${action.description}"`,
+            `"${action.investment}"`
+        ];
+        csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([`\uFEFF${csvString}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${industry}_減碳行動計畫.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Card className="animate-fade-in">
@@ -142,9 +180,15 @@ const ActionExplorer = ({ industry, totalBudgetPoints, onBack }: Props) => {
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between items-center flex-wrap gap-2">
-        <Button variant="outline" onClick={onBack}>返回</Button>
-        <div className="text-sm font-medium text-primary">
+      <CardFooter className="flex justify-between items-center flex-wrap gap-4">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={onBack}>返回</Button>
+          <Button variant="outline" onClick={handleExport} disabled={selectedCount === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            匯出試算表
+          </Button>
+        </div>
+        <div className="text-sm font-medium text-primary text-right">
           已選擇 {selectedCount} 項行動，已使用 {usedBudgetPoints} 點預算
         </div>
       </CardFooter>
