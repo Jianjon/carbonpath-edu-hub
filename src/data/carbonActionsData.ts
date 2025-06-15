@@ -1,4 +1,3 @@
-
 import { Action, ActionAngle, Industry } from '../pages/CarbonCredits';
 
 export const industries: Industry[] = ['餐飲業', '零售業', '製造業', '營建業', '運輸業', '科技業', '金融業', '醫療保健', '教育服務', '旅宿業'];
@@ -157,7 +156,56 @@ export const actionsData: ActionData = {
       { id: 'man-ne-10', name: '永續金融導入', description: '尋求綠色貸款或發行綠色債券。', investment: '中' },
     ]
   },
-  '營建業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
+  '營建業': {
+    '能源管理': [
+      { id: 'con-en-1', name: '綠建築設計（自然採光通風）', description: '減少照明與空調用電，提升室內舒適度。', investment: '中' },
+      { id: 'con-en-2', name: '高效能外殼（隔熱）', description: '減少空調負荷，降低能源消耗。', investment: '中' },
+      { id: 'con-en-3', name: '節能空調系統', description: '降低空調系統耗電量。', investment: '中' },
+      { id: 'con-en-4', name: 'LED照明', description: '減少照明用電。', investment: '低' },
+      { id: 'con-en-5', name: '智慧能源管理', description: '自動化控制與優化能源使用。', investment: '中' },
+      { id: 'con-en-6', name: '再生能源應用（太陽能）', description: '利用建築物產生再生能源。', investment: '高' },
+      { id: 'con-en-7', name: '工地電力管理', description: '減少工地用電浪費。', investment: '低' },
+      { id: 'con-en-8', name: '預製工法', description: '減少現場施工時間與能源消耗。', investment: '中' },
+      { id: 'con-en-9', name: '施工機具節能', description: '選擇節能機具，減少燃料消耗。', investment: '中' },
+      { id: 'con-en-10', name: '熱水系統優化', description: '提升熱水供應效率，減少能源消耗。', investment: '中' },
+    ],
+    '循環經濟': [
+      { id: 'con-ci-1', name: '營建廢棄物分類回收', description: '提高回收率，減少廢棄物掩埋。', investment: '低' },
+      { id: 'con-ci-2', name: '再生建材應用', description: '使用回收或再生材料，減少資源消耗。', investment: '中' },
+      { id: 'con-ci-3', name: '舊建築物再利用', description: '減少拆除與新建，節省資源與能源。', investment: '高' },
+      { id: 'con-ci-4', name: '土方平衡與再利用', description: '減少土方運輸與處理。', investment: '低' },
+      { id: 'con-ci-5', name: '鋼筋模板回收', description: '減少鋼筋與模板的消耗。', investment: '低' },
+      { id: 'con-ci-6', name: '水資源循環利用（雨水回收）', description: '減少自來水用量。', investment: '中' },
+      { id: 'con-ci-7', name: '預製構件循環', description: '減少現場廢棄物，促進構件再利用。', investment: '中' },
+      { id: 'con-ci-8', name: '建材生命週期評估', description: '從設計階段減少建材的環境衝擊。', investment: '中' },
+      { id: 'con-ci-9', name: '拆除廢料再利用', description: '將拆除廢料轉為可用資源。', investment: '低' },
+      { id: 'con-ci-10', name: '閒置設備共享', description: '不同工地共用設備，提高使用效率。', investment: '低' },
+    ],
+    '永續採購': [
+      { id: 'con-su-1', name: '採購綠建材', description: '選擇對環境友善的建材。', investment: '中' },
+      { id: 'con-su-2', name: '低碳混凝土', description: '使用低碳水泥或添加劑，減少碳排放。', investment: '中' },
+      { id: 'con-su-3', name: '本地建材', description: '減少運輸距離，降低碳排放。', investment: '低' },
+      { id: 'con-su-4', name: '永續認證木材', description: '確保木材來源符合永續林業標準。', investment: '中' },
+      { id: 'con-su-5', name: '節能施工設備', description: '選擇節能的施工機具。', investment: '中' },
+      { id: 'con-su-6', name: '可回收工地耗材', description: '減少工地廢棄物。', investment: '低' },
+      { id: 'con-su-7', name: '環境友善塗料', description: '選擇低VOC或水性塗料，減少空氣污染。', investment: '低' },
+      { id: 'con-su-8', name: '供應商ESG評估', description: '確保供應商符合環境與社會責任標準。', investment: '中' },
+      { id: 'con-su-9', name: '永續供應鏈合作', description: '與供應商共同推動永續發展。', investment: '中' },
+      { id: 'con-su-10', name: '綠色設備租賃', description: '減少設備閒置，促進資源循環利用。', investment: '低' },
+    ],
+    '淨零管理': [
+      { id: 'con-ne-1', name: '碳足跡盤查（建築生命週期）', description: '了解建築物整個生命週期的碳排放。', investment: '中' },
+      { id: 'con-ne-2', name: '淨零建築目標', description: '設定建築物的減碳目標。', investment: '中' },
+      { id: 'con-ne-3', name: 'BIM結合碳管理', description: '利用BIM進行碳排放分析與優化。', investment: '中' },
+      { id: 'con-ne-4', name: '綠建築認證（LEED, EEWH）', description: '取得綠建築認證，提升建築物價值。', investment: '中' },
+      { id: 'con-ne-5', name: '碳抵銷專案', description: '參與碳抵銷專案，抵銷剩餘碳排放。', investment: '中' },
+      { id: 'con-ne-6', name: '供應鏈碳管理', description: '與供應商共同減少碳排放。', investment: '中' },
+      { id: 'con-ne-7', name: '員工綠色建築培訓', description: '提升員工對綠色建築的認識與技能。', investment: '低' },
+      { id: 'con-ne-8', name: '永續金融（綠色債券）', description: '尋求綠色融資，支持永續建築專案。', investment: '中' },
+      { id: 'con-ne-9', name: '創新工法減少碳排', description: '採用低碳工法，減少施工過程的碳排放。', investment: '中' },
+      { id: 'con-ne-10', name: '定期發布永續報告', description: '揭露企業在永續發展方面的表現。', investment: '中' },
+    ],
+  },
   '運輸業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
   '科技業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
   '金融業': { '能源管理': [], '循環經濟': [], '永續採購': [], '淨零管理': [] },
