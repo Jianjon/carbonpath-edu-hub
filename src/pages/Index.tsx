@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Leaf, Calculator, Puzzle, MessageSquare, ArrowRight, BookOpen, Users, Award } from 'lucide-react';
+import { Leaf, Calculator, Puzzle, MessageSquare, ArrowRight } from 'lucide-react';
 import Navigation from '../components/Navigation';
+import AboutSection from '../components/home/AboutSection';
 
 const Index = () => {
   const modules = [
@@ -39,24 +40,6 @@ const Index = () => {
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-600'
-    }
-  ];
-
-  const features = [
-    {
-      icon: BookOpen,
-      title: '專業教學',
-      description: '結合理論與實務的專業課程內容'
-    },
-    {
-      icon: Users,
-      title: '顧問服務',
-      description: '提供企業減碳策略諮詢與規劃'
-    },
-    {
-      icon: Award,
-      title: '認證課程',
-      description: '完整的永續發展認證培訓體系'
     }
   ];
 
@@ -125,38 +108,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              為什麼選擇我們
-            </h2>
-            <p className="text-lg text-gray-600">
-              專業、實用、易學的永續教育解決方案
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="text-center p-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                    <Icon className="h-8 w-8 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      {/* About Section */}
+      <AboutSection />
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
