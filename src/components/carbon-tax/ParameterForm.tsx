@@ -1,4 +1,5 @@
 
+import { useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Calculator } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
 import { ReductionModel } from '@/pages/CarbonTax';
+import ReductionScenarioChart from './ReductionScenarioChart';
+import ReductionScenarioTable from './ReductionScenarioTable';
 
 interface ParameterFormProps {
   form: UseFormReturn<CarbonTaxFormValues>;
@@ -17,6 +20,48 @@ interface ParameterFormProps {
 }
 
 const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFormProps) => {
+  const annualEmissions = form.watch('annualEmissions');
+
+  const projectionData = useMemo(() => {
+    if (!annualEmissions || annualEmissions <= 0) return [];
+    
+    const data = [];
+    const startYear = new Date().getFullYear();
+    const endYear = 2050;
+
+    let sbtiEmissions = annualEmissions;
+    let taiwanEmissions = annualEmissions;
+
+    for (let year = startYear; year <= endYear; year++) {
+        if (year > startYear) {
+            sbtiEmissions *= (1 - 0.042);
+            taiwanEmissions *= (1 - 0.028);
+        }
+
+        data.push({
+            year,
+            none: Math.round(annualEmissions),
+            sbti: Math.round(sbtiEmissions),
+            taiwan: Math.round(taiwanEmissions),
+        });
+    }
+    return data;
+  }, [annualEmissions]);
+
+  const tableData = useMemo(() => {
+      if (reductionModel === 'none' || !projectionData.length) return [];
+      
+      return projectionData.map((curr, i) => {
+          const prevEmissions = i > 0 ? projectionData[i-1][reductionModel] : projectionData[0][reductionModel];
+          const currentEmissions = curr[reductionModel];
+          return {
+              year: curr.year,
+              emissions: currentEmissions,
+              annualReduction: i > 0 ? prevEmissions - currentEmissions : 0
+          }
+      });
+  }, [projectionData, reductionModel]);
+
   return (
     <Card className="bg-white shadow-sm">
       <CardHeader>
@@ -32,7 +77,7 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
             <FormField control={form.control} name="annualEmissions" render={({ field }) => (
               <FormItem>
                 <FormLabel>年排放量 (噸 CO₂e)</FormLabel>
-                <FormControl><Input type="number" placeholder="例如：50000" {...field} /></FormControl>
+                <FormControl><Input type="number" placeholder="例如：50000" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -58,6 +103,13 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
                 </div>
               </RadioGroup>
             </FormItem>
+
+            { annualEmissions > 0 && (
+                <div className="space-y-6 pt-4 border-t">
+                    <ReductionScenarioChart data={projectionData} reductionModel={reductionModel} />
+                    {reductionModel !== 'none' && <ReductionScenarioTable data={tableData} />}
+                </div>
+            )}
 
             <FormField control={form.control} name="isHighLeakageRisk" render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">

@@ -168,17 +168,23 @@ const CarbonTax = () => {
         <Stepper currentStep={step} />
         
         {step === 1 && (
-            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                <div>
-                  <Introduction />
-                </div>
-                <div className="space-y-8">
-                    <ParameterForm form={form} reductionModel={reductionModel} setReductionModel={setReductionModel} />
-                    <div className="text-center">
-                        <Button size="lg" onClick={() => setStep(2)} className="bg-blue-600 hover:bg-blue-700 w-full">
-                            查看結果分析
-                        </Button>
-                    </div>
+            <div className="max-w-4xl mx-auto space-y-8">
+                <Introduction />
+                <ParameterForm 
+                  form={form} 
+                  reductionModel={reductionModel} 
+                  setReductionModel={setReductionModel} 
+                />
+                <div className="text-center pt-4">
+                    <Button size="lg" onClick={() => {
+                      if (form.getValues("annualEmissions") > 0) {
+                        setStep(2)
+                      } else {
+                        form.trigger("annualEmissions");
+                      }
+                    }} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto px-10">
+                        查看結果分析
+                    </Button>
                 </div>
             </div>
         )}
