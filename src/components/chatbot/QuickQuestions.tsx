@@ -7,9 +7,10 @@ interface QuickQuestionsProps {
     quickQuestions: string[];
     onQuickQuestion: (question: string) => void;
     isTyping: boolean;
+    limitReached: boolean;
 }
 
-const QuickQuestions = ({ loadingQuestions, quickQuestions, onQuickQuestion, isTyping }: QuickQuestionsProps) => {
+const QuickQuestions = ({ loadingQuestions, quickQuestions, onQuickQuestion, isTyping, limitReached }: QuickQuestionsProps) => {
     return (
         <div className="mt-8">
             <div className="flex items-center space-x-2 mb-4">
@@ -27,7 +28,7 @@ const QuickQuestions = ({ loadingQuestions, quickQuestions, onQuickQuestion, isT
                             key={index}
                             onClick={() => onQuickQuestion(question)}
                             className="text-left p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-purple-300 transition-colors disabled:opacity-50"
-                            disabled={isTyping}
+                            disabled={isTyping || limitReached}
                         >
                             <div className="flex items-center space-x-2">
                                 <Zap className="h-4 w-4 text-purple-600" />

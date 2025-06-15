@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Message {
@@ -7,6 +7,8 @@ export interface Message {
   type: 'user' | 'bot';
   content: string;
 }
+
+const USAGE_LIMIT = 5;
 
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -22,8 +24,38 @@ export const useChat = () => {
   const [ragMode, setRagMode] = useState(false);
   const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [usage, setUsage] = useState({ count: 0, limit: USAGE_LIMIT });
+  const [isLimitReached, setIsLimitReached] = useState(false);
+
+  const getTodayDateString = useCallback(() => new Date().toISOString().split('T')[0], []);
+
+  const checkUsage = useCallback(() => {
+    const today = getTodayDateString();
+    try {
+      const storedUsageRaw = localStorage.getItem('chatbotUsage');
+      if (storedUsageRaw) {
+        const storedUsage = JSON.parse(storedUsageRaw);
+        if (storedUsage.date === today) {
+          const currentCount = storedUsage.count || 0;
+          setUsage({ count: currentCount, limit: USAGE_LIMIT });
+          if (currentCount >= USAGE_LIMIT) {
+            setIsLimitReached(true);
+            setError("今日額度已用完，請明天再來。");
+          }
+          return;
+        }
+      }
+      localStorage.setItem('chatbotUsage', JSON.stringify({ count: 0, date: today }));
+      setUsage({ count: 0, limit: USAGE_LIMIT });
+      setIsLimitReached(false);
+    } catch (e) {
+      console.error("Failed to process usage data from localStorage", e);
+    }
+  }, [getTodayDateString]);
 
   useEffect(() => {
+    checkUsage();
+    
     const fetchQuickQuestions = async () => {
       setLoadingQuestions(true);
       try {
@@ -60,9 +92,29 @@ export const useChat = () => {
     };
 
     fetchQuickQuestions();
-  }, []);
+  }, [checkUsage]);
+
+  const incrementUsage = useCallback(() => {
+    const today = getTodayDateString();
+    try {
+      const newCount = usage.count + 1;
+      localStorage.setItem('chatbotUsage', JSON.stringify({ count: newCount, date: today }));
+      setUsage({ count: newCount, limit: USAGE_LIMIT });
+
+      if (newCount >= USAGE_LIMIT) {
+        setIsLimitReached(true);
+        setError("今日額度已用完，請明天再來。");
+      }
+    } catch (e) {
+      console.error("Failed to update usage data in localStorage", e);
+    }
+  }, [getTodayDateString, usage.count]);
 
   const sendMessage = async (messageContent: string) => {
+    if (isLimitReached) {
+        setError("今日額度已用完，請明天再來。");
+        return;
+    }
     if (!messageContent.trim() || isTyping) return;
 
     const userMessage: Message = {
@@ -75,6 +127,8 @@ export const useChat = () => {
     setMessages(newMessages);
     setIsTyping(true);
     setError(null);
+    
+    incrementUsage();
 
     try {
       const functionName = ragMode ? 'rag-search' : 'ai-chat';
@@ -153,6 +207,8 @@ export const useChat = () => {
     ragMode,
     quickQuestions,
     loadingQuestions,
+    usage,
+    isLimitReached,
     setInputMessage,
     handleSendMessage,
     handleQuickQuestion,

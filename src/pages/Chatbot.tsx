@@ -17,6 +17,8 @@ const Chatbot = () => {
         ragMode,
         quickQuestions,
         loadingQuestions,
+        usage,
+        isLimitReached,
         setInputMessage,
         handleSendMessage,
         handleQuickQuestion,
@@ -40,6 +42,8 @@ const Chatbot = () => {
                         isTyping={isTyping}
                         ragMode={ragMode}
                         error={error}
+                        usage={usage}
+                        limitReached={isLimitReached}
                     />
                 </div>
                 <QuickQuestions
@@ -47,6 +51,7 @@ const Chatbot = () => {
                     quickQuestions={quickQuestions}
                     onQuickQuestion={handleQuickQuestion}
                     isTyping={isTyping}
+                    limitReached={isLimitReached}
                 />
             </div>
         </div>
