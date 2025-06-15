@@ -186,7 +186,7 @@ export const calculatePathwayData = (
   
   // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後線性遞減年減排量
   else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量逐年遞減');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量逐年線性遞減');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -219,7 +219,7 @@ export const calculatePathwayData = (
       console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
-        console.log("SBTi 長期減排模式：年減排量逐年線性遞減");
+        console.log("SBTi 長期減排模式：年減排量平穩線性遞減");
         
         // 總減排量 = 2030年排放量 - 残留排放量
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
@@ -232,36 +232,33 @@ export const calculatePathwayData = (
             target: residualEmissions,
           });
         } else {
-          // 設計線性遞減的年減排量：r(t) = a * t + b
-          // r(1) = 最大年減排量（前期容易減）
-          // r(D) = 最小年減排量（後期困難減）
-          // ∑r(t) = totalReductionNeeded
+          // 簡單線性遞減：從較大的年減排量逐年平穩遞減到較小的年減排量
+          // r(t) = a - b*t，其中 a 是初始年減排量，b 是遞減斜率
           
           const avgReduction = totalReductionNeeded / D;
           
-          // 設定第一年減排量為平均值的1.4倍，最後一年為平均值的0.6倍
-          const maxReduction = avgReduction * 1.4;
-          const minReduction = avgReduction * 0.6;
+          // 設定第一年年減排量為平均值的1.3倍，最後一年為平均值的0.7倍
+          const firstYearReduction = avgReduction * 1.3;
+          const lastYearReduction = avgReduction * 0.7;
           
-          // 線性遞減：r(t) = a * t + b
-          // r(1) = a + b = maxReduction
-          // r(D) = a * D + b = minReduction
-          // 解得：a = (minReduction - maxReduction) / (D - 1)
-          //      b = maxReduction - a
+          // 線性遞減：r(t) = a - b*(t-1)，t從1到D
+          // r(1) = a = firstYearReduction
+          // r(D) = a - b*(D-1) = lastYearReduction
+          // 解得：b = (firstYearReduction - lastYearReduction) / (D - 1)
           
-          const a = (minReduction - maxReduction) / (D - 1);
-          const b = maxReduction - a;
+          const b = (firstYearReduction - lastYearReduction) / (D - 1);
+          const a = firstYearReduction;
           
-          console.log(`線性遞減參數: a=${a.toFixed(4)}, b=${b.toFixed(2)}`);
-          console.log(`第一年減排: ${maxReduction.toFixed(0)}, 最後一年減排: ${minReduction.toFixed(0)}`);
+          console.log(`線性遞減參數: a=${a.toFixed(2)}, b=${b.toFixed(4)}`);
+          console.log(`第一年減排: ${firstYearReduction.toFixed(0)}, 最後一年減排: ${lastYearReduction.toFixed(0)}`);
           
           // 計算實際的年減排量並調整係數以確保總和正確
           let totalCalculated = 0;
           const reductionByYear: { [year: number]: number } = {};
           
           for (let t = 1; t <= D; t++) {
-            const reduction = a * t + b;
-            reductionByYear[2030 + t] = Math.max(reduction, avgReduction * 0.3); // 設定最小減排量
+            const reduction = a - b * (t - 1);
+            reductionByYear[2030 + t] = Math.max(reduction, avgReduction * 0.4); // 確保最小減排量
             totalCalculated += reductionByYear[2030 + t];
           }
           
