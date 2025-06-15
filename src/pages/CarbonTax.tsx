@@ -9,6 +9,7 @@ import ParameterForm from '../components/carbon-tax/ParameterForm';
 import Results from '../components/carbon-tax/Results';
 import ParameterSummary from '../components/carbon-tax/ParameterSummary';
 import { Button } from '@/components/ui/button';
+import CostBenefitAnalysis from '../components/carbon-tax/CostBenefitAnalysis';
 
 interface Rate {
   value: number;
@@ -133,7 +134,7 @@ const CarbonTax = () => {
   }, [formValues, selectedRate, reductionModel]);
 
   const Stepper = ({ currentStep }: { currentStep: number }) => {
-    const steps = ['參數與情境設定', '結果分析'];
+    const steps = ['參數與情境設定', '碳費計算', '碳費VS減碳成本'];
     return (
         <div className="flex items-center justify-center space-x-4 sm:space-x-8 mb-12">
             {steps.map((title, index) => {
@@ -183,7 +184,7 @@ const CarbonTax = () => {
                         form.trigger("annualEmissions");
                       }
                     }} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto px-10">
-                        查看結果分析
+                        查看計算結果
                     </Button>
                 </div>
             </div>
@@ -209,6 +210,26 @@ const CarbonTax = () => {
                         setIsHighLeakageRisk={(checked) => form.setValue('isHighLeakageRisk', checked)}
                         reductionModel={reductionModel}
                     />
+                    <div className="text-center pt-4">
+                        <Button size="lg" onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto px-10">
+                            前往成本效益分析
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {step === 3 && (
+            <div className="max-w-5xl mx-auto space-y-8">
+                <CostBenefitAnalysis
+                    feeProjection={feeProjection}
+                    reductionModel={reductionModel}
+                    formValues={formValues}
+                />
+                <div className="flex justify-center gap-4 pt-4">
+                    <Button variant="outline" onClick={() => setStep(2)}>
+                        返回碳費計算
+                    </Button>
                 </div>
             </div>
         )}
