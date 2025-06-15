@@ -10,11 +10,12 @@ interface CostBenefitAnalysisProps {
   baselineFeeProjection: FeeProjectionItem[];
   reductionModel: ReductionModel;
   selectedRate: number;
+  leakageCoefficient: number;
 }
 
 const formatCurrency = (value: number) => `NT$ ${Math.round(value).toLocaleString()}`;
 
-const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionModel, selectedRate }: CostBenefitAnalysisProps) => {
+const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionModel, selectedRate, leakageCoefficient }: CostBenefitAnalysisProps) => {
   if (reductionModel === 'none') {
     return (
       <Card>
@@ -43,9 +44,16 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
     const baselineItem = baselineFeeProjection[index];
     const threshold = 25000;
 
-    // Recalculate fees based on the user's specific logic for this analysis
-    const baselineFee = Math.max(0, (baselineItem.emissions - threshold) * 300);
-    const scenarioFee = Math.max(0, (item.emissions - threshold) * selectedRate);
+    let baselineFee: number;
+    let scenarioFee: number;
+
+    if (leakageCoefficient > 0) {
+      baselineFee = baselineItem.emissions * leakageCoefficient * 300;
+      scenarioFee = item.emissions * leakageCoefficient * selectedRate;
+    } else {
+      baselineFee = Math.max(0, (baselineItem.emissions - threshold) * 300);
+      scenarioFee = Math.max(0, (item.emissions - threshold) * selectedRate);
+    }
 
     const annualSavings = baselineFee - scenarioFee;
     const annualEmissionsReduced = baselineItem.emissions - item.emissions;

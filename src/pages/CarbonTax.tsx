@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -103,6 +104,7 @@ const CarbonTax = () => {
                     baselineFeeProjection={baselineFeeProjection}
                     reductionModel={reductionModel}
                     selectedRate={selectedRate}
+                    leakageCoefficient={leakageCoefficient}
                 />
                 <div className="flex justify-center gap-4 pt-4">
                     <Button variant="outline" onClick={() => setStep(2)}>
