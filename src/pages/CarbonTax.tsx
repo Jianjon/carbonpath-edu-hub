@@ -1,4 +1,3 @@
-
 import { useState, useMemo, ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -145,6 +144,32 @@ const CarbonTax = () => {
     });
   }, [formValues, selectedRate, reductionModel, leakageCoefficient]);
 
+  const baselineFeeProjection = useMemo(() => {
+    const { annualEmissions } = formValues;
+    const baseEmissions = annualEmissions || 0;
+    const rate = selectedRate;
+    const threshold = 25000;
+    const projectionYears = 5;
+
+    const emissionsPath: number[] = Array(projectionYears).fill(baseEmissions);
+    
+    return emissionsPath.map((emissions, index) => {
+        let fee = 0;
+        if (leakageCoefficient > 0) {
+            fee = (emissions * leakageCoefficient) * rate;
+        } else {
+            if (emissions > threshold) {
+                fee = (emissions - threshold) * rate;
+            }
+        }
+        return {
+            year: new Date().getFullYear() + index,
+            emissions: Math.round(emissions),
+            fee: Math.round(fee),
+        };
+    });
+  }, [formValues, selectedRate, leakageCoefficient]);
+
   const Stepper = ({ currentStep }: { currentStep: number }) => {
     const steps = ['參數與情境設定', '碳費計算', '碳費VS減碳成本'];
     return (
@@ -236,6 +261,7 @@ const CarbonTax = () => {
             <div className="max-w-5xl mx-auto space-y-8">
                 <CostBenefitAnalysis
                     feeProjection={feeProjection}
+                    baselineFeeProjection={baselineFeeProjection}
                     reductionModel={reductionModel}
                     formValues={formValues}
                 />
