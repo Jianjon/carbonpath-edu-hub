@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Leaf, Calculator, MessageSquare, Home, Shield, Puzzle } from 'lucide-react';
+import { Leaf, Calculator, MessageSquare, Home, Puzzle } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
@@ -41,17 +41,6 @@ const Navigation = () => {
                 </Link>
               );
             })}
-            <Link
-              to="/admin"
-              className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                location.pathname === '/admin'
-                  ? 'text-green-600 bg-green-50'
-                  : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
-              }`}
-            >
-              <Shield className="h-4 w-4" />
-              <span>管理後台</span>
-            </Link>
           </nav>
 
           {/* Mobile menu button */}
