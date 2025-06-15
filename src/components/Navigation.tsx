@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Leaf, Calculator, Coins, MessageSquare, Home, Shield } from 'lucide-react';
+import { Leaf, Calculator, MessageSquare, Home, Shield, Puzzle } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
@@ -9,7 +9,7 @@ const Navigation = () => {
     { name: '首頁', path: '/', icon: Home },
     { name: '減碳路徑', path: '/carbon-path', icon: Leaf },
     { name: '碳費模擬', path: '/carbon-tax', icon: Calculator },
-    { name: '自願性碳權', path: '/carbon-credits', icon: Coins },
+    { name: '減碳行動', path: '/carbon-credits', icon: Puzzle },
     { name: '減碳Chatbot', path: '/chatbot', icon: MessageSquare },
   ];
 

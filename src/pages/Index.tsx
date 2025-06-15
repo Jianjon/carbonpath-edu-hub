@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Leaf, Calculator, Coins, MessageSquare, ArrowRight, BookOpen, Users, Award } from 'lucide-react';
+import { Leaf, Calculator, Puzzle, MessageSquare, ArrowRight, BookOpen, Users, Award } from 'lucide-react';
 import Navigation from '../components/Navigation';
 
 const Index = () => {
@@ -26,7 +26,7 @@ const Index = () => {
     {
       title: '減碳行動',
       description: '了解產業行動分區、組合模擬與主流策略類別',
-      icon: Coins,
+      icon: Puzzle,
       path: '/carbon-credits',
       color: 'bg-yellow-500',
       bgColor: 'bg-yellow-50',
