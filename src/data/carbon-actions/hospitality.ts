@@ -1,4 +1,3 @@
-
 import { Action, ActionAngle } from '../../pages/CarbonCredits';
 
 export const hospitalityActions: Record<ActionAngle, Action[]> = {
@@ -209,7 +208,7 @@ export const hospitalityActions: Record<ActionAngle, Action[]> = {
     },
     {
       id: 'hos-ci-2',
-      name: '布草重複使用',
+      name: '延用毛巾床單',
       description: '鼓勵房客重複使用毛巾、床單，節省水電。',
       investment: '低',
       difficulty: '簡易',
