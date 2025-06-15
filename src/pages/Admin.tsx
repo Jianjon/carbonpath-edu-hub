@@ -129,7 +129,6 @@ const AdminPage = () => {
       if (error) {
         console.error('Upload error details:', {
           message: error.message,
-          statusCode: error.statusCode,
           error: error
         });
         toast({ 
