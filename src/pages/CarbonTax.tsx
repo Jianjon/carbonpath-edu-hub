@@ -14,6 +14,7 @@ import { ReductionModel } from '@/lib/carbon-tax/types';
 import { rates } from '@/lib/carbon-tax/constants';
 import { useCarbonTaxCalculations } from '@/hooks/useCarbonTaxCalculations';
 import Stepper from '@/components/carbon-tax/Stepper';
+import CarbonTaxReport from '../components/carbon-tax/CarbonTaxReport';
 
 const CarbonTax = () => {
   const [step, setStep] = useState(1);
@@ -113,6 +114,15 @@ const CarbonTax = () => {
                     reductionModel={reductionModel}
                     selectedRate={selectedRate}
                     leakageCoefficient={leakageCoefficient}
+                />
+                <CarbonTaxReport
+                    formValues={formValues}
+                    feeProjection={feeProjection}
+                    baselineFeeProjection={baselineFeeProjection}
+                    reductionModel={reductionModel}
+                    selectedRate={selectedRate}
+                    leakageCoefficient={leakageCoefficient}
+                    onReset={() => setStep(1)}
                 />
                 <div className="flex justify-center gap-4 pt-4">
                     <Button variant="outline" onClick={() => setStep(2)}>
