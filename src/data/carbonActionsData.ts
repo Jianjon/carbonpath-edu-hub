@@ -1,8 +1,6 @@
-
 import { Action, ActionAngle, Industry } from '../pages/CarbonCredits';
 
 export const industries: Industry[] = ['餐飲業', '零售業', '製造業', '營建業', '運輸業', '科技業', '金融業', '醫療保健', '教育服務', '旅宿業'];
-export const businessScales = ['小型企業', '中型企業', '大型企業'];
 export const actionAngles: ActionAngle[] = ['能源管理', '循環經濟', '永續採購', '淨零管理'];
 
 type ActionData = Record<Industry, Record<ActionAngle, Action[]>>;

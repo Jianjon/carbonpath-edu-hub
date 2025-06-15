@@ -7,7 +7,6 @@ import ActionExplorer from '../components/carbon-actions/ActionExplorer';
 
 // Define types for better state management
 export type Industry = '餐飲業' | '零售業' | '製造業' | '營建業' | '運輸業' | '科技業' | '金融業' | '醫療保健' | '教育服務' | '旅宿業';
-export type BusinessScale = '小型企業' | '中型企業' | '大型企業';
 export type ActionAngle = '能源管理' | '循環經濟' | '永續採購' | '淨零管理';
 
 export interface Action {
@@ -22,18 +21,15 @@ export interface Action {
 const CarbonActions = () => {
   const [step, setStep] = useState(1);
   const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
-  const [selectedScale, setSelectedScale] = useState<BusinessScale | null>(null);
 
-  const handleCriteriaSelect = (industry: Industry, scale: BusinessScale) => {
+  const handleCriteriaSelect = (industry: Industry) => {
     setSelectedIndustry(industry);
-    setSelectedScale(scale);
     setStep(2);
   };
   
   const handleReset = () => {
     setStep(1);
     setSelectedIndustry(null);
-    setSelectedScale(null);
   };
 
   return (
