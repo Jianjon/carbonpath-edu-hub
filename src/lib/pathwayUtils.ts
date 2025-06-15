@@ -8,7 +8,7 @@ export const calculatePathwayData = (
   const totalEmissions = emissionData.scope1 + emissionData.scope2;
   const years = emissionData.targetYear - emissionData.baseYear;
   
-  // 殘留排放量是用戶設定的目標終點（固定不變）
+  // 残留排放量是用戶設定的目標終點（固定不變）
   const residualEmissions = totalEmissions * (emissionData.residualEmissionPercentage / 100);
   
   console.log('=== 減碳路徑規劃邏輯 ===');
@@ -56,7 +56,7 @@ export const calculatePathwayData = (
       console.log("長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
       console.log(`起點: ${emissionsAtNearTermEnd.toLocaleString()}, 終點: ${residualEmissions.toLocaleString()}, 年數: ${D}`);
       
-      // 總減排量 = 起點排放量 - 殘留排放量
+      // 總減排量 = 起點排放量 - 残留排放量
       const totalReductionNeeded = emissionsAtNearTermEnd - residualEmissions;
       
       if (D === 1) {
@@ -221,7 +221,7 @@ export const calculatePathwayData = (
       if (D > 0) {
         console.log("SBTi 長期減排模式：拋物線型年減排量（前期緩慢，中後期加速）");
         
-        // 總減排量 = 2030年排放量 - 殘留排放量
+        // 總減排量 = 2030年排放量 - 残留排放量
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
         
         if (D === 1) {
@@ -232,26 +232,37 @@ export const calculatePathwayData = (
             target: residualEmissions,
           });
         } else {
-          // 設計拋物線年減排量：r(t) = at² + bt + c
-          const sumT2 = D * (D + 1) * (2 * D + 1) / 6;
+          // 設計真正的拋物線型年減排量，前期小，後期大，逐年遞增
+          // 使用簡單的二次函數：r(t) = a * t^2 + b * t + c
+          // 邊界條件：
+          // 1. r(1) 較小（前期減排量小）
+          // 2. r(D) 較大（後期減排量大）
+          // 3. 總和 = totalReductionNeeded
+          // 4. 所有值都為正數且遞增
           
-          // 設定前期減排量相對較小，後期較大的比例
-          const minReductionRatio = 0.3;
+          // 為了確保拋物線型且逐年遞增，使用簡化的方法
+          // r(t) = baseReduction + growthFactor * (t-1)^2
+          
           const avgReduction = totalReductionNeeded / D;
-          const minReduction = avgReduction * minReductionRatio;
+          const baseReduction = avgReduction * 0.4; // 第一年減排量設為平均值的40%
           
-          // 從 r(1) = a + b = minReduction 和總量約束求解 a 和 b
-          const b = minReduction - (totalReductionNeeded - minReduction * D) / sumT2;
-          const a = (totalReductionNeeded - b * D) / sumT2;
+          // 計算成長因子，確保總和等於totalReductionNeeded
+          // ∑(t=1 to D) [baseReduction + growthFactor * (t-1)^2] = totalReductionNeeded
+          // baseReduction * D + growthFactor * ∑(t=1 to D)(t-1)^2 = totalReductionNeeded
+          // ∑(t=1 to D)(t-1)^2 = ∑(k=0 to D-1)k^2 = (D-1)*D*(2D-1)/6
           
-          console.log(`SBTi 拋物線參數: a=${a.toFixed(6)}, b=${b.toFixed(2)}`);
-          console.log(`預期最小年減排: ${minReduction.toFixed(0)}, 最大年減排: ${(a * D * D + b).toFixed(0)}`);
+          const sumSquares = (D - 1) * D * (2 * D - 1) / 6;
+          const growthFactor = (totalReductionNeeded - baseReduction * D) / sumSquares;
+          
+          console.log(`SBTi 拋物線參數: baseReduction=${baseReduction.toFixed(2)}, growthFactor=${growthFactor.toFixed(6)}`);
           
           let cumulativeReduction = 0;
           for (let t = 1; t <= D; t++) {
             // 計算當前年度的拋物線年減排量
-            const parabolicReduction = a * t * t + b;
+            const parabolicReduction = baseReduction + growthFactor * (t - 1) * (t - 1);
             cumulativeReduction += parabolicReduction;
+            
+            console.log(`Year ${2030 + t}: 年減排量 ${parabolicReduction.toFixed(0)}, 累積減排 ${cumulativeReduction.toFixed(0)}`);
             
             // 計算當前排放量
             let currentEmissions;
