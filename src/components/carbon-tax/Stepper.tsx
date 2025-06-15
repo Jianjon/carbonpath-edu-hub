@@ -1,13 +1,18 @@
 
+import { LucideIcon } from 'lucide-react';
+
+export interface StepConfig {
+  title: string;
+  icon?: LucideIcon;
+}
+
 interface StepperProps {
     currentStep: number;
-    steps?: string[];
+    steps: StepConfig[];
     themeColor?: 'blue' | 'green' | 'orange';
 }
   
-const Stepper = ({ currentStep, steps: stepsProp, themeColor = 'blue' }: StepperProps) => {
-    const steps = stepsProp || ['參數與情境設定', '碳費計算', '碳費VS減碳成本'];
-
+const Stepper = ({ currentStep, steps, themeColor = 'green' }: StepperProps) => {
     const themeStyles = {
         blue: {
             active: 'bg-blue-600 border-blue-600 text-white',
@@ -26,27 +31,28 @@ const Stepper = ({ currentStep, steps: stepsProp, themeColor = 'blue' }: Stepper
         }
     };
 
-    const currentTheme = themeStyles[themeColor] || themeStyles.blue;
+    const currentTheme = themeStyles[themeColor] || themeStyles.green;
 
     return (
-        <div className="flex items-center justify-center space-x-4 sm:space-x-8 mb-12">
-            {steps.map((title, index) => {
+        <div className="flex items-start justify-center gap-4 sm:gap-8 mb-12">
+            {steps.map((step, index) => {
                 const stepNumber = index + 1;
                 const isActive = currentStep === stepNumber;
                 const isCompleted = currentStep > stepNumber;
+                const Icon = step.icon;
                 return (
-                    <div key={title} className="flex flex-col items-center text-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold mb-2 transition-all ${
+                    <div key={step.title} className="flex flex-col items-center text-center w-24">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 shrink-0 mb-2 transition-all ${
                             isActive ? currentTheme.active :
                             isCompleted ? currentTheme.completed :
                             'bg-gray-100 border-gray-300 text-gray-400'
                         }`}>
-                            {stepNumber}
+                            {Icon ? <Icon className="w-6 h-6" /> : <span className="font-bold">{stepNumber}</span>}
                         </div>
                         <span className={`text-sm font-medium transition-colors ${
                             isActive || isCompleted ? currentTheme.text : 'text-gray-500'
                         }`}>
-                            {title}
+                            {step.title}
                         </span>
                     </div>
                 );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -11,12 +10,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { calculatePathwayData } from '../lib/pathwayUtils';
 import InfoCard from '@/components/shared/InfoCard';
+import Stepper from '@/components/carbon-tax/Stepper';
+import type { StepConfig } from '@/components/carbon-tax/Stepper';
 import type { 
   EmissionData, 
   ReductionModel, 
   PathwayData, 
   CustomTargets 
 } from '../types/carbon';
+
+const carbonPathSteps: StepConfig[] = [
+  { title: '輸入排放數據', icon: Calculator },
+  { title: '選擇減碳模型', icon: TrendingDown },
+  { title: '生成路徑規劃', icon: FileBarChart },
+  { title: '導出報告', icon: Download }
+];
 
 const CarbonPath = () => {
   const [step, setStep] = useState(1);
@@ -57,36 +65,8 @@ const CarbonPath = () => {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center space-x-8 mb-8">
-          {[
-            { number: 1, title: '輸入排放數據', icon: Calculator },
-            { number: 2, title: '選擇減碳模型', icon: TrendingDown },
-            { number: 3, title: '生成路徑規劃', icon: FileBarChart },
-            { number: 4, title: '導出報告', icon: Download }
-          ].map((stepItem, index) => {
-            const Icon = stepItem.icon;
-            const isActive = step === stepItem.number;
-            const isCompleted = step > stepItem.number;
-            
-            return (
-              <div key={index} className="flex flex-col items-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
-                  isActive ? 'bg-green-600 border-green-600 text-white' :
-                  isCompleted ? 'bg-green-100 border-green-600 text-green-600' :
-                  'bg-gray-100 border-gray-300 text-gray-400'
-                }`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <span className={`text-sm font-medium ${
-                  isActive || isCompleted ? 'text-green-600' : 'text-gray-400'
-                }`}>
-                  {stepItem.title}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Stepper currentStep={step} steps={carbonPathSteps} themeColor="green" />
         
         <div className="max-w-4xl mx-auto">
           {step === 1 && (
