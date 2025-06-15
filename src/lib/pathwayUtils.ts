@@ -50,7 +50,6 @@ export const calculatePathwayData = (
 
     // Phase 2: Long-Term with exponential decay for annual reduction (SBTi-style)
     const emissionsAtNearTermEnd = tempEmissions;
-    const { targetYear } = emissionData;
     const D = targetYear - nearTermTarget.year;
 
     if (D > 0) {
