@@ -179,7 +179,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Long-Term with U-shaped or front-loaded reduction
+    // Phase 2: Long-Term with U-shaped or growth reduction
     const emissionsAtNearTermEnd = tempEmissions;
     const D = targetYear - nearTermTarget.year;
 
@@ -192,8 +192,8 @@ export const calculatePathwayData = (
       if (annualReductions) {
         console.log("自訂長期減排：使用U形減排模型");
       } else {
-        console.log("自訂長期減排：使用後備前置式減排模型");
-        annualReductions = calculateFrontLoadedReductions(D, totalReductionNeeded);
+        console.log("自訂長期減排：使用後備平滑增長模型（向上凸）");
+        annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
       }
         
       console.log(`長期減排總量: ${totalReductionNeeded.toFixed(0)} tCO2e`);
@@ -271,9 +271,9 @@ export const calculatePathwayData = (
     finalPathway = pathway;
   } 
   
-  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後採U形或前置式減排
+  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後採U形或平滑增長
   else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採U形或前置式減排');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採U形或平滑增長');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -298,7 +298,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: U-shaped or front-loaded reduction from 2031 to target year
+    // Phase 2: U-shaped or growth reduction from 2031 to target year
     if (emissionData.targetYear > 2030) {
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
@@ -317,8 +317,8 @@ export const calculatePathwayData = (
         if (annualReductions) {
             console.log("SBTi 長期減排模式：使用U形減排模型");
         } else {
-            console.log("SBTi 長期減排模式：使用後備前置式減排模型");
-            annualReductions = calculateFrontLoadedReductions(D, totalReductionNeeded);
+            console.log("SBTi 長期減排模式：使用後備平滑增長模型（向上凸）");
+            annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
         }
 
         // Apply reductions
