@@ -64,14 +64,13 @@ export const calculatePathwayData = (
           target: residualEmissions,
         });
       } else {
-        // 參考 SBTi 模型，使用指數衰減分配年減排量，允許高峰出現
         // R(t) = A × e^(-k×t) + C
+        const nearTermFinalAnnualReduction = path.length > 1 ? path[path.length - 2].emissions - path[path.length - 1].emissions : 0;
+        console.log(`近期最後一年減排量: ${nearTermFinalAnnualReduction.toFixed(0)} tCO2e`);
         
-        // 設定衰減參數
-        const k = 0.1; // 衰減係數，可調整曲線形狀
-        
-        // 最小年減排量，確保最後幾年仍有減排
-        const C = Math.max(totalReductionNeeded * 0.005, 50);
+        // 參考 SBTi 模型參數，設計更平滑合理的曲線
+        const k = 0.08; // 較溫和的衰減係數，使曲線更平滑
+        const C = Math.max(totalReductionNeeded * 0.01, 100); // 更穩健的最小年減排量
         
         // 計算 A 以滿足總減排量需求
         const exponentialSum = Array.from({ length: D }, (_, t) => Math.exp(-k * t)).reduce((sum, val) => sum + val, 0);
@@ -99,7 +98,12 @@ export const calculatePathwayData = (
             }
         } else {
             console.log(`指數衰減參數: A=${A.toFixed(0)}, k=${k}, C=${C.toFixed(0)}`);
-            console.log(`長期第一年減排量 (峰值): ${(A + C).toFixed(0)}`);
+            const firstYearLongTermReduction = A + C;
+            console.log(`長期第一年減排量 (峰值): ${firstYearLongTermReduction.toFixed(0)}`);
+
+            if (firstYearLongTermReduction < nearTermFinalAnnualReduction) {
+                console.warn("警告：長期階段的起始減排量低於近期階段的最終減排量，未形成預期峰值。");
+            }
             
             let currentEmissions = emissionsAtNearTermEnd;
             for (let t = 0; t < D; t++) {
