@@ -1,9 +1,10 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ShieldCheck } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import { FeeProjectionItem, ReductionModel } from '@/lib/carbon-tax/types';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import InvestmentGuide from './InvestmentGuide';
 
 interface CostBenefitAnalysisProps {
   feeProjection: FeeProjectionItem[];
@@ -69,9 +70,6 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
     };
   });
 
-  const totalSavings = analysisData.reduce((acc, item) => acc + item.annualSavings, 0);
-  const totalEmissionsReduced = analysisData.reduce((acc, item) => acc + item.annualEmissionsReduced, 0);
-
   return (
     <Card>
       <CardHeader>
@@ -118,31 +116,8 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
             </CardContent>
         </Card>
 
-        <Card className="bg-white">
-          <CardHeader>
-            <CardTitle className="text-lg">效益分析總結 (五年合計)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className={cn("flex items-center justify-between p-4 rounded-lg bg-green-50 border-green-200")}>
-                <div className="flex items-center">
-                    <ShieldCheck className="h-8 w-8 mr-4 text-green-600" />
-                    <div>
-                        <p className="font-semibold text-base">減碳可節省碳費成本</p>
-                        <p className="text-sm text-gray-600">相較於不進行任何減量，預估五年可省下：</p>
-                    </div>
-                </div>
-                <p className={cn("text-2xl font-bold text-green-700")}>
-                  {formatCurrency(totalSavings)}
-                </p>
-            </div>
-            <div className="grid grid-cols-1 gap-4 text-center">
-                <div className="p-4 bg-gray-50 rounded-lg border">
-                    <p className="text-sm text-gray-600">預估五年總減量</p>
-                    <p className="text-xl font-bold">{totalEmissionsReduced.toLocaleString()} 噸 CO₂e</p>
-                </div>
-            </div>
-          </CardContent>
-        </Card>
+        <InvestmentGuide />
+
       </CardContent>
     </Card>
   );
