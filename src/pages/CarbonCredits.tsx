@@ -9,12 +9,20 @@ import ActionExplorer from '../components/carbon-actions/ActionExplorer';
 export type Industry = '餐飲業' | '零售業' | '製造業' | '營建業' | '運輸業' | '科技業' | '金融業' | '醫療保健' | '教育服務' | '旅宿業';
 export type ActionAngle = '能源管理' | '循環經濟' | '永續採購' | '淨零管理';
 export type BudgetLevel = '低' | '中' | '高';
+export type Difficulty = '簡易' | '中等' | '複雜';
+export type TimeEstimate = '數天' | '數週' | '數月' | '數年';
+export type Manpower = '少數員工即可' | '需專案小組' | '需外聘顧問';
 
 export interface Action {
   id: string;
   name: string;
   description: string;
   investment: '高' | '中' | '低';
+  difficulty: Difficulty;
+  time: TimeEstimate;
+  manpower: Manpower;
+  steps: string[];
+  tracking: string[];
 }
 
 const budgetPoints: Record<BudgetLevel, number> = {

@@ -3,51 +3,754 @@ import { Action, ActionAngle } from '../../pages/CarbonCredits';
 
 export const constructionActions: Record<ActionAngle, Action[]> = {
   '能源管理': [
-    { id: 'con-en-1', name: '綠建築設計（自然採光通風）', description: '減少照明與空調用電，提升室內舒適度。', investment: '中' },
-    { id: 'con-en-2', name: '高效能外殼（隔熱）', description: '減少空調負荷，降低能源消耗。', investment: '中' },
-    { id: 'con-en-3', name: '節能空調系統', description: '降低空調系統耗電量。', investment: '中' },
-    { id: 'con-en-4', name: 'LED照明', description: '減少照明用電。', investment: '低' },
-    { id: 'con-en-5', name: '智慧能源管理', description: '自動化控制與優化能源使用。', investment: '中' },
-    { id: 'con-en-6', name: '再生能源應用（太陽能）', description: '利用建築物產生再生能源。', investment: '高' },
-    { id: 'con-en-7', name: '工地電力管理', description: '減少工地用電浪費。', investment: '低' },
-    { id: 'con-en-8', name: '預製工法', description: '減少現場施工時間與能源消耗。', investment: '中' },
-    { id: 'con-en-9', name: '施工機具節能', description: '選擇節能機具，減少燃料消耗。', investment: '中' },
-    { id: 'con-en-10', name: '熱水系統優化', description: '提升熱水供應效率，減少能源消耗。', investment: '中' },
+    {
+      id: 'con-en-1',
+      name: '綠建築設計（自然採光通風）',
+      description: '減少照明與空調用電，提升室內舒適度。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在建築設計初期，進行微氣候與日照模擬分析。',
+        '優化建築座向、開窗大小與位置。',
+        '設計天井、導光板等，將自然光引入室內深處。',
+        '利用浮力通風或風力通風設計，促進空氣對流。'
+      ],
+      tracking: [
+        '評估模擬的節能效益與實際成效的差異。',
+        '監測建築完成後的室內溫濕度與照度。'
+      ]
+    },
+    {
+      id: 'con-en-2',
+      name: '高效能外殼（隔熱）',
+      description: '減少空調負荷，降低能源消耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '選用高效率的隔熱材用於牆體與屋頂。',
+        '採用雙層或三層玻璃的節能窗戶。',
+        '設計外遮陽板或綠化牆面，減少日曬得熱。',
+        '確保施工品質，避免熱橋效應。'
+      ],
+      tracking: [
+        '計算並比較設計前後的建築外殼熱傳透率(U值)。',
+        '追蹤空調系統的實際運轉時數與耗電量。'
+      ]
+    },
+    {
+      id: 'con-en-3',
+      name: '節能空調系統',
+      description: '降低空調系統耗電量。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '精確計算建築的冷熱負荷。',
+        '選用高能效比(EER/COP)的空調主機。',
+        '導入全熱交換器，回收排氣中的冷/熱能。',
+        '採用分區溫控，避免不必要的能源浪費。'
+      ],
+      tracking: [
+        '確保空調系統的能效表現符合設計值。',
+        '定期清洗濾網與維護主機，維持高效運轉。'
+      ]
+    },
+    {
+      id: 'con-en-4',
+      name: 'LED照明',
+      description: '減少照明用電。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在建築設計中，全面採用LED燈具。',
+        '搭配智慧控制系統，如感應器或定時器。',
+        '選擇符合空間照度需求的最適瓦數燈具。'
+      ],
+      tracking: [
+        '計算照明用電密度(LPD)是否符合綠建築標準。',
+        '追蹤照明系統的總耗電量。'
+      ]
+    },
+    {
+      id: 'con-en-5',
+      name: '智慧能源管理',
+      description: '自動化控制與優化能源使用。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '導入建築能源管理系統(BEMS)。',
+        '整合照明、空調、電梯等子系統。',
+        '設定最佳化的運轉排程與節能模式。',
+        '透過數據分析，持續找出節能改善機會。'
+      ],
+      tracking: [
+        '即時監控整棟建築的能源使用狀況。',
+        '分析系統導入後的整體節能率。'
+      ]
+    },
+    {
+      id: 'con-en-6',
+      name: '再生能源應用（太陽能）',
+      description: '利用建築物產生再生能源。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '評估建築屋頂或立面的太陽能裝設潛力。',
+        '考慮建築整合太陽能(BIPV)的設計。',
+        '委託專業廠商進行系統設計與施工。',
+        '完成並網申請與作業。'
+      ],
+      tracking: [
+        '監測太陽能系統的每日發電量。',
+        '計算建築的能源自給率。'
+      ]
+    },
+    {
+      id: 'con-en-7',
+      name: '工地電力管理',
+      description: '減少工地用電浪費。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立工地節能規範。',
+        '非施工時段，確實關閉不必要的機具與照明。',
+        '採用臨時性的節能燈具。',
+        '定期巡檢，避免電力浪費。'
+      ],
+      tracking: [
+        '追蹤工地的電費變化。',
+        '將節能表現納入工地管理評核。'
+      ]
+    },
+    {
+      id: 'con-en-8',
+      name: '預製工法',
+      description: '減少現場施工時間與能源消耗。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在設計階段，規劃採用預製構件（如牆板、樓梯）。',
+        '與預製工廠協調生產與運輸排程。',
+        '在工地現場進行吊裝與組立。',
+        '確保接頭處的施工品質。'
+      ],
+      tracking: [
+        '比較預製工法與傳統工法的施工時程差異。',
+        '估算減少的現場能源消耗與廢棄物。'
+      ]
+    },
+    {
+      id: 'con-en-9',
+      name: '施工機具節能',
+      description: '選擇節能機具，減少燃料消耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在租賃或採購施工機具時，將油耗或能效列為評選標準。',
+        '優先選用電動化或油電混合的機具。',
+        '落實機具的定期保養。',
+        '教育操作人員節能駕駛習慣。'
+      ],
+      tracking: [
+        '記錄施工機具的燃料或電力消耗量。',
+        '追蹤機具的維護保養紀錄。'
+      ]
+    },
+    {
+      id: 'con-en-10',
+      name: '熱水系統優化',
+      description: '提升熱水供應效率，減少能源消耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '採用高效率的熱泵或太陽能熱水器。',
+        '確實包覆熱水管線，減少熱損失。',
+        '評估設置分區或即熱式熱水系統。',
+        '設計管線路徑，縮短熱水輸送距離。'
+      ],
+      tracking: [
+        '監測熱水系統的燃料或電力消耗。',
+        '確保末端出水溫度符合設計要求。'
+      ]
+    }
   ],
   '循環經濟': [
-    { id: 'con-ci-1', name: '營建廢棄物分類回收', description: '提高回收率，減少廢棄物掩埋。', investment: '低' },
-    { id: 'con-ci-2', name: '再生建材應用', description: '使用回收或再生材料，減少資源消耗。', investment: '中' },
-    { id: 'con-ci-3', name: '舊建築物再利用', description: '減少拆除與新建，節省資源與能源。', investment: '高' },
-    { id: 'con-ci-4', name: '土方平衡與再利用', description: '減少土方運輸與處理。', investment: '低' },
-    { id: 'con-ci-5', name: '鋼筋模板回收', description: '減少鋼筋與模板的消耗。', investment: '低' },
-    { id: 'con-ci-6', name: '水資源循環利用（雨水回收）', description: '減少自來水用量。', investment: '中' },
-    { id: 'con-ci-7', name: '預製構件循環', description: '減少現場廢棄物，促進構件再利用。', investment: '中' },
-    { id: 'con-ci-8', name: '建材生命週期評估', description: '從設計階段減少建材的環境衝擊。', investment: '中' },
-    { id: 'con-ci-9', name: '拆除廢料再利用', description: '將拆除廢料轉為可用資源。', investment: '低' },
-    { id: 'con-ci-10', name: '閒置設備共享', description: '不同工地共用設備，提高使用效率。', investment: '低' },
+    {
+      id: 'con-ci-1',
+      name: '營建廢棄物分類回收',
+      description: '提高回收率，減少廢棄物掩埋。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在工地規劃廢棄物分類暫存區。',
+        '對工人進行廢棄物分類的教育訓練。',
+        '與合法的回收處理商簽訂合約。',
+        '確實記錄各類廢棄物的清運流向。'
+      ],
+      tracking: [
+        '統計營建廢棄物的回收率。',
+        '追蹤廢棄物處理的總費用。'
+      ]
+    },
+    {
+      id: 'con-ci-2',
+      name: '再生建材應用',
+      description: '使用回收或再生材料，減少資源消耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在設計選材階段，研究可用的再生建材（如再生瀝青、環保地磚）。',
+        '確保再生建材的性能與品質符合規範。',
+        '將再生建材納入工程採購清單。'
+      ],
+      tracking: [
+        '計算再生建材佔總建材的重量或金額比例。',
+        '追蹤綠建築評分中相關指標的得分。'
+      ]
+    },
+    {
+      id: 'con-ci-3',
+      name: '舊建築物再利用',
+      description: '減少拆除與新建，節省資源與能源。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需外聘顧問',
+      steps: [
+        '對舊建築進行詳細的結構安全與現況評估。',
+        '規劃結構補強與空間改造方案。',
+        '保留具歷史或文化價值的元素。',
+        '導入新的節能與環保設施。'
+      ],
+      tracking: [
+        '評估保留舊建築所節省的蘊含碳。',
+        '比較再利用與新建的總體成本與效益。'
+      ]
+    },
+    {
+      id: 'con-ci-4',
+      name: '土方平衡與再利用',
+      description: '減少土方運輸與處理。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在規劃設計階段，力求開挖與回填的土方量平衡。',
+        '將開挖出的良質土方，用於基地內的回填或景觀塑造。',
+        '透過土方交換資訊平台，尋找鄰近工地的需求。'
+      ],
+      tracking: [
+        '計算土方的外運與內運量。',
+        '估算減少的運輸成本與碳排放。'
+      ]
+    },
+    {
+      id: 'con-ci-5',
+      name: '鋼筋模板回收',
+      description: '減少鋼筋與模板的消耗。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '採用系統模板，提高重複使用次數。',
+        '確實清理與維護模板，延長壽命。',
+        '將裁切剩餘的鋼筋回收利用。',
+        '將不堪使用的模板與鋼筋，售予回收商。'
+      ],
+      tracking: [
+        '記錄模板的周轉使用次數。',
+        '追蹤廢鋼筋與廢模板的回收量。'
+      ]
+    },
+    {
+      id: 'con-ci-6',
+      name: '水資源循環利用（雨水回收）',
+      description: '減少自來水用量。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '設計雨水收集系統，包含集水、過濾與儲存設施。',
+        '將回收的雨水用於工地灑水、沖廁或景觀澆灌。',
+        '定期清理儲水槽與過濾設備。'
+      ],
+      tracking: [
+        '計量雨水回收量。',
+        '比較安裝前後的自來水用量與水費。'
+      ]
+    },
+    {
+      id: 'con-ci-7',
+      name: '預製構件循環',
+      description: '減少現場廢棄物，促進構件再利用。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在設計階段即考慮到未來的拆卸與再利用。',
+        '採用標準化的模矩，增加構件的通用性。',
+        '建立預製構件的履歷資料庫。',
+        '探索二手構件的交易平台。'
+      ],
+      tracking: [
+        '追蹤預製構件的再利用率。',
+        '評估對減少營建廢棄物的貢獻。'
+      ]
+    },
+    {
+      id: 'con-ci-8',
+      name: '建材生命週期評估',
+      description: '從設計階段減少建材的環境衝擊。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '針對主要建材，進行生命週期評估(LCA)。',
+        '比較不同建材方案的蘊含碳、資源消耗等環境衝擊。',
+        '選擇總體環境衝擊較低的建材方案。',
+        '將評估結果作為綠色採購的依據。'
+      ],
+      tracking: [
+        '計算建築物整體的蘊含碳。',
+        '將LCA數據用於申請環保標章或綠建築認證。'
+      ]
+    },
+    {
+      id: 'con-ci-9',
+      name: '拆除廢料再利用',
+      description: '將拆除廢料轉為可用資源。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在拆除前，進行建材盤點，找出可回收的項目。',
+        '採用分選拆除(deconstruction)工法。',
+        '將混凝土塊破碎後，作為再生骨料。',
+        '將廢木料、廢金屬等分類回收。'
+      ],
+      tracking: [
+        '記錄拆除廢料的回收再利用率。',
+        '比較與傳統拆除工法的廢棄物產生量差異。'
+      ]
+    },
+    {
+      id: 'con-ci-10',
+      name: '閒置設備共享',
+      description: '不同工地共用設備，提高使用效率。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立公司內部施工機具的調度平台。',
+        '與同業或協力廠商建立設備共享的合作關係。',
+        '明確租借費用與責任歸屬。'
+      ],
+      tracking: [
+        '追蹤公司內部機具的閒置率。',
+        '評估設備共享帶來的成本節省。'
+      ]
+    }
   ],
   '永續採購': [
-    { id: 'con-su-1', name: '採購綠建材', description: '選擇對環境友善的建材。', investment: '中' },
-    { id: 'con-su-2', name: '低碳混凝土', description: '使用低碳水泥或添加劑，減少碳排放。', investment: '中' },
-    { id: 'con-su-3', name: '本地建材', description: '減少運輸距離，降低碳排放。', investment: '低' },
-    { id: 'con-su-4', name: '永續認證木材', description: '確保木材來源符合永續林業標準。', investment: '中' },
-    { id: 'con-su-5', name: '節能施工設備', description: '選擇節能的施工機具。', investment: '中' },
-    { id: 'con-su-6', name: '可回收工地耗材', description: '減少工地廢棄物。', investment: '低' },
-    { id: 'con-su-7', name: '環境友善塗料', description: '選擇低VOC或水性塗料，減少空氣污染。', investment: '低' },
-    { id: 'con-su-8', name: '供應商ESG評估', description: '確保供應商符合環境與社會責任標準。', investment: '中' },
-    { id: 'con-su-9', name: '永續供應鏈合作', description: '與供應商共同推動永續發展。', investment: '中' },
-    { id: 'con-su-10', name: '綠色設備租賃', description: '減少設備閒置，促進資源循環利用。', investment: '低' },
+    {
+      id: 'con-su-1',
+      name: '採購綠建材',
+      description: '選擇對環境友善的建材。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立綠建材採購清單，優先選擇有環保標章或綠建材標章的產品。',
+        '要求供應商提供產品的環境宣告(EPD)或相關證明。',
+        '將綠建材的使用納入工程合約要求。'
+      ],
+      tracking: [
+        '統計綠建材佔總採購金額的比例。',
+        '確保所用建材符合綠建築認證的要求。'
+      ]
+    },
+    {
+      id: 'con-su-2',
+      name: '低碳混凝土',
+      description: '使用低碳水泥或添加劑，減少碳排放。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '與預拌混凝土廠合作，開發或採用低碳配比（如使用爐石、飛灰）。',
+        '確保低碳混凝土的強度與工作性符合設計要求。',
+        '在非主要結構處，優先使用低碳混凝土。',
+        '進行現場澆置測試與強度驗證。'
+      ],
+      tracking: [
+        '計算因使用低碳混凝土而減少的水泥用量與碳排放。',
+        '追蹤混凝土的長期強度發展。'
+      ]
+    },
+    {
+      id: 'con-su-3',
+      name: '本地建材',
+      description: '減少運輸距離，降低碳排放。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在選材時，優先考慮工地周邊生產的建材。',
+        '與本地供應商建立合作關係。',
+        '優化運輸排程，減少空車率。'
+      ],
+      tracking: [
+        '計算本地採購建材的比例。',
+        '估算減少的運輸碳排放。'
+      ]
+    },
+    {
+      id: 'con-su-4',
+      name: '永續認證木材',
+      description: '確保木材來源符合永續林業標準。',
+      investment: '中',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '要求木材供應商提供FSC或PEFC等永續林業認證。',
+        '建立認證木材的監管鏈(Chain of Custody)。',
+        '確保從林場到工地的所有環節都可追溯。'
+      ],
+      tracking: [
+        '保存所有認證木材的採購與證明文件。',
+        '統計永續認證木材的使用比例。'
+      ]
+    },
+    {
+      id: 'con-su-5',
+      name: '節能施工設備',
+      description: '選擇節能的施工機具。',
+      investment: '中',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '將能效作為採購或租賃機具的重要考量。',
+        '優先選擇符合最新環保法規的機具。',
+        '考慮使用電動化的中小型機具。'
+      ],
+      tracking: [
+        '記錄機具的油耗或電耗數據。',
+        '比較不同品牌或型號機具的能效表現。'
+      ]
+    },
+    {
+      id: 'con-su-6',
+      name: '可回收工地耗材',
+      description: '減少工地廢棄物。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '採購可回收的安全網、帆布等。',
+        '使用可重複填充的標線漆罐。',
+        '減少一次性耗材的使用。'
+      ],
+      tracking: [
+        '追蹤一次性耗材的採購量變化。',
+        '確保耗材使用後進入正確的回收管道。'
+      ]
+    },
+    {
+      id: 'con-su-7',
+      name: '環境友善塗料',
+      description: '選擇低VOC或水性塗料，減少空氣污染。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '優先採購具有環保標章或綠建材標章的塗料。',
+        '選擇低揮發性有機化合物(VOC)的產品。',
+        '確保施工過程中的通風良好。'
+      ],
+      tracking: [
+        '保存所用塗料的檢驗報告與證明。',
+        '監測施工後室內的空氣品質。'
+      ]
+    },
+    {
+      id: 'con-su-8',
+      name: '供應商ESG評估',
+      description: '確保供應商符合環境與社會責任標準。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '對主要建材或設備供應商，建立ESG評估問卷。',
+        '將ESG表現納入供應商評選與管理流程。',
+        '與供應商溝通，鼓勵其提升ESG表現。'
+      ],
+      tracking: [
+        '定期更新供應商的ESG評估分數。',
+        '追蹤關鍵供應商的改善計畫進度。'
+      ]
+    },
+    {
+      id: 'con-su-9',
+      name: '永續供應鏈合作',
+      description: '與供應商共同推動永續發展。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '舉辦供應商大會，分享公司的永續目標。',
+        '與關鍵供應商建立聯合專案，共同開發綠色建材或工法。',
+        '建立資訊分享平台，交流最佳實踐案例。'
+      ],
+      tracking: [
+        '評估合作專案的成果與效益。',
+        '提升供應鏈整體的永續韌性。'
+      ]
+    },
+    {
+      id: 'con-su-10',
+      name: '綠色設備租賃',
+      description: '減少設備閒置，促進資源循環利用。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '與設備租賃公司合作，優先租用節能、低排放的機具。',
+        '精準規劃施工排程，減少機具的閒置時間。',
+        '考慮共享經濟模式，與其他工地協調租賃。'
+      ],
+      tracking: [
+        '比較租賃與購買的成本效益。',
+        '追蹤所租用機具的能耗與排放表現。'
+      ]
+    }
   ],
   '淨零管理': [
-    { id: 'con-ne-1', name: '碳足跡盤查（建築生命週期）', description: '了解建築物整個生命週期的碳排放。', investment: '中' },
-    { id: 'con-ne-2', name: '淨零建築目標', description: '設定建築物的減碳目標。', investment: '中' },
-    { id: 'con-ne-3', name: 'BIM結合碳管理', description: '利用BIM進行碳排放分析與優化。', investment: '中' },
-    { id: 'con-ne-4', name: '綠建築認證（LEED, EEWH）', description: '取得綠建築認證，提升建築物價值。', investment: '中' },
-    { id: 'con-ne-5', name: '碳抵銷專案', description: '參與碳抵銷專案，抵銷剩餘碳排放。', investment: '中' },
-    { id: 'con-ne-6', name: '供應鏈碳管理', description: '與供應商共同減少碳排放。', investment: '中' },
-    { id: 'con-ne-7', name: '員工綠色建築培訓', description: '提升員工對綠色建築的認識與技能。', investment: '低' },
-    { id: 'con-ne-8', name: '永續金融（綠色債券）', description: '尋求綠色融資，支持永續建築專案。', investment: '中' },
-    { id: 'con-ne-9', name: '創新工法減少碳排', description: '採用低碳工法，減少施工過程的碳排放。', investment: '中' },
-    { id: 'con-ne-10', name: '定期發布永續報告', description: '揭露企業在永續發展方面的表現。', investment: '中' },
-  ],
+    {
+      id: 'con-ne-1',
+      name: '碳足跡盤查（建築生命週期）',
+      description: '了解建築物整個生命週期的碳排放。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '遵循ISO 14067或EN 15978等標準。',
+        '收集從建材生產、施工、使用到拆除階段的數據。',
+        '利用專業軟體計算建築物生命週期的總碳排放量。',
+        '分析各階段的碳排熱點。'
+      ],
+      tracking: [
+        '比較不同設計方案的碳足跡。',
+        '將盤查結果用於制定減碳策略。'
+      ]
+    },
+    {
+      id: 'con-ne-2',
+      name: '淨零建築目標',
+      description: '設定建築物的減碳目標。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '定義「淨零建築」的範疇與邊界。',
+        '以最大化提升能源效率為優先。',
+        '透過再生能源最大化滿足自身用電需求。',
+        '在窮盡前兩項措施後，才考慮購買碳權進行抵換。'
+      ],
+      tracking: [
+        '追蹤建築物的實際能耗與再生能源發電量。',
+        '計算並揭露剩餘需抵換的碳排放量。'
+      ]
+    },
+    {
+      id: 'con-ne-3',
+      name: 'BIM結合碳管理',
+      description: '利用BIM進行碳排放分析與優化。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在建築資訊模型(BIM)中，導入建材的碳足跡參數。',
+        '利用BIM進行不同設計方案的蘊含碳模擬與比較。',
+        '結合BIM進行施工排程優化，減少廢棄物與耗能。',
+        '利用BIM進行建築能耗模擬分析。'
+      ],
+      tracking: [
+        '評估BIM在碳管理上的應用效益。',
+        '建立公司的BIM碳足跡資料庫。'
+      ]
+    },
+    {
+      id: 'con-ne-4',
+      name: '綠建築認證（LEED, EEWH）',
+      description: '取得綠建築認證，提升建築物價值。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '在專案初期即確定要申請的綠建築認證系統與等級。',
+        '由專案團隊與顧問，依認證指標要求進行設計與施工。',
+        '準備並提交所有必要的證明文件。',
+        '完成審查並取得認證。'
+      ],
+      tracking: [
+        '確保最終得分與認證等級符合預期目標。',
+        '將取得的認證作為建案的行銷重點。'
+      ]
+    },
+    {
+      id: 'con-ne-5',
+      name: '碳抵銷專案',
+      description: '參與碳抵銷專案，抵銷剩餘碳排放。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '計算因施工或營運產生的難以避免的碳排放。',
+        '選擇高品質、具公信力的碳權專案進行投資。',
+        '優先考慮與建築或社區相關的專案。',
+        '公開揭露碳抵換的資訊。'
+      ],
+      tracking: [
+        '確保碳權的品質與有效性。',
+        '追蹤所投資專案的進展與共同效益。'
+      ]
+    },
+    {
+      id: 'con-ne-6',
+      name: '供應鏈碳管理',
+      description: '與供應商共同減少碳排放。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '要求主要建材供應商提供產品碳足跡。',
+        '與供應商合作，尋找低碳的替代材料或製程。',
+        '將供應商的減碳表現納入採購評分。'
+      ],
+      tracking: [
+        '追蹤主要建材的碳足跡變化。',
+        '評估供應鏈整體的減碳成效。'
+      ]
+    },
+    {
+      id: 'con-ne-7',
+      name: '員工綠色建築培訓',
+      description: '提升員工對綠色建築的認識與技能。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '定期舉辦綠建築、永續材料等主題的內部訓練。',
+        '鼓勵員工考取綠建築專業人員(LEED AP, EEWH AP)等證照。',
+        '分享國內外最新的綠色建築案例與趨勢。'
+      ],
+      tracking: [
+        '評估員工的學習成效與滿意度。',
+        '觀察培訓成果是否能應用於實際專案中。'
+      ]
+    },
+    {
+      id: 'con-ne-8',
+      name: '永續金融（綠色債券）',
+      description: '尋求綠色融資，支持永續建築專案。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '盤點符合綠色定義的建築專案。',
+        '與金融機構洽談綠色貸款或永續連結貸款。',
+        '若有大規模資金需求，可評估發行綠色債券。',
+        '建立資金管理與效益追蹤機制。'
+      ],
+      tracking: [
+        '確保資金用途符合綠色金融框架。',
+        '定期對外揭露資金使用情況與環境效益。'
+      ]
+    },
+    {
+      id: 'con-ne-9',
+      name: '創新工法減少碳排',
+      description: '採用低碳工法，減少施工過程的碳排放。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '研究並引進低碳排的施工技術（如3D列印建築）。',
+        '使用數位化工具進行施工模擬與管理。',
+        '優化物流與資源調度，減少浪費。'
+      ],
+      tracking: [
+        '比較新舊工法的碳排放與成本差異。',
+        '評估新工法的施工效率與品質。'
+      ]
+    },
+    {
+      id: 'con-ne-10',
+      name: '定期發布永續報告',
+      description: '揭露企業在永續發展方面的表現。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '成立永續報告書專案小組。',
+        '參考GRI等國際準則，鑑別重大議題。',
+        '收集並整合公司的ESG績效數據。',
+        '編撰並對外發布報告書。'
+      ],
+      tracking: [
+        '每年定期發布。',
+        '收集利害關係人的回饋，作為持續改善的依據。'
+      ]
+    }
+  ]
 };

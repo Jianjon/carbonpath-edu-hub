@@ -3,51 +3,752 @@ import { Action, ActionAngle } from '../../pages/CarbonCredits';
 
 export const technologyActions: Record<ActionAngle, Action[]> = {
   '能源管理': [
-    { id: 'tec-en-1', name: '資料中心PUE優化', description: '顯著降低資料中心電力消耗。', investment: '高' },
-    { id: 'tec-en-2', name: '伺服器虛擬化', description: '提高伺服器利用率，減少硬體數量和能耗。', investment: '中' },
-    { id: 'tec-en-3', name: '高效率電源供應器', description: '減少電力轉換損耗。', investment: '中' },
-    { id: 'tec-en-4', name: '廢熱回收', description: '利用資料中心或設備廢熱進行再利用。', investment: '中' },
-    { id: 'tec-en-5', name: '智能冷卻系統', description: '精準控制機房溫度，降低製冷能耗。', investment: '中' },
-    { id: 'tec-en-6', name: '綠色機房設計', description: '從建築設計層面優化機房能效。', investment: '高' },
-    { id: 'tec-en-7', name: '再生能源採購', description: '降低範疇二電力排放。', investment: '中' },
-    { id: 'tec-en-8', name: '高效辦公設備', description: '選擇節能電腦、顯示器等辦公設備。', investment: '低' },
-    { id: 'tec-en-9', name: '智慧照明', description: '依環境光線自動調整，節省照明用電。', investment: '低' },
-    { id: 'tec-en-10', name: '員工節能行為', description: '提升員工節能意識，隨手關閉電源。', investment: '低' },
+    {
+      id: 'tec-en-1',
+      name: '資料中心PUE優化',
+      description: '顯著降低資料中心電力消耗。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需外聘顧問',
+      steps: [
+        '對資料中心進行全面的能源審計，計算PUE (Power Usage Effectiveness)值。',
+        '優化空調系統，如採用熱通道/冷通道佈置、水冷系統。',
+        '導入高效能的UPS不斷電系統。',
+        '建立即時的PUE監控與管理系統。'
+      ],
+      tracking: [
+        '持續監控PUE值的變化，目標接近1.0。',
+        '追蹤資料中心的總用電量(TCO)。'
+      ]
+    },
+    {
+      id: 'tec-en-2',
+      name: '伺服器虛擬化',
+      description: '提高伺服器利用率，減少硬體數量和能耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '盤點現有實體伺服器的數量與使用率。',
+        '導入伺服器虛擬化平台（如VMware, Hyper-V）。',
+        '將多台實體伺服器的應用程式遷移至虛擬機。',
+        '將閒置的實體伺服器淘汰或重新部署。'
+      ],
+      tracking: [
+        '追蹤伺服器的平均利用率。',
+        '計算因減少實體伺服器而節省的電力與空間成本。'
+      ]
+    },
+    {
+      id: 'tec-en-3',
+      name: '高效率電源供應器',
+      description: '減少電力轉換損耗。',
+      investment: '中',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在採購新的伺服器、電腦等設備時，指定選用符合80 PLUS白金級或鈦金級認證的電源供應器。',
+        '逐步汰換老舊設備的電源供應器。'
+      ],
+      tracking: [
+        '記錄採購的高效率電源供應器數量。',
+        '長期觀察對整體IT設備用電量的影響。'
+      ]
+    },
+    {
+      id: 'tec-en-4',
+      name: '廢熱回收',
+      description: '利用資料中心或設備廢熱進行再利用。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需外聘顧問',
+      steps: [
+        '評估資料中心產生的廢熱量與溫度。',
+        '研究將廢熱用於辦公室供暖、提供熱水或為鄰近社區供熱的可行性。',
+        '設計並安裝熱交換與輸送系統。'
+      ],
+      tracking: [
+        '計算回收的熱能量價值。',
+        '評估廢熱回收系統的投資回報率。'
+      ]
+    },
+    {
+      id: 'tec-en-5',
+      name: '智能冷卻系統',
+      description: '精準控制機房溫度，降低製冷能耗。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '在機櫃上安裝多點溫度感測器。',
+        '導入電腦室空調(CRAC)的智慧控制系統。',
+        '根據伺服器的即時負載，動態調整冷卻輸出。',
+        '適度提高機房的運轉溫度標準。'
+      ],
+      tracking: [
+        '監測機房的溫度分佈均勻性。',
+        '追蹤空調系統的用電量變化。'
+      ]
+    },
+    {
+      id: 'tec-en-6',
+      name: '綠色機房設計',
+      description: '從建築設計層面優化機房能效。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需外聘顧問',
+      steps: [
+        '在新建資料中心時，即導入綠色設計理念。',
+        '利用自然冷卻或間接蒸發冷卻技術。',
+        '優化建築外殼的隔熱性能。',
+        '整合再生能源（如太陽能）供應。'
+      ],
+      tracking: [
+        '目標是取得LEED或相關的綠建築認證。',
+        '追蹤新機房的PUE表現。'
+      ]
+    },
+    {
+      id: 'tec-en-7',
+      name: '再生能源採購',
+      description: '降低範疇二電力排放。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '統計公司（含資料中心）的總用電量。',
+        '研究簽訂長期綠色購電協議(PPA)的可行性。',
+        '若用電量較小，可考慮購買再生能源憑證(RECs)。',
+        '設定100%使用再生能源的目標與時程。'
+      ],
+      tracking: [
+        '追蹤再生能源使用比例。',
+        '向利害關係人溝通公司的綠電承諾與成果。'
+      ]
+    },
+    {
+      id: 'tec-en-8',
+      name: '高效辦公設備',
+      description: '選擇節能電腦、顯示器等辦公設備。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立綠色採購政策，優先購買有節能標章或ENERGY STAR認證的產品。',
+        '設定電腦及周邊設備的自動待機與休眠功能。',
+        '鼓勵員工下班時關閉個人設備電源。'
+      ],
+      tracking: [
+        '統計節能設備的採購比例。',
+        '追蹤辦公區域的用電量。'
+      ]
+    },
+    {
+      id: 'tec-en-9',
+      name: '智慧照明',
+      description: '依環境光線自動調整，節省照明用電。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '辦公室全面更換為LED燈具。',
+        '安裝移動感測器，在無人時自動關燈。',
+        '安裝日光感測器，根據戶外亮度自動調節燈光。'
+      ],
+      tracking: [
+        '比較安裝前後的照明用電量。',
+        '收集員工對智慧照明系統的滿意度。'
+      ]
+    },
+    {
+      id: 'tec-en-10',
+      name: '員工節能行為',
+      description: '提升員工節能意識，隨手關閉電源。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '舉辦節能教育訓練與宣導活動。',
+        '在辦公室張貼節能提醒標語。',
+        '舉辦節能競賽，獎勵表現優異的部門。'
+      ],
+      tracking: [
+        '定期巡檢節能措施的落實情況。',
+        '觀察非上班時間的辦公室用電狀況。'
+      ]
+    }
   ],
   '循環經濟': [
-    { id: 'tec-ci-1', name: '廢棄電子產品回收', description: '確保電子廢棄物妥善處理，回收有價材料。', investment: '低' },
-    { id: 'tec-ci-2', name: '產品生命週期管理', description: '從設計、製造到回收，全程減少資源消耗。', investment: '中' },
-    { id: 'tec-ci-3', name: '零件模組化設計', description: '方便產品維修與升級，延長使用壽命。', investment: '中' },
-    { id: 'tec-ci-4', name: '推動維修服務', description: '鼓勵用戶維修而非替換，減少電子廢棄物。', investment: '低' },
-    { id: 'tec-ci-5', name: '軟體重複利用', description: '優化軟體碼減少計算資源消耗。', investment: '低' },
-    { id: 'tec-ci-6', name: '包裝減量與可回收設計', description: '減少產品包裝材料的使用和環境影響。', investment: '低' },
-    { id: 'tec-ci-7', name: '水資源回收', description: '辦公室或實驗用水的回收再利用。', investment: '低' },
-    { id: 'tec-ci-8', name: '資產再利用', description: '閒置辦公設備或家具的內部轉用或捐贈。', investment: '低' },
-    { id: 'tec-ci-9', name: '二手設備市場', description: '推動公司內部或外部二手設備交易。', investment: '低' },
-    { id: 'tec-ci-10', name: '碳纖維等材料回收', description: '回收高價值特殊材料，減少新料需求。', investment: '中' },
+    {
+      id: 'tec-ci-1',
+      name: '廢棄電子產品回收',
+      description: '確保電子廢棄物妥善處理，回收有價材料。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立公司IT資產的汰換與報廢流程。',
+        '與合法的電子廢棄物回收商(e-waste recycler)合作。',
+        '在報廢前，確保硬碟資料被徹底清除。',
+        '考慮將仍可用的設備捐贈給社福團體。'
+      ],
+      tracking: [
+        '記錄回收的電子廢棄物重量與數量。',
+        '保存回收處理證明文件。'
+      ]
+    },
+    {
+      id: 'tec-ci-2',
+      name: '產品生命週期管理',
+      description: '從設計、製造到回收，全程減少資源消耗。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需專案小組',
+      steps: [
+        '在產品設計階段即導入生命週期思維(LCT)。',
+        '進行產品生命週期評估(LCA)，找出環境衝擊熱點。',
+        '設計易於拆解、維修與回收的產品。',
+        '建立產品回收與再利用的商業模式。'
+      ],
+      tracking: [
+        '追蹤產品的回收率與材料再利用率。',
+        '比較不同代產品的生命週期環境績效。'
+      ]
+    },
+    {
+      id: 'tec-ci-3',
+      name: '零件模組化設計',
+      description: '方便產品維修與升級，延長使用壽命。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '將產品設計為由數個標準化模組構成。',
+        '讓使用者或維修人員可以輕易更換損壞的模組。',
+        '提供模組升級服務，取代整機更換。'
+      ],
+      tracking: [
+        '分析產品的維修數據，找出最常損壞的模組。',
+        '追蹤零件與模組的銷售量。'
+      ]
+    },
+    {
+      id: 'tec-ci-4',
+      name: '推動維修服務',
+      description: '鼓勵用戶維修而非替換，減少電子廢棄物。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '提供清晰的產品維修手冊與教學影片。',
+        '建立官方的維修服務網絡或認證第三方維修商。',
+        '確保維修零件的充足供應與合理價格。',
+        '倡導「維修權」(Right to Repair)。'
+      ],
+      tracking: [
+        '統計產品的維修率。',
+        '調查使用者對於維修服務的滿意度。'
+      ]
+    },
+    {
+      id: 'tec-ci-5',
+      name: '軟體重複利用',
+      description: '優化軟體碼減少計算資源消耗。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '建立公司內部的程式碼庫(codebase)與元件庫。',
+        '鼓勵開發人員使用開源軟體與函式庫。',
+        '撰寫高效能、低資源佔用的程式碼。',
+        '透過軟體更新，延長舊硬體的使用壽命。'
+      ],
+      tracking: [
+        '評估軟體的運算效率與資源使用量。',
+        '追蹤內部程式碼的重複使用率。'
+      ]
+    },
+    {
+      id: 'tec-ci-6',
+      name: '包裝減量與可回收設計',
+      description: '減少產品包裝材料的使用和環境影響。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '檢視並優化產品包裝設計，去除不必要的材料。',
+        '使用再生紙漿、大豆油墨等環保材料。',
+        '採用單一材質設計，方便使用者回收。',
+        '在包裝上清楚標示回收資訊。'
+      ],
+      tracking: [
+        '計算單位產品的包裝重量。',
+        '追蹤包裝的回收率。'
+      ]
+    },
+    {
+      id: 'tec-ci-7',
+      name: '水資源回收',
+      description: '辦公室或實驗用水的回收再利用。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '少數員工即可',
+      steps: [
+        '若有晶圓製造或實驗室等用水量大的製程，應評估廢水回收。',
+        '安裝中水回收系統，將處理過的廢水用於沖廁或澆灌。',
+        '在辦公室安裝省水龍頭。'
+      ],
+      tracking: [
+        '監測廠區或辦公室的總用水量。',
+        '計算水的回收率與節省的水費。'
+      ]
+    },
+    {
+      id: 'tec-ci-8',
+      name: '資產再利用',
+      description: '閒置辦公設備或家具的內部轉用或捐贈。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立公司內部閒置資產的交換平台。',
+        '鼓勵部門間互相調度使用。',
+        '將仍可用的資產捐贈給需要的非營利組織。'
+      ],
+      tracking: [
+        '追蹤閒置資產的再利用率。',
+        '計算因減少新購而節省的成本。'
+      ]
+    },
+    {
+      id: 'tec-ci-9',
+      name: '二手設備市場',
+      description: '推動公司內部或外部二手設備交易。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立官方認證的二手產品銷售管道。',
+        '提供二手產品的檢測、整理與保固服務。',
+        '與二手交易平台合作。'
+      ],
+      tracking: [
+        '追蹤二手產品的銷售量與流向。',
+        '評估對新產品銷售的影響。'
+      ]
+    },
+    {
+      id: 'tec-ci-10',
+      name: '碳纖維等材料回收',
+      description: '回收高價值特殊材料，減少新料需求。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需外聘顧問',
+      steps: [
+        '若產品使用碳纖維、稀土金屬等高價值材料，應建立回收體系。',
+        '與專業回收技術公司合作。',
+        '研究將回收材料重新應用於自家產品的可行性。'
+      ],
+      tracking: [
+        '追蹤特殊材料的回收率。',
+        '評估回收材料的品質與成本。'
+      ]
+    }
   ],
   '永續採購': [
-    { id: 'tec-su-1', name: '採購永續認證原物料', description: '確保材料來源符合環境與社會標準。', investment: '中' },
-    { id: 'tec-su-2', name: '供應商ESG審核', description: '評估供應商的環境、社會和公司治理表現。', investment: '中' },
-    { id: 'tec-su-3', name: '低碳供應鏈管理', description: '協助供應商減碳，降低範疇三排放。', investment: '中' },
-    { id: 'tec-su-4', name: '綠色能源採購', description: '購買綠色電力或再生能源證書。', investment: '中' },
-    { id: 'tec-su-5', name: '再生材料採購', description: '優先購買含有回收成分的材料。', investment: '中' },
-    { id: 'tec-su-6', name: '循環包材', description: '採購可重複使用或回收的包裝材料。', investment: '低' },
-    { id: 'tec-su-7', name: '衝突礦產管理', description: '確保採購材料不涉及衝突地區非法採礦。', investment: '中' },
-    { id: 'tec-su-8', name: '環保清潔劑', description: '減少辦公室清潔劑對環境的影響。', investment: '低' },
-    { id: 'tec-su-9', name: '節能辦公用品', description: '採購節能標章或環保標章的辦公用品。', investment: '低' },
-    { id: 'tec-su-10', name: '綠色雲端服務', description: '選擇使用再生能源或碳中和的雲端服務供應商。', investment: '中' },
+    {
+      id: 'tec-su-1',
+      name: '採購永續認證原物料',
+      description: '確保材料來源符合環境與社會標準。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '盤點產品使用的關鍵原物料（如金、鈷、錫、鉭）。',
+        '要求供應商提供材料來源證明，如無衝突礦產宣告。',
+        '優先採購使用回收材料或符合永續認證的原料。'
+      ],
+      tracking: [
+        '追蹤責任採購的比例。',
+        '定期對供應鏈進行風險評估。'
+      ]
+    },
+    {
+      id: 'tec-su-2',
+      name: '供應商ESG審核',
+      description: '評估供應商的環境、社會和公司治理表現。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '建立詳細的供應商行為準則(Code of Conduct)。',
+        '透過問卷、文件審查與實地稽核，對供應商進行ESG評分。',
+        '將ESG表現作為選擇與管理供應商的關鍵指標。',
+        '對不合規的供應商提出改善計畫，甚至中止合作。'
+      ],
+      tracking: [
+        '追蹤關鍵供應商的稽核覆蓋率與合格率。',
+        '每年發布供應鏈永續管理報告。'
+      ]
+    },
+    {
+      id: 'tec-su-3',
+      name: '低碳供應鏈管理',
+      description: '協助供應商減碳，降低範疇三排放。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需專案小組',
+      steps: [
+        '要求關鍵供應商設定減碳目標並揭露碳排放數據。',
+        '為供應商提供碳盤查與節能技術的培訓。',
+        '建立供應鏈減碳的聯合專案與獎勵機制。',
+        '將供應商的減碳績效與採購訂單連結。'
+      ],
+      tracking: [
+        '追蹤供應鏈整體的碳排放趨勢。',
+        '評估供應鏈減碳合作的成效。'
+      ]
+    },
+    {
+      id: 'tec-su-4',
+      name: '綠色能源採購',
+      description: '購買綠色電力或再生能源證書。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '統計全球所有營運據點的總用電量。',
+        '在全球各主要市場，尋找可行的綠電採購方案(PPA, RECs等)。',
+        '設定全球100%再生能源使用的目標與路徑圖。'
+      ],
+      tracking: [
+        '追蹤全球再生能源使用比例。',
+        '確保符合RE100等國際倡議的要求。'
+      ]
+    },
+    {
+      id: 'tec-su-5',
+      name: '再生材料採購',
+      description: '優先購買含有回收成分的材料。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '設定產品中再生塑料、再生金屬等的使用比例目標。',
+        '與供應商合作，開發與驗證再生材料的品質。',
+        '要求供應商提供再生材料的來源與含量證明。'
+      ],
+      tracking: [
+        '追蹤各產品線的再生材料使用率。',
+        '向消費者溝通產品的環保特性。'
+      ]
+    },
+    {
+      id: 'tec-su-6',
+      name: '循環包材',
+      description: '採購可重複使用或回收的包裝材料。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在採購產品包材時，優先選擇FSC認證紙材、單一可回收塑料。',
+        '與供應商合作，探索使用循環物流箱，減少一次性外箱。',
+        '去除不必要的塑膠膜、緩衝材。'
+      ],
+      tracking: [
+        '計算包裝材料的回收成分比例。',
+        '追蹤包裝廢棄物的總量。'
+      ]
+    },
+    {
+      id: 'tec-su-7',
+      name: '衝突礦產管理',
+      description: '確保採購材料不涉及衝突地區非法採礦。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '遵循責任礦產倡議(RMI)等國際規範。',
+        '對供應鏈進行盡職調查，追溯錫、鉭、鎢、金等礦產的來源。',
+        '要求冶煉廠取得合格的第三方稽核。',
+        '每年公開揭露衝突礦產調查報告。'
+      ],
+      tracking: [
+        '追蹤合格冶煉廠的清單與比例。',
+        '確保符合美國《多德-弗蘭克法案》等法規要求。'
+      ]
+    },
+    {
+      id: 'tec-su-8',
+      name: '環保清潔劑',
+      description: '減少辦公室清潔劑對環境的影響。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '採購具有環保標章的清潔用品。',
+        '集中採購，確保所有辦公室使用相同標準的產品。',
+        '教育清潔人員正確的使用方式。'
+      ],
+      tracking: [
+        '統計環保清潔劑的採購比例。',
+        '確保廢水排放符合當地環保法規。'
+      ]
+    },
+    {
+      id: 'tec-su-9',
+      name: '節能辦公用品',
+      description: '採購節能標章或環保標章的辦公用品。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '建立辦公用品的綠色採購指南。',
+        '優先購買再生紙、環保筆、節能螢幕等。',
+        '與供應商合作，提供更多環保產品選項。'
+      ],
+      tracking: [
+        '計算綠色辦公用品的採購比例。',
+        '追蹤辦公室的總體資源消耗量。'
+      ]
+    },
+    {
+      id: 'tec-su-10',
+      name: '綠色雲端服務',
+      description: '選擇使用再生能源或碳中和的雲端服務供應商。',
+      investment: '中',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '在選擇雲端服務供應商(CSP)時，將其永續表現納入考量。',
+        '優先選擇已承諾100%使用再生能源或達成碳中和的供應商。',
+        '利用雲端平台提供的工具，監控與優化自身的雲端碳足跡。'
+      ],
+      tracking: [
+        '追蹤主要雲端供應商的永續績效報告。',
+        '計算並揭露雲端服務的範疇三排放。'
+      ]
+    }
   ],
   '淨零管理': [
-    { id: 'tec-ne-1', name: '碳盤查與範疇三管理', description: '全面量化自身及供應鏈的碳排放。', investment: '中' },
-    { id: 'tec-ne-2', name: '淨零承諾', description: '公開承諾淨零目標，展現企業決心。', investment: '低' },
-    { id: 'tec-ne-3', name: '綠色軟體開發', description: '設計高效能、低資源消耗的軟體。', investment: '中' },
-    { id: 'tec-ne-4', name: '碳中和產品/服務', description: '透過減排和抵銷實現產品或服務的碳中和。', investment: '中' },
-    { id: 'tec-ne-5', name: '參與負碳技術研究', description: '投資或參與碳捕捉、直接空氣捕獲等技術開發。', investment: '高' },
-    { id: 'tec-ne-6', name: '員工減碳文化', description: '培養全員參與減碳的企業文化。', investment: '低' },
-    { id: 'tec-ne-7', name: '透明化永續報告', description: '定期發布透明且符合標準的永續發展報告。', investment: '中' },
-    { id: 'tec-ne-8', name: '供應鏈碳協作', description: '積極與供應商合作，共同推動減碳。', investment: '中' },
-    { id: 'tec-ne-9', name: '永續金融應用', description: '尋求綠色投資或綠色債券。', investment: '中' },
-    { id: 'tec-ne-10', name: '創新減碳技術投資', description: '投入資源研發或採購前沿減碳技術。', investment: '高' },
-  ],
+    {
+      id: 'tec-ne-1',
+      name: '碳盤查與範疇三管理',
+      description: '全面量化自身及供應鏈的碳排放。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需外聘顧問',
+      steps: [
+        '執行完整的範疇一、二、三溫室氣體盤查。',
+        '特別針對範疇三中的「購入的商品與服務」及「售出產品的使用」進行詳細計算。',
+        '建立持續性的數據收集與管理流程。',
+        '取得盤查結果的第三方查證。'
+      ],
+      tracking: [
+        '每年更新盤查數據，分析排放趨勢。',
+        '根據熱點分析，制定針對性的減排策略。'
+      ]
+    },
+    {
+      id: 'tec-ne-2',
+      name: '淨零承諾',
+      description: '公開承諾淨零目標，展現企業決心。',
+      investment: '低',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '由董事會與最高管理階層支持並發布淨零承諾。',
+        '向科學基礎減碳目標倡議(SBTi)提交淨零目標以供驗證。',
+        '制定達成目標的具體路徑圖與分階段里程碑。',
+        '將淨零目標與高階主管的績效連結。'
+      ],
+      tracking: [
+        '每年在永續報告中揭露目標達成進度。',
+        '確保目標與最新的氣候科學研究保持一致。'
+      ]
+    },
+    {
+      id: 'tec-ne-3',
+      name: '綠色軟體開發',
+      description: '設計高效能、低資源消耗的軟體。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '將永續性納入軟體開發生命週期(SDLC)。',
+        '遵循綠色軟體基金會(Green Software Foundation)的原則。',
+        '撰寫優化的程式碼，減少CPU、記憶體與網路資源的消耗。',
+        '開發能夠幫助使用者節能或減碳的軟體功能。'
+      ],
+      tracking: [
+        '評估軟體在不同硬體設備上的能耗表現。',
+        '量化軟體更新所帶來的效能提升與資源節省。'
+      ]
+    },
+    {
+      id: 'tec-ne-4',
+      name: '碳中和產品/服務',
+      description: '透過減排和抵銷實現產品或服務的碳中和。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '計算特定產品或服務的生命週期碳足跡。',
+        '盡最大努力降低產品本身的碳排放。',
+        '針對剩餘的排放量，購買高品質的碳權進行抵銷。',
+        '取得碳中和認證(如PAS 2060)，並與消費者溝通。'
+      ],
+      tracking: [
+        '定期重新計算產品碳足跡。',
+        '確保用於抵銷的碳權的品質與有效性。'
+      ]
+    },
+    {
+      id: 'tec-ne-5',
+      name: '參與負碳技術研究',
+      description: '投資或參與碳捕捉、直接空氣捕獲等技術開發。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需外聘顧問',
+      steps: [
+        '評估各種負碳技術(Negative Emission Technologies)的潛力。',
+        '透過企業創投(CVC)投資相關的新創公司。',
+        '與頂尖大學或研究機構建立合作計畫。',
+        '參與產業聯盟，共同推動技術發展與政策倡議。'
+      ],
+      tracking: [
+        '追蹤所投資或合作技術的研發進展。',
+        '評估技術的商業化可行性與潛在的減碳貢獻。'
+      ]
+    },
+    {
+      id: 'tec-ne-6',
+      name: '員工減碳文化',
+      description: '培養全員參與減碳的企業文化。',
+      investment: '低',
+      difficulty: '簡易',
+      time: '數週',
+      manpower: '少數員工即可',
+      steps: [
+        '將永續發展融入公司的使命與價值觀。',
+        '舉辦多元的內部溝通與參與活動，如黑客松、工作坊。',
+        '建立綠色大使(Green Ambassador)制度。',
+        '鼓勵員工在日常工作中實踐減碳。'
+      ],
+      tracking: [
+        '透過員工調查，評估永續文化的成熟度。',
+        '統計員工參與活動的人數與提出的建議數量。'
+      ]
+    },
+    {
+      id: 'tec-ne-7',
+      name: '透明化永續報告',
+      description: '定期發布透明且符合標準的永續發展報告。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '遵循TCFD(氣候相關財務揭露)、GRI、SASB等國際框架。',
+        '建立穩健的ESG數據收集與管理流程。',
+        '在報告中清晰地揭露目標、績效與挑戰。',
+        '尋求第三方對報告內容的確信或保證。'
+      ],
+      tracking: [
+        '每年定期發布報告。',
+        '監測主要ESG評級機構對公司的評分。'
+      ]
+    },
+    {
+      id: 'tec-ne-8',
+      name: '供應鏈碳協作',
+      description: '積極與供應商合作，共同推動減碳。',
+      investment: '中',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需專案小組',
+      steps: [
+        '將減碳要求納入供應商管理的核心。',
+        '提供供應商能力建構的資源，如培訓、工具與資金。',
+        '建立供應鏈碳盤查平台，共同追蹤進度。',
+        '與供應商分享減碳所帶來的效益。'
+      ],
+      tracking: [
+        '設定並追蹤供應鏈的總體減碳目標。',
+        '評估合作計畫對範疇三減排的貢獻。'
+      ]
+    },
+    {
+      id: 'tec-ne-9',
+      name: '永續金融應用',
+      description: '尋求綠色投資或綠色債券。',
+      investment: '中',
+      difficulty: '中等',
+      time: '數月',
+      manpower: '需專案小組',
+      steps: [
+        '將公司的閒置資金投資於綠色債券或ESG基金。',
+        '與銀行洽談永續連結貸款，將公司的ESG表現與融資條件掛鉤。',
+        '若有大型綠色專案，可評估發行綠色債券來籌資。'
+      ],
+      tracking: [
+        '追蹤永續金融工具的投資報酬。',
+        '確保資金的運用符合相關的綠色或永續框架。'
+      ]
+    },
+    {
+      id: 'tec-ne-10',
+      name: '創新減碳技術投資',
+      description: '投入資源研發或採購前沿減碳技術。',
+      investment: '高',
+      difficulty: '複雜',
+      time: '數年',
+      manpower: '需專案小組',
+      steps: [
+        '成立專責的技術評估與投資團隊。',
+        '鎖定與公司業務相關的關鍵減碳技術領域。',
+        '透過直接投資、合作開發或併購等方式獲取技術。',
+        '將新技術整合進自身的產品或營運中。'
+      ],
+      tracking: [
+        '評估投資組合的技術成熟度與市場潛力。',
+        '量化新技術帶來的減碳效益與商業價值。'
+      ]
+    }
+  ]
 };
