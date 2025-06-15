@@ -42,6 +42,7 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
     const baselineItem = baselineFeeProjection[index];
     const annualSavings = baselineItem.fee - item.fee;
     const annualEmissionsReduced = baselineItem.emissions - item.emissions;
+    const costPerTonReduced = annualEmissionsReduced > 0 ? annualSavings / annualEmissionsReduced : 0;
 
     return {
         year: item.year,
@@ -49,6 +50,7 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
         scenarioFee: item.fee,
         annualSavings,
         annualEmissionsReduced,
+        costPerTonReduced,
     };
   });
 
@@ -80,7 +82,7 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
                                 <TableHead className="text-right whitespace-nowrap">情境A: 維持現狀碳費</TableHead>
                                 <TableHead className="text-right whitespace-nowrap">情境B: 減量後碳費</TableHead>
                                 <TableHead className="text-right whitespace-nowrap">年度減量 (噸)</TableHead>
-                                <TableHead className="text-right whitespace-nowrap">年度預估節省</TableHead>
+                                <TableHead className="text-right whitespace-nowrap">每噸減碳效益 (元/噸)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -91,7 +93,7 @@ const CostBenefitAnalysis = ({ feeProjection, baselineFeeProjection, reductionMo
                                     <TableCell className="text-right">{formatCurrency(data.scenarioFee)}</TableCell>
                                     <TableCell className="text-right">{data.annualEmissionsReduced.toLocaleString()}</TableCell>
                                     <TableCell className={cn("text-right font-semibold text-green-700")}>
-                                        {formatCurrency(data.annualSavings)}
+                                        {formatCurrency(data.costPerTonReduced)}
                                     </TableCell>
                                 </TableRow>
                             ))}
