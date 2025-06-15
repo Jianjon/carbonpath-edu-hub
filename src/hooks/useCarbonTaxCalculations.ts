@@ -23,7 +23,7 @@ export const useCarbonTaxCalculations = ({
     const baseEmissions = annualEmissions || 0;
     const rate = selectedRate;
     const threshold = 25000;
-    const projectionYears = Math.max(1, 2035 - new Date().getFullYear() + 1);
+    const projectionYears = Math.max(1, 2030 - new Date().getFullYear() + 1);
 
     let emissionsPath: number[] = [];
     let currentEmissions = baseEmissions;
@@ -77,7 +77,7 @@ export const useCarbonTaxCalculations = ({
     const baseEmissions = annualEmissions || 0;
     const rate = 300; // Use fixed 300 for baseline scenario
     const threshold = 25000;
-    const projectionYears = Math.max(1, 2035 - new Date().getFullYear() + 1);
+    const projectionYears = Math.max(1, 2030 - new Date().getFullYear() + 1);
 
     const emissionsPath: number[] = Array(projectionYears).fill(baseEmissions);
     
