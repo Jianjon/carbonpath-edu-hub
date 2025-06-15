@@ -1,28 +1,15 @@
-
 import { ReactNode } from 'react';
 import { AlertTriangle, Info, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ReductionModel } from '@/pages/CarbonTax';
-
-interface Rate {
-  value: number;
-  label: string;
-  description: ReactNode;
-}
-
-interface FeeProjection {
-    year: number;
-    emissions: number;
-    fee: number;
-}
+import { FeeProjectionItem, Rate, ReductionModel } from '@/lib/carbon-tax/types';
 
 interface ResultsProps {
   rates: Rate[];
   selectedRate: number;
   setSelectedRate: (rate: number) => void;
-  feeProjection: FeeProjection[];
+  feeProjection: FeeProjectionItem[];
   leakageCoefficient: number;
   reductionModel: ReductionModel;
 }

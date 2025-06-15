@@ -1,22 +1,15 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, TrendingUp, TrendingDown, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
-import { ReductionModel } from '@/pages/CarbonTax';
+import { FeeProjectionItem, ReductionModel } from '@/lib/carbon-tax/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-interface FeeProjection {
-    year: number;
-    emissions: number;
-    fee: number;
-}
-
 interface CostBenefitAnalysisProps {
-  feeProjection: FeeProjection[];
-  baselineFeeProjection: FeeProjection[];
+  feeProjection: FeeProjectionItem[];
+  baselineFeeProjection: FeeProjectionItem[];
   reductionModel: ReductionModel;
   formValues: CarbonTaxFormValues;
 }

@@ -3,7 +3,7 @@ import { Pencil } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
-import { ReductionModel } from '@/pages/CarbonTax';
+import { ReductionModel } from '@/lib/carbon-tax/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 

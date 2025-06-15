@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
-import { ReductionModel } from '@/pages/CarbonTax';
+import { ReductionModel } from '@/lib/carbon-tax/types';
 import ReductionScenarioChart from './ReductionScenarioChart';
 import ReductionScenarioTable from './ReductionScenarioTable';
 
