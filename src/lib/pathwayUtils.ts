@@ -184,9 +184,9 @@ export const calculatePathwayData = (
     finalPathway = pathway;
   } 
   
-  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後倒U型年減排量（2035為高峰）
+  // SBTi 1.5°C目標 - 到2030年等比減4.2%，之後線性遞減年減排量
   else {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後倒U型年減排量（2035為高峰）');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後年減排量逐年遞減');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -211,7 +211,7 @@ export const calculatePathwayData = (
       });
     }
 
-    // Phase 2: Inverted U-shaped annual reduction from 2031 to target year (peak at 2035)
+    // Phase 2: Linearly decreasing annual reduction from 2031 to target year
     if (emissionData.targetYear > 2030) {
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
@@ -219,7 +219,7 @@ export const calculatePathwayData = (
       console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
-        console.log("SBTi 長期減排模式：倒U型年減排量（2030-2035緩增，2035高峰，2035-2050遞減）");
+        console.log("SBTi 長期減排模式：年減排量逐年線性遞減");
         
         // 總減排量 = 2030年排放量 - 残留排放量
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
@@ -232,49 +232,37 @@ export const calculatePathwayData = (
             target: residualEmissions,
           });
         } else {
-          // 設計倒U型年減排量：以2035年為高峰
-          // r(t) = a * (t - peak)² + maxReduction
-          // 其中 peak = 2035, t 從 2031 到 targetYear
+          // 設計線性遞減的年減排量：r(t) = a * t + b
+          // r(1) = 最大年減排量（前期容易減）
+          // r(D) = 最小年減排量（後期困難減）
+          // ∑r(t) = totalReductionNeeded
           
-          const peakYear = Math.min(2035, emissionData.targetYear - 1); // 確保高峰年不會是最後一年
           const avgReduction = totalReductionNeeded / D;
           
-          // 設定高峰年的減排量為平均值的1.3倍
-          const maxReduction = avgReduction * 1.3;
+          // 設定第一年減排量為平均值的1.4倍，最後一年為平均值的0.6倍
+          const maxReduction = avgReduction * 1.4;
+          const minReduction = avgReduction * 0.6;
           
-          // 設定起始年和結束年的減排量為平均值的0.8倍
-          const minReduction = avgReduction * 0.8;
+          // 線性遞減：r(t) = a * t + b
+          // r(1) = a + b = maxReduction
+          // r(D) = a * D + b = minReduction
+          // 解得：a = (minReduction - maxReduction) / (D - 1)
+          //      b = maxReduction - a
           
-          // 計算倒U型拋物線的係數
-          // r(2031) = r(targetYear) = minReduction
-          // r(peakYear) = maxReduction
-          // 使用 r(t) = a * (t - peakYear)² + maxReduction
-          // 其中 a < 0 (向下開口)
+          const a = (minReduction - maxReduction) / (D - 1);
+          const b = maxReduction - a;
           
-          const peakOffset = peakYear - 2030; // peak相對於2030的偏移
-          const startOffset = 1; // 2031相對於2030的偏移
-          const endOffset = D; // 最後一年相對於2030的偏移
-          
-          // 使用起始年或結束年中距離高峰較遠的那個來計算係數
-          const maxOffsetFromPeak = Math.max(
-            Math.abs(startOffset - peakOffset),
-            Math.abs(endOffset - peakOffset)
-          );
-          
-          const a = (minReduction - maxReduction) / (maxOffsetFromPeak * maxOffsetFromPeak);
-          
-          console.log(`倒U型參數: peakYear=${peakYear}, maxReduction=${maxReduction.toFixed(2)}, minReduction=${minReduction.toFixed(2)}, a=${a.toFixed(6)}`);
+          console.log(`線性遞減參數: a=${a.toFixed(4)}, b=${b.toFixed(2)}`);
+          console.log(`第一年減排: ${maxReduction.toFixed(0)}, 最後一年減排: ${minReduction.toFixed(0)}`);
           
           // 計算實際的年減排量並調整係數以確保總和正確
           let totalCalculated = 0;
           const reductionByYear: { [year: number]: number } = {};
           
           for (let t = 1; t <= D; t++) {
-            const currentYear = 2030 + t;
-            const offsetFromPeak = currentYear - peakYear;
-            const reduction = a * offsetFromPeak * offsetFromPeak + maxReduction;
-            reductionByYear[currentYear] = Math.max(reduction, avgReduction * 0.5); // 設定最小減排量
-            totalCalculated += reductionByYear[currentYear];
+            const reduction = a * t + b;
+            reductionByYear[2030 + t] = Math.max(reduction, avgReduction * 0.3); // 設定最小減排量
+            totalCalculated += reductionByYear[2030 + t];
           }
           
           // 調整係數以確保總減排量正確
