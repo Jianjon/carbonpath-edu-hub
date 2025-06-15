@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calculator, TrendingDown, FileBarChart, Download } from 'lucide-react';
 import Navigation from '../components/Navigation';
@@ -9,6 +10,7 @@ import ReportExport from '../components/ReportExport';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { calculatePathwayData } from '../lib/pathwayUtils';
+import InfoCard from '@/components/shared/InfoCard';
 import type { 
   EmissionData, 
   ReductionModel, 
@@ -88,12 +90,31 @@ const CarbonPath = () => {
         
         <div className="max-w-4xl mx-auto">
           {step === 1 && (
-            <EmissionDataInput 
-              onNext={(data) => {
-                setEmissionData(data);
-                setStep(2);
-              }}
-            />
+            <>
+              <InfoCard
+                icon={TrendingDown}
+                title="淨零路徑規劃功能說明"
+                description={
+                  <span>
+                    此功能旨在協助企業運用科學方法，規劃出清晰、可行的淨零排放路徑。您可以：
+                    <ul className="list-disc list-inside mt-2 space-y-1">
+                      <li><b>輸入排放數據：</b>提供您企業的範疇一、二排放量、基準年與目標年等基本資料。</li>
+                      <li><b>選擇減碳模型：</b>依據國際標準（如 SBTi）或台灣目標，甚至自訂不同階段的減碳目標。</li>
+                      <li><b>生成路徑規劃：</b>系統將依您選擇的模型，計算出逐年的排放量下降路徑圖與數據表。</li>
+                      <li><b>導出完整報告：</b>將路徑圖、數據表與相關參數匯出成一份完整的報告，作為內部溝通與策略擬定的依據。</li>
+                    </ul>
+                  </span>
+                }
+                themeColor="green"
+                className="mb-8"
+              />
+              <EmissionDataInput 
+                onNext={(data) => {
+                  setEmissionData(data);
+                  setStep(2);
+                }}
+              />
+            </>
           )}
 
           {step === 2 && emissionData && (
