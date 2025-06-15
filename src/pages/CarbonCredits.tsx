@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Puzzle } from 'lucide-react';
+import { Puzzle, Wallet } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import CriteriaSelection from '../components/carbon-actions/CriteriaSelection';
 import ActionExplorer from '../components/carbon-actions/ActionExplorer';
@@ -8,28 +8,36 @@ import ActionExplorer from '../components/carbon-actions/ActionExplorer';
 // Define types for better state management
 export type Industry = '餐飲業' | '零售業' | '製造業' | '營建業' | '運輸業' | '科技業' | '金融業' | '醫療保健' | '教育服務' | '旅宿業';
 export type ActionAngle = '能源管理' | '循環經濟' | '永續採購' | '淨零管理';
+export type BudgetLevel = '低' | '中' | '高';
 
 export interface Action {
   id: string;
   name: string;
   description: string;
-  benefit: '高' | '中' | '低';
   investment: '高' | '中' | '低';
-  difficulty: '高' | '中' | '低';
 }
+
+const budgetPoints: Record<BudgetLevel, number> = {
+  '低': 5,
+  '中': 10,
+  '高': 15,
+};
 
 const CarbonActions = () => {
   const [step, setStep] = useState(1);
   const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
+  const [selectedBudget, setSelectedBudget] = useState<BudgetLevel | null>(null);
 
-  const handleCriteriaSelect = (industry: Industry) => {
+  const handleCriteriaSelect = (industry: Industry, budget: BudgetLevel) => {
     setSelectedIndustry(industry);
+    setSelectedBudget(budget);
     setStep(2);
   };
   
   const handleReset = () => {
     setStep(1);
     setSelectedIndustry(null);
+    setSelectedBudget(null);
   };
 
   return (
@@ -53,9 +61,10 @@ const CarbonActions = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mt-8">
           {step === 1 && <CriteriaSelection onNext={handleCriteriaSelect} />}
-          {step === 2 && selectedIndustry && (
+          {step === 2 && selectedIndustry && selectedBudget && (
             <ActionExplorer
               industry={selectedIndustry}
+              totalBudgetPoints={budgetPoints[selectedBudget]}
               onBack={handleReset}
             />
           )}
