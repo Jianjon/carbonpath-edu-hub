@@ -187,7 +187,7 @@ export const calculatePathwayData = (
       console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
-        console.log("SBTi 長期減排模式：平滑指數衰減年減排量（2030年峰值，之後平緩下降）");
+        console.log("SBTi 長期減排模式：完全基於指數衰減的平滑年減排量分配");
         
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
         
@@ -199,7 +199,7 @@ export const calculatePathwayData = (
             target: residualEmissions,
           });
         } else {
-          // 計算2030年的實際年減排量作為起始參考
+          // 計算2030年的實際年減排量作為基準
           let emissionsAt2029 = totalEmissions;
           for (let y = emissionData.baseYear + 1; y <= 2029; y++) {
             emissionsAt2029 *= (1 - sbtiRate);
@@ -208,50 +208,49 @@ export const calculatePathwayData = (
           
           console.log(`2030年實際年減排量: ${actual2030Reduction.toFixed(0)} tCO2e`);
           
-          // 設計平滑指數衰減：R(t) = A × e^(-k×t) + C
-          // 確保 R(0) ≤ actual2030Reduction，避免跳躍
+          // 使用純指數衰減分配年減排量，確保整體平滑
+          // R(t) = A × e^(-k×t) + C
           
-          // 設定最終年減排量為2030年的30%
-          const finalReduction = actual2030Reduction * 0.3;
-          const C = finalReduction;
+          // 設定衰減參數
+          const k = 0.06; // 溫和的衰減係數
           
-          // 設定衰減係數，控制下降速度
-          const k = 0.08; // 較溫和的衰減係數
+          // 設定最小年減排量（避免接近零時的數值問題）
+          const minReduction = Math.max(totalReductionNeeded * 0.01, 100); // 至少100噸或總量的1%
+          const C = minReduction;
           
-          // 通過總和約束計算A
+          // 通過總和約束計算A，確保總減排量正確
           const exponentialSum = Array.from({ length: D }, (_, t) => Math.exp(-k * t)).reduce((sum, val) => sum + val, 0);
           let A = (totalReductionNeeded - C * D) / exponentialSum;
           
-          // 確保第一年（t=0）不超過2030年實際減排量
-          const maxFirstYearReduction = actual2030Reduction * 0.95; // 稍微小於2030年
+          // 確保第一年不超過2030年的95%（避免跳躍）
+          const maxFirstYearReduction = actual2030Reduction * 0.95;
           if (A + C > maxFirstYearReduction) {
             A = maxFirstYearReduction - C;
-            console.log(`調整A以避免跳躍: A=${A.toFixed(0)}`);
+            console.log(`調整A以避免2030→2031跳躍: A=${A.toFixed(0)}`);
           }
           
-          console.log(`指數衰減參數:`);
+          // 重新計算確保總量平衡
+          const adjustedTotalReduction = A * exponentialSum + C * D;
+          const scalingFactor = totalReductionNeeded / adjustedTotalReduction;
+          A *= scalingFactor;
+          
+          console.log(`最終指數衰減參數:`);
           console.log(`A: ${A.toFixed(0)}, k: ${k}, C: ${C.toFixed(0)}`);
-          console.log(`第一年減排量: ${(A + C).toFixed(0)} (2030年: ${actual2030Reduction.toFixed(0)})`);
+          console.log(`2031年減排量: ${(A + C).toFixed(0)} (2030年: ${actual2030Reduction.toFixed(0)})`);
           console.log(`最後年減排量: ${(A * Math.exp(-k * (D-1)) + C).toFixed(0)}`);
           
-          let cumulativeReduction = 0;
+          // 使用指數衰減分配每年的減排量
+          let currentEmissions = emissionsAt2030;
           for (let t = 0; t < D; t++) {
-            // 計算當前年度的平滑指數衰減年減排量
-            const exponentialReduction = A * Math.exp(-k * t) + C;
-            cumulativeReduction += exponentialReduction;
+            const currentYearReduction = A * Math.exp(-k * t) + C;
+            currentEmissions -= currentYearReduction;
             
-            console.log(`Year ${2031 + t}: 年減排量 ${exponentialReduction.toFixed(0)}, 累積減排 ${cumulativeReduction.toFixed(0)}`);
-            
-            // 計算當前排放量
-            let currentEmissions;
-            if (t === D - 1) {
-              // 最後一年確保達到殘留排放量
+            // 確保不會低於殘留排放量，但避免最後幾年強制調整造成峰值
+            if (currentEmissions < residualEmissions) {
               currentEmissions = residualEmissions;
-            } else {
-              currentEmissions = emissionsAt2030 - cumulativeReduction;
-              // 確保不會低於殘留排放量
-              currentEmissions = Math.max(currentEmissions, residualEmissions);
             }
+            
+            console.log(`Year ${2031 + t}: 年減排量 ${currentYearReduction.toFixed(0)}, 排放量 ${currentEmissions.toFixed(0)}`);
             
             pathway.push({
               year: 2031 + t,
