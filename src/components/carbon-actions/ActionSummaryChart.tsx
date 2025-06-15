@@ -1,9 +1,9 @@
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceArea, Customized } from 'recharts';
+
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceArea, Customized } from 'recharts';
 import { ActionAngle } from '../../pages/CarbonCredits';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-    ChartContainer, ChartLegend, 
-    ChartLegendContent, type ChartConfig 
+    ChartContainer, type ChartConfig 
 } from '@/components/ui/chart';
 
 type ScatterData = {
@@ -51,10 +51,10 @@ const renderQuadrantLabels = (props: any) => {
         <g>
             {labels.map(label => (
                 <g key={label.name} transform={`translate(${xAxis.scale(label.x)}, ${yAxis.scale(label.y)})`}>
-                    <text x={0} y={0} dy={-8} textAnchor="middle" className="text-base font-bold fill-foreground/70">
+                    <text x={0} y={0} dy={-8} textAnchor="middle" className="text-base font-bold fill-foreground">
                         {label.name}
                     </text>
-                     <text x={0} y={0} dy={12} textAnchor="middle" className="text-xs fill-muted-foreground">
+                     <text x={0} y={0} dy={12} textAnchor="middle" className="text-xs fill-foreground/70">
                         {label.desc}
                     </text>
                 </g>
@@ -78,10 +78,10 @@ const ActionSummaryChart = ({ scatterDataByAngle, chartConfig }: Props) => {
                         <ScatterChart margin={{ top: 20, right: 40, bottom: 60, left: 20 }}>
                             <CartesianGrid strokeDasharray="3 3" />
 
-                            <ReferenceArea x1={0.5} x2={2.5} y1={0.5} y2={2.5} stroke="none" fill="hsl(var(--chart-1))" fillOpacity={0.08} />
-                            <ReferenceArea x1={2.5} x2={3.5} y1={0.5} y2={2.5} stroke="none" fill="hsl(var(--chart-2))" fillOpacity={0.08} />
-                            <ReferenceArea x1={0.5} x2={2.5} y1={2.5} y2={3.5} stroke="none" fill="hsl(var(--chart-3))" fillOpacity={0.08} />
-                            <ReferenceArea x1={2.5} x2={3.5} y1={2.5} y2={3.5} stroke="none" fill="hsl(var(--chart-4))" fillOpacity={0.08} />
+                            <ReferenceArea x1={0.5} x2={2.5} y1={0.5} y2={2.5} stroke="none" fill="hsl(var(--chart-1))" fillOpacity={0.1} />
+                            <ReferenceArea x1={2.5} x2={3.5} y1={0.5} y2={2.5} stroke="none" fill="hsl(var(--chart-2))" fillOpacity={0.1} />
+                            <ReferenceArea x1={0.5} x2={2.5} y1={2.5} y2={3.5} stroke="none" fill="hsl(var(--chart-3))" fillOpacity={0.1} />
+                            <ReferenceArea x1={2.5} x2={3.5} y1={2.5} y2={3.5} stroke="none" fill="hsl(var(--chart-4))" fillOpacity={0.1} />
                             
                             <XAxis 
                                 type="number" 
@@ -108,7 +108,6 @@ const ActionSummaryChart = ({ scatterDataByAngle, chartConfig }: Props) => {
                                 tickLine={false}
                             />
                             <Tooltip content={<CustomScatterTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                            <Legend content={<ChartLegendContent />} verticalAlign="top" wrapperStyle={{paddingBottom: '20px'}} />
                             
                             <Customized component={renderQuadrantLabels} />
 
