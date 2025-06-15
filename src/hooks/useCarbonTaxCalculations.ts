@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { CarbonTaxFormValues } from '@/lib/schemas/carbonTaxSchema';
 import { ReductionModel } from '@/lib/carbon-tax/types';
@@ -23,7 +22,7 @@ export const useCarbonTaxCalculations = ({
     const baseEmissions = annualEmissions || 0;
     const rate = selectedRate;
     const threshold = 25000;
-    const projectionYears = Math.max(1, 2030 - new Date().getFullYear() + 1);
+    const projectionYears = Math.max(1, 2035 - new Date().getFullYear() + 1);
 
     let emissionsPath: number[] = [];
     let currentEmissions = baseEmissions;
@@ -77,7 +76,7 @@ export const useCarbonTaxCalculations = ({
     const baseEmissions = annualEmissions || 0;
     const rate = selectedRate;
     const threshold = 25000;
-    const projectionYears = Math.max(1, 2030 - new Date().getFullYear() + 1);
+    const projectionYears = Math.max(1, 2035 - new Date().getFullYear() + 1);
 
     const emissionsPath: number[] = Array(projectionYears).fill(baseEmissions);
     

@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import { AlertTriangle, Info, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -51,15 +50,6 @@ const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, leakageC
               </div>
             </div>
         )}
-
-        <div className="text-center bg-gray-50 p-6 rounded-lg border">
-          <p className="text-4xl font-bold text-indigo-600">
-            NT$ {totalFee.toLocaleString()}
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            於 {rates.find(r => r.value === selectedRate)?.label} 情境下
-          </p>
-        </div>
 
         <Card>
             <CardHeader className="flex-row items-center space-x-3 space-y-0 pb-2">

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,31 +81,26 @@ const CarbonTax = () => {
         )}
         
         {step === 2 && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-1 space-y-8">
-                    <ParameterSummary 
-                        formValues={formValues} 
-                        reductionModel={reductionModel} 
-                        onEdit={() => setStep(1)} 
-                        leakageCoefficient={leakageCoefficient}
-                        setLeakageCoefficient={setLeakageCoefficient}
-                    />
-                </div>
-            
-                <div className="lg:col-span-2 space-y-8">
-                    <Results
-                        rates={rates}
-                        selectedRate={selectedRate}
-                        setSelectedRate={setSelectedRate}
-                        feeProjection={feeProjection}
-                        leakageCoefficient={leakageCoefficient}
-                        reductionModel={reductionModel}
-                    />
-                    <div className="text-center pt-4">
-                        <Button size="lg" onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto px-10">
-                            前往成本效益分析
-                        </Button>
-                    </div>
+            <div className="max-w-4xl mx-auto space-y-8">
+                <ParameterSummary 
+                    formValues={formValues} 
+                    reductionModel={reductionModel} 
+                    onEdit={() => setStep(1)} 
+                    leakageCoefficient={leakageCoefficient}
+                    setLeakageCoefficient={setLeakageCoefficient}
+                />
+                <Results
+                    rates={rates}
+                    selectedRate={selectedRate}
+                    setSelectedRate={setSelectedRate}
+                    feeProjection={feeProjection}
+                    leakageCoefficient={leakageCoefficient}
+                    reductionModel={reductionModel}
+                />
+                <div className="text-center">
+                    <Button size="lg" onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto px-10">
+                        前往成本效益分析
+                    </Button>
                 </div>
             </div>
         )}
