@@ -6,6 +6,7 @@ import CriteriaSelection from '../components/carbon-actions/CriteriaSelection';
 import ActionExplorer from '../components/carbon-actions/ActionExplorer';
 import ActionSummary from '../components/carbon-actions/ActionSummary';
 import Stepper from '../components/carbon-tax/Stepper';
+import InfoCard from '../components/shared/InfoCard';
 
 // Define types for better state management
 export type Industry = '餐飲業' | '零售業' | '製造業' | '營建業' | '運輸業' | '科技業' | '金融業' | '醫療保健' | '教育服務' | '旅宿業';
@@ -67,16 +68,30 @@ const CarbonActions = () => {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 flex justify-center items-center gap-2">
-              <Puzzle className="h-8 w-8 text-green-600" />
+      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 flex justify-center items-center gap-2">
+              <Puzzle className="h-10 w-10" />
               減碳行動
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-xl text-green-100 max-w-2xl mx-auto">
               探索符合您產業與規模的減碳方案，從四大面向建立您的永續策略。
             </p>
+          </div>
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {step === 1 && (
+            <InfoCard
+                icon={Puzzle}
+                title="減碳行動功能說明"
+                description="此模組旨在協助您根據產業特性、預算規模與執行資源，探索並選擇最適合的減碳行動方案。透過系統性的四大面向分類，您可以建立一份具體、可行的行動計畫，並將其匯出作為內部溝通與執行的依據。"
+                themeColor="green"
+                className="mb-8"
+            />
+        )}
         
         <Stepper currentStep={step} steps={carbonActionsSteps} themeColor="green" />
 
