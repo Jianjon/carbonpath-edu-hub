@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -306,11 +305,15 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
                             dataKey="year"
                             stroke="#6b7280"
                             fontSize={12}
+                            domain={[firstChartYear, netZeroYear + extendedYears]}
+                            type="number"
+                            allowDataOverflow
                         />
                         <YAxis 
                             stroke="#6b7280"
                             fontSize={12}
                             tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
+                            width={70}
                         />
                         <ChartTooltip 
                             content={<ChartTooltipContent />}
@@ -328,6 +331,7 @@ const PathwayChart: React.FC<PathwayChartProps> = ({ data, modelType, planBaseYe
                             fill="url(#annualReductionGradient)"
                             name="年度減量"
                             activeDot={{ r: 4, fill: chartConfig.annualReduction.color }}
+                            connectNulls
                         />
                     </AreaChart>
                 </ResponsiveContainer>
