@@ -7,7 +7,7 @@ export const calculateSbtiPath = (
   totalEmissions: number,
   residualEmissions: number
 ): PathwayData[] => {
-    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採平滑增長');
+    console.log('使用SBTi目標 - 2030年前每年等比減4.2%，之後採使用者定義之二次方增長模型');
     let pathway: PathwayData[] = [];
     let tempEmissions = totalEmissions;
 
@@ -37,13 +37,18 @@ export const calculateSbtiPath = (
       const emissionsAt2030 = tempEmissions;
       const D = emissionData.targetYear - 2030;
       
-      console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年內需達到 ${residualEmissions.toLocaleString()}`);
+      console.log(`2030年後減排: 起始排放 ${emissionsAt2030.toLocaleString()}, ${D}年内需達到 ${residualEmissions.toLocaleString()}`);
 
       if (D > 0) {
         const totalReductionNeeded = emissionsAt2030 - residualEmissions;
         
-        console.log("SBTi 長期減排模式：使用平滑增長模型（向上凸）");
-        const annualReductions = calculateGrowthReductions(D, totalReductionNeeded);
+        let initialAnnualReduction = 0;
+        // 如果 pathway 包含前一年的數據，計算其減排量以確保曲線連續
+        if (pathway.length > 1) {
+            initialAnnualReduction = pathway[pathway.length - 2].emissions - pathway[pathway.length - 1].emissions;
+        }
+        
+        const annualReductions = calculateGrowthReductions(D, totalReductionNeeded, initialAnnualReduction);
 
         // Apply reductions
         let currentEmissions = emissionsAt2030;
