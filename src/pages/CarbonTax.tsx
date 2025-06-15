@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,11 +17,14 @@ import { useCarbonTaxCalculations } from '@/hooks/useCarbonTaxCalculations';
 import Stepper from '@/components/carbon-tax/Stepper';
 import CarbonTaxReport from '../components/carbon-tax/CarbonTaxReport';
 
+type Industry = 'none' | 'steel' | 'cement' | 'semiconductor' | 'electronics' | 'energy';
+
 const CarbonTax = () => {
   const [step, setStep] = useState(1);
   const [selectedRate, setSelectedRate] = useState(rates[0].value);
   const [reductionModel, setReductionModel] = useState<ReductionModel>('none');
   const [leakageCoefficient, setLeakageCoefficient] = useState<number>(0);
+  const [industry, setIndustry] = useState<Industry>('none');
 
   const form = useForm<CarbonTaxFormValues>({
     resolver: zodResolver(carbonTaxFormSchema),
@@ -38,6 +42,15 @@ const CarbonTax = () => {
     reductionModel,
     leakageCoefficient,
   });
+
+  const handleReset = () => {
+    setStep(1);
+    form.reset();
+    setSelectedRate(rates[0].value);
+    setReductionModel('none');
+    setLeakageCoefficient(0);
+    setIndustry('none');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
@@ -65,7 +78,9 @@ const CarbonTax = () => {
                 <ParameterForm 
                   form={form} 
                   reductionModel={reductionModel} 
-                  setReductionModel={setReductionModel} 
+                  setReductionModel={setReductionModel}
+                  industry={industry}
+                  setIndustry={setIndustry}
                 />
                 <div className="text-center pt-4">
                     <Button size="lg" onClick={() => {
@@ -89,6 +104,7 @@ const CarbonTax = () => {
                     onEdit={() => setStep(1)} 
                     leakageCoefficient={leakageCoefficient}
                     setLeakageCoefficient={setLeakageCoefficient}
+                    industry={industry}
                 />
                 <Results
                     rates={rates}
@@ -122,7 +138,8 @@ const CarbonTax = () => {
                     reductionModel={reductionModel}
                     selectedRate={selectedRate}
                     leakageCoefficient={leakageCoefficient}
-                    onReset={() => setStep(1)}
+                    industry={industry}
+                    onReset={handleReset}
                 />
                 <div className="flex justify-center gap-4 pt-4">
                     <Button variant="outline" onClick={() => setStep(2)}>

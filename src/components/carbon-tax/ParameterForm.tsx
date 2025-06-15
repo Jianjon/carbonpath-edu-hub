@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { Calculator } from 'lucide-react';
+import { Calculator, Factory } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -12,14 +12,28 @@ import { ReductionModel } from '@/lib/carbon-tax/types';
 import ReductionScenarioChart from './ReductionScenarioChart';
 import ReductionScenarioTable from './ReductionScenarioTable';
 import { steelAnnualReduction, cementAnnualReduction } from '@/lib/carbon-tax/constants';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type Industry = 'none' | 'steel' | 'cement' | 'semiconductor' | 'electronics' | 'energy';
 
 interface ParameterFormProps {
   form: UseFormReturn<CarbonTaxFormValues>;
   reductionModel: ReductionModel;
   setReductionModel: (model: ReductionModel) => void;
+  industry: Industry;
+  setIndustry: (industry: Industry) => void;
 }
 
-const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFormProps) => {
+const industryOptions: { value: Industry; label: string }[] = [
+    { value: 'none', label: '請選擇您的產業別...' },
+    { value: 'steel', label: '鋼鐵業' },
+    { value: 'cement', label: '水泥業' },
+    { value: 'semiconductor', label: '半導體業' },
+    { value: 'electronics', label: '電子業' },
+    { value: 'energy', label: '能源業' },
+];
+
+const ParameterForm = ({ form, reductionModel, setReductionModel, industry, setIndustry }: ParameterFormProps) => {
   const annualEmissions = form.watch('annualEmissions');
 
   const projectionData = useMemo(() => {
@@ -75,7 +89,7 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
           <Calculator className="mr-3 h-6 w-6 text-green-600" />
           輸入模擬參數
         </CardTitle>
-        <CardDescription>輸入年排放量，並選擇減量情境以預測未來五年費用。</CardDescription>
+        <CardDescription>輸入年排放量、產業別與減量情境，以預測未來費用。</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -87,6 +101,27 @@ const ParameterForm = ({ form, reductionModel, setReductionModel }: ParameterFor
                 <FormMessage />
               </FormItem>
             )} />
+
+            <FormItem>
+              <FormLabel className="flex items-center">
+                <Factory className="mr-2 h-4 w-4 text-gray-600" />
+                產業類別
+              </FormLabel>
+              <Select value={industry} onValueChange={(value) => setIndustry(value as Industry)}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="請選擇您的產業別" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {industryOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value} disabled={option.value === 'none'}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
 
             <FormItem>
               <FormLabel>減量情境選擇</FormLabel>

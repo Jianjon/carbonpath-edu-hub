@@ -1,4 +1,3 @@
-
 import { Pencil } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,12 +6,15 @@ import { ReductionModel } from '@/lib/carbon-tax/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
+type Industry = 'none' | 'steel' | 'cement' | 'semiconductor' | 'electronics' | 'energy';
+
 interface ParameterSummaryProps {
   formValues: CarbonTaxFormValues;
   reductionModel: ReductionModel;
   onEdit: () => void;
   leakageCoefficient: number;
   setLeakageCoefficient: (value: number) => void;
+  industry: Industry;
 }
 
 const reductionModelLabels: Record<ReductionModel, string> = {
@@ -23,7 +25,16 @@ const reductionModelLabels: Record<ReductionModel, string> = {
   cement: '水泥業指定削減路徑 (年減約5.0%)',
 };
 
-const ParameterSummary = ({ formValues, reductionModel, onEdit, leakageCoefficient, setLeakageCoefficient }: ParameterSummaryProps) => {
+const industryLabels: Record<Industry, string> = {
+    none: '未指定',
+    steel: '鋼鐵業',
+    cement: '水泥業',
+    semiconductor: '半導體業',
+    electronics: '電子業',
+    energy: '能源業',
+};
+
+const ParameterSummary = ({ formValues, reductionModel, onEdit, leakageCoefficient, setLeakageCoefficient, industry }: ParameterSummaryProps) => {
   const { annualEmissions } = formValues;
 
   const leakageOptions = [
@@ -49,6 +60,10 @@ const ParameterSummary = ({ formValues, reductionModel, onEdit, leakageCoefficie
         <div className="flex justify-between py-2 border-b">
           <span className="text-gray-600">年排放量</span>
           <span className="font-medium">{annualEmissions?.toLocaleString() ?? 0} 噸 CO₂e</span>
+        </div>
+        <div className="flex justify-between py-2 border-b">
+          <span className="text-gray-600">產業別</span>
+          <span className="font-medium">{industryLabels[industry]}</span>
         </div>
         <div className="flex justify-between py-2 border-b">
           <span className="text-gray-600">減量情境</span>
