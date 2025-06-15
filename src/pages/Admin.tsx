@@ -29,17 +29,20 @@ const AdminPage = () => {
 
   const fetchFiles = async () => {
     setLoadingFiles(true);
+    console.log('Fetching files from storage...');
     const { data, error } = await supabase.storage.from('documents').list();
     if (error) {
+      console.error('Error fetching files:', error);
       toast({ title: "錯誤", description: "無法讀取文件列表。", variant: "destructive" });
-      console.error(error);
     } else {
+      console.log('Files fetched successfully:', data);
       setFiles(data || []);
     }
     setLoadingFiles(false);
   };
 
   const fetchProcessingStatus = async () => {
+    console.log('Fetching processing status...');
     const { data, error } = await supabase
       .from('document_processing')
       .select('*')
@@ -48,6 +51,7 @@ const AdminPage = () => {
     if (error) {
       console.error('Error fetching processing status:', error);
     } else {
+      console.log('Processing status fetched:', data);
       setProcessing(data || []);
     }
   };
@@ -91,31 +95,67 @@ const AdminPage = () => {
     const timestamp = Date.now();
     const sanitizedFileName = `${sanitizedBaseName}_${timestamp}.${fileExtension}`;
     
-    console.log(`Original file name: ${file.name}`);
-    console.log(`Sanitized file name: ${sanitizedFileName}`);
+    console.log(`Uploading file:`);
+    console.log(`- Original file name: ${file.name}`);
+    console.log(`- Sanitized file name: ${sanitizedFileName}`);
+    console.log(`- File size: ${file.size} bytes`);
+    console.log(`- File type: ${file.type}`);
     
-    const { error } = await supabase.storage.from('documents').upload(sanitizedFileName, file, {
-      cacheControl: '3600',
-      upsert: true,
-    });
-    
-    setUploading(false);
+    try {
+      // First, let's check if the bucket exists
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      console.log('Available buckets:', buckets);
+      if (bucketsError) {
+        console.error('Error listing buckets:', bucketsError);
+      }
 
-    if (error) {
-      console.error('Upload error:', error);
+      // Check bucket details
+      const { data: bucketInfo, error: bucketError } = await supabase.storage.getBucket('documents');
+      console.log('Documents bucket info:', bucketInfo);
+      if (bucketError) {
+        console.error('Error getting bucket info:', bucketError);
+      }
+
+      // Try the upload
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(sanitizedFileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+      
+      console.log('Upload response:', { data, error });
+      
+      if (error) {
+        console.error('Upload error details:', {
+          message: error.message,
+          statusCode: error.statusCode,
+          error: error
+        });
+        toast({ 
+          title: "上傳失敗", 
+          description: `錯誤: ${error.message}`, 
+          variant: "destructive" 
+        });
+      } else {
+        console.log('Upload successful:', data);
+        toast({ 
+          title: "上傳成功", 
+          description: `檔案已成功上傳為: ${sanitizedFileName}` 
+        });
+        fetchFiles();
+        fetchProcessingStatus();
+      }
+    } catch (err) {
+      console.error('Unexpected error during upload:', err);
       toast({ 
         title: "上傳失敗", 
-        description: `錯誤: ${error.message}`, 
+        description: `未預期的錯誤: ${err}`, 
         variant: "destructive" 
       });
-    } else {
-      toast({ 
-        title: "上傳成功", 
-        description: `檔案已成功上傳為: ${sanitizedFileName}` 
-      });
-      fetchFiles();
-      fetchProcessingStatus();
     }
+    
+    setUploading(false);
     
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
