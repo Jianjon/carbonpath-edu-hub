@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { MessageSquare, Send, Bot, User, Lightbulb, Zap } from 'lucide-react';
 import Navigation from '../components/Navigation';
+import { supabase } from '@/integrations/supabase/client';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([
@@ -13,6 +13,7 @@ const Chatbot = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const quickQuestions = [
     '如何制定企業減碳目標？',
@@ -23,46 +24,66 @@ const Chatbot = () => {
     '碳中和與淨零的差別？'
   ];
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const sendMessage = async (messageContent: string) => {
+    if (!messageContent.trim() || isTyping) return;
 
     const userMessage = {
       id: messages.length + 1,
       type: 'user',
-      content: inputMessage
+      content: messageContent,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setIsTyping(true);
+    setError(null);
 
-    // 模擬AI回覆
-    setTimeout(() => {
+    try {
+      // 傳送除了第一條歡迎訊息之外的對話歷史，作為上下文
+      const contextMessages = newMessages.slice(1).map(({ type, content }) => ({ type, content }));
+
+      const { data, error: functionError } = await supabase.functions.invoke('ai-chat', {
+        body: { messages: contextMessages },
+      });
+
+      if (functionError) {
+        throw functionError;
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       const botResponse = {
-        id: messages.length + 2,
+        id: newMessages.length + 1,
         type: 'bot',
-        content: getBotResponse(inputMessage)
+        content: data.reply,
       };
-      setMessages(prev => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 1500);
-  };
 
-  const getBotResponse = (question: string) => {
-    // 簡單的關鍵字匹配回覆
-    if (question.includes('減碳目標') || question.includes('SBTi')) {
-      return '制定企業減碳目標建議遵循SBTi科學基礎目標倡議：\n\n1. 進行碳盤查了解現況\n2. 設定符合1.5°C情境的減碳目標\n3. 制定具體減碳行動方案\n4. 定期監測與報告進度\n\n您希望了解哪個步驟的詳細內容嗎？';
-    } else if (question.includes('碳費') || question.includes('計算')) {
-      return '台灣碳費計算方式：\n\n碳費 = 排放量 × 碳費費率\n\n目前規劃：\n• 2024年：NT$300/噸CO2e\n• 逐年調升至國際水準\n• 適用於年排放2.5萬噸以上企業\n\n您可以使用我們的碳費模擬器進行詳細計算！';
-    } else if (question.includes('碳權') || question.includes('自願性')) {
-      return '自願性碳權主要類型包括：\n\n🌱 再生能源憑證（I-REC）\n🌳 森林碳匯項目\n🏭 工業減排項目\n🔬 碳捕集封存技術\n\n選擇碳權時應注意：\n• 額外性（Additionality）\n• 永久性（Permanence）\n• 可驗證性（Verifiability）\n\n需要投資建議嗎？';
-    } else {
-      return '感謝您的問題！我會持續學習以提供更好的服務。您可以：\n\n1. 瀏覽我們的學習模組獲得系統性知識\n2. 使用碳費模擬器進行計算\n3. 了解碳權市場投資機會\n\n還有其他問題嗎？';
+      setMessages(prev => [...prev, botResponse]);
+
+    } catch (err: any) {
+      console.error("Error sending message:", err);
+      const errorMessage = "抱歉，我現在遇到了一些問題，請稍後再試。";
+      setError(errorMessage);
+      const errorResponse = {
+        id: newMessages.length + 1,
+        type: 'bot',
+        content: errorMessage,
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
+  const handleSendMessage = () => {
+    sendMessage(inputMessage);
+    setInputMessage('');
+  };
+
   const handleQuickQuestion = (question: string) => {
-    setInputMessage(question);
+    sendMessage(question);
   };
 
   return (
@@ -145,17 +166,20 @@ const Chatbot = () => {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                onKeyPress={(e) => e.key === 'Enter' && !isTyping && handleSendMessage()}
                 placeholder="輸入您的問題..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                disabled={isTyping}
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
+                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors disabled:bg-purple-400"
+                disabled={isTyping || !inputMessage.trim()}
               >
                 <Send className="h-4 w-4" />
               </button>
             </div>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
         </div>
 
