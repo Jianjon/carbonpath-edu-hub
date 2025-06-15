@@ -1,3 +1,4 @@
+
 import { ReactNode } from 'react';
 import { AlertTriangle, Info, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -52,8 +53,7 @@ const Results = ({ rates, selectedRate, setSelectedRate, feeProjection, leakageC
         )}
 
         <div className="text-center bg-gray-50 p-6 rounded-lg border">
-          <p className="text-lg text-gray-600">預估5年累計碳費</p>
-          <p className="text-4xl font-bold text-indigo-600 mt-2">
+          <p className="text-4xl font-bold text-indigo-600">
             NT$ {totalFee.toLocaleString()}
           </p>
           <p className="text-sm text-gray-500 mt-2">
