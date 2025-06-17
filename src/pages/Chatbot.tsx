@@ -1,12 +1,12 @@
 
 import Navigation from '../components/Navigation';
-import { useChat } from '@/hooks/useChat';
+import { useChatEnhanced } from '@/hooks/useChatEnhanced';
 import ChatbotPageHeader from '@/components/chatbot/ChatbotPageHeader';
 import ChatbotInfo from '@/components/chatbot/ChatbotInfo';
 import ChatHeader from '@/components/chatbot/ChatHeader';
 import MessageList from '@/components/chatbot/MessageList';
 import MessageInput from '@/components/chatbot/MessageInput';
-import QuickQuestions from '@/components/chatbot/QuickQuestions';
+import QuickQuestionsEnhanced from '@/components/chatbot/QuickQuestionsEnhanced';
 
 const Chatbot = () => {
     const {
@@ -22,8 +22,9 @@ const Chatbot = () => {
         setInputMessage,
         handleSendMessage,
         handleQuickQuestion,
-        handleModeSwitch
-    } = useChat();
+        handleModeSwitch,
+        regenerateQuestions
+    } = useChatEnhanced();
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -46,12 +47,14 @@ const Chatbot = () => {
                         limitReached={isLimitReached}
                     />
                 </div>
-                <QuickQuestions
+                <QuickQuestionsEnhanced
                     loadingQuestions={loadingQuestions}
                     quickQuestions={quickQuestions}
                     onQuickQuestion={handleQuickQuestion}
+                    onRegenerateQuestions={regenerateQuestions}
                     isTyping={isTyping}
                     limitReached={isLimitReached}
+                    ragMode={ragMode}
                 />
             </div>
         </div>
