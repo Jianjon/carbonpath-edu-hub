@@ -6,7 +6,6 @@ interface MessageInputProps {
     setInputMessage: (value: string) => void;
     handleSendMessage: () => void;
     isTyping: boolean;
-    ragMode: boolean;
     error: string | null;
     usage: { count: number; limit: number };
     limitReached: boolean;
@@ -17,7 +16,6 @@ const MessageInput = ({
     setInputMessage,
     handleSendMessage,
     isTyping,
-    ragMode,
     error,
     usage,
     limitReached
@@ -30,7 +28,7 @@ const MessageInput = ({
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && !isTyping && handleSendMessage()}
-                    placeholder={limitReached ? "今日額度已用完" : (ragMode ? "基於文件內容提問..." : "輸入您的問題...")}
+                    placeholder={limitReached ? "今日額度已用完" : "請提出ESG、碳管理相關問題..."}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                     disabled={isTyping || limitReached}
                 />

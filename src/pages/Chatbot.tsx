@@ -14,7 +14,6 @@ const Chatbot = () => {
         inputMessage,
         isTyping,
         error,
-        ragMode,
         quickQuestions,
         loadingQuestions,
         usage,
@@ -22,7 +21,6 @@ const Chatbot = () => {
         setInputMessage,
         handleSendMessage,
         handleQuickQuestion,
-        handleModeSwitch,
         regenerateQuestions
     } = useChatEnhanced();
 
@@ -34,14 +32,13 @@ const Chatbot = () => {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <ChatbotInfo />
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-[600px] flex flex-col">
-                    <ChatHeader ragMode={ragMode} onModeSwitch={handleModeSwitch} />
+                    <ChatHeader />
                     <MessageList messages={messages} isTyping={isTyping} />
                     <MessageInput
                         inputMessage={inputMessage}
                         setInputMessage={setInputMessage}
                         handleSendMessage={handleSendMessage}
                         isTyping={isTyping}
-                        ragMode={ragMode}
                         error={error}
                         usage={usage}
                         limitReached={isLimitReached}
@@ -54,7 +51,6 @@ const Chatbot = () => {
                     onRegenerateQuestions={regenerateQuestions}
                     isTyping={isTyping}
                     limitReached={isLimitReached}
-                    ragMode={ragMode}
                 />
             </div>
         </div>

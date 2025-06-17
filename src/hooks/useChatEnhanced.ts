@@ -10,18 +10,56 @@ export interface Message {
 
 const USAGE_LIMIT = 5;
 
+// 分類問題池
+const QUESTION_CATEGORIES = {
+  energySaving: [
+    '企業有哪些常見的節能減碳方法？',
+    '如何制定有效的減碳路徑圖？',
+    '再生能源在企業減碳中的角色是什麼？',
+    '綠色建築對企業減碳的貢獻有哪些？',
+    '智慧電網如何協助企業節能？'
+  ],
+  inventory: [
+    '溫室氣體盤查的範疇一、二、三是什麼？',
+    '如何進行企業碳盤查的資料收集？',
+    'ISO 14064標準在碳盤查中的重要性？',
+    '碳盤查報告需要包含哪些關鍵要素？'
+  ],
+  footprint: [
+    '產品碳足跡與組織碳盤查有何不同？',
+    '如何計算產品生命週期的碳足跡？',
+    '碳足跡標籤對消費者的意義是什麼？',
+    '供應鏈碳足跡管理的挑戰有哪些？'
+  ],
+  circularEconomy: [
+    '循環經濟如何貢獻於企業的減碳目標？',
+    '廢料回收再利用對減碳的效益如何計算？',
+    '循環經濟商業模式有哪些類型？',
+    '如何建立有效的循環經濟供應鏈？'
+  ]
+};
+
+// 隨機選取問題
+const getRandomQuestions = (): string[] => {
+  const energySaving = QUESTION_CATEGORIES.energySaving.sort(() => 0.5 - Math.random()).slice(0, 3);
+  const inventory = QUESTION_CATEGORIES.inventory.sort(() => 0.5 - Math.random()).slice(0, 1);
+  const footprint = QUESTION_CATEGORIES.footprint.sort(() => 0.5 - Math.random()).slice(0, 1);
+  const circularEconomy = QUESTION_CATEGORIES.circularEconomy.sort(() => 0.5 - Math.random()).slice(0, 1);
+  
+  return [...energySaving, ...inventory, ...footprint, ...circularEconomy].sort(() => 0.5 - Math.random());
+};
+
 export const useChatEnhanced = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       type: 'bot',
-      content: '您好！我是CarbonPath減碳智能助手。我可以幫您解答關於減碳策略、碳費計算、碳權投資等問題。您可以切換到「文件模式」來基於已上傳的PDF文件進行問答。請問有什麼我能協助您的嗎？'
+      content: '您好！我是CarbonPath ESG智能顧問。我專精於ESG永續發展、碳管理、節能減碳等領域，可以基於您上傳的專業文件提供精準解答。我只回答ESG和碳管理相關問題，讓我們一起邁向永續未來！有什麼ESG或碳管理問題需要協助嗎？'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ragMode, setRagMode] = useState(false);
   const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [usage, setUsage] = useState({ count: 0, limit: USAGE_LIMIT });
@@ -53,18 +91,21 @@ export const useChatEnhanced = () => {
     }
   }, [getTodayDateString]);
 
-  // Generate contextual questions based on conversation
+  // 生成情境化問題
   const generateContextualQuestions = useCallback(async () => {
-    if (messages.length <= 1) return; // Skip if no real conversation yet
+    if (messages.length <= 1) {
+      // 初始載入時使用隨機分類問題
+      setQuickQuestions(getRandomQuestions());
+      return;
+    }
     
     setLoadingQuestions(true);
     try {
-      const conversationMessages = messages.slice(1); // Remove initial greeting
+      const conversationMessages = messages.slice(1);
       
       const { data, error } = await supabase.functions.invoke('generate-contextual-questions', {
         body: { 
-          messages: conversationMessages,
-          ragMode 
+          messages: conversationMessages
         },
       });
 
@@ -72,51 +113,26 @@ export const useChatEnhanced = () => {
         throw error;
       }
 
-      setQuickQuestions(data.questions || [
-        '如何開始制定企業減碳計畫？',
-        '減碳技術的投資報酬率如何計算？',
-        '法規對企業減碳的要求有哪些？'
-      ]);
+      setQuickQuestions(data.questions || getRandomQuestions());
 
     } catch (err) {
       console.error("Error generating contextual questions:", err);
-      setQuickQuestions([
-        '減碳策略實施的優先順序如何安排？',
-        '企業減碳的成本效益分析怎麼做？',
-        '如何建立有效的碳管理系統？'
-      ]);
+      setQuickQuestions(getRandomQuestions());
     } finally {
       setLoadingQuestions(false);
     }
-  }, [messages, ragMode]);
+  }, [messages]);
 
-  // Initial load and setup
+  // 初始載入
   useEffect(() => {
     checkUsage();
-    
-    // Load initial questions (fallback)
-    const fetchInitialQuestions = async () => {
-      setLoadingQuestions(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-quick-questions');
-        if (!error && data.questions) {
-          setQuickQuestions(data.questions);
-        }
-      } catch (err) {
-        console.error("Error fetching initial questions:", err);
-      } finally {
-        setLoadingQuestions(false);
-      }
-    };
-
-    fetchInitialQuestions();
+    setQuickQuestions(getRandomQuestions());
   }, [checkUsage]);
 
-  // Generate new questions after each bot response
+  // 對話後生成新問題
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && lastMessage.type === 'bot' && messages.length > 2) {
-      // Delay to ensure smooth UX
       const timer = setTimeout(() => {
         generateContextualQuestions();
       }, 1000);
@@ -162,11 +178,10 @@ export const useChatEnhanced = () => {
     incrementUsage();
 
     try {
-      const functionName = ragMode ? 'rag-search' : 'ai-chat';
-      
+      // 使用新的智能整合模式
       const contextMessages = newMessages.slice(1).map(({ type, content }) => ({ type, content }));
 
-      const { data, error: functionError } = await supabase.functions.invoke(functionName, {
+      const { data, error: functionError } = await supabase.functions.invoke('smart-chat', {
         body: { messages: contextMessages },
       });
 
@@ -180,8 +195,8 @@ export const useChatEnhanced = () => {
 
       let botResponseContent = data.reply;
       
-      if (ragMode && data.sources_count > 0) {
-        botResponseContent += `\n\n💡 此回答基於 ${data.sources_count} 個相關文件片段`;
+      if (data.sources_count > 0) {
+        botResponseContent += `\n\n💡 此回答參考了 ${data.sources_count} 個相關文件片段`;
       }
 
       const botResponse: Message = {
@@ -194,9 +209,7 @@ export const useChatEnhanced = () => {
 
     } catch (err: any) {
       console.error("Error sending message:", err);
-      const errorMessage = ragMode 
-        ? "抱歉，我在搜尋文件時遇到了問題，請稍後再試。" 
-        : "抱歉，我現在遇到了一些問題，請稍後再試。";
+      const errorMessage = "抱歉，我現在遇到了一些問題，請稍後再試。";
       setError(errorMessage);
       const errorResponse: Message = {
         id: newMessages.length + 1,
@@ -218,20 +231,12 @@ export const useChatEnhanced = () => {
     sendMessage(question);
   };
 
-  const handleModeSwitch = (newRagMode: boolean) => {
-    setRagMode(newRagMode);
-    const modeMessage: Message = {
-      id: messages.length + 1,
-      type: 'bot',
-      content: newRagMode 
-        ? '已切換到文件模式！我現在會基於已上傳的PDF文件來回答您的問題。' 
-        : '已切換到一般模式！我會使用我的通用知識來回答您的問題。'
-    };
-    setMessages(prev => [...prev, modeMessage]);
-  };
-
   const regenerateQuestions = () => {
-    generateContextualQuestions();
+    if (messages.length <= 1) {
+      setQuickQuestions(getRandomQuestions());
+    } else {
+      generateContextualQuestions();
+    }
   };
 
   return {
@@ -239,7 +244,6 @@ export const useChatEnhanced = () => {
     inputMessage,
     isTyping,
     error,
-    ragMode,
     quickQuestions,
     loadingQuestions,
     usage,
@@ -247,7 +251,6 @@ export const useChatEnhanced = () => {
     setInputMessage,
     handleSendMessage,
     handleQuickQuestion,
-    handleModeSwitch,
     regenerateQuestions
   };
 };
