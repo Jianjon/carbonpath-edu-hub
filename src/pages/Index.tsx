@@ -2,49 +2,41 @@ import { Link } from 'react-router-dom';
 import { Leaf, Calculator, Puzzle, MessageSquare, ArrowRight } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import AboutSection from '../components/home/AboutSection';
-
 const Index = () => {
-  const modules = [
-    {
-      title: '減碳路徑',
-      description: '學習系統性減碳策略，從基礎概念到實務應用',
-      icon: Leaf,
-      path: '/carbon-path',
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600'
-    },
-    {
-      title: '碳費模擬',
-      description: '計算與分析碳費成本，協助企業財務規劃',
-      icon: Calculator,
-      path: '/carbon-tax',
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
-    },
-    {
-      title: '減碳行動',
-      description: '探索符合您產業規模的減碳方法，從四大面向建立永續策略',
-      icon: Puzzle,
-      path: '/carbon-credits',
-      color: 'bg-yellow-500',
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-600'
-    },
-    {
-      title: '減碳Chatbot',
-      description: 'AI智能助手提供即時減碳諮詢與建議',
-      icon: MessageSquare,
-      path: '/chatbot',
-      color: 'bg-purple-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600'
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+  const modules = [{
+    title: '減碳路徑',
+    description: '學習系統性減碳策略，從基礎概念到實務應用',
+    icon: Leaf,
+    path: '/carbon-path',
+    color: 'bg-green-500',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-600'
+  }, {
+    title: '碳費模擬',
+    description: '計算與分析碳費成本，協助企業財務規劃',
+    icon: Calculator,
+    path: '/carbon-tax',
+    color: 'bg-blue-500',
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-600'
+  }, {
+    title: '減碳行動',
+    description: '探索符合您產業規模的減碳方法，從四大面向建立永續策略',
+    icon: Puzzle,
+    path: '/carbon-credits',
+    color: 'bg-yellow-500',
+    bgColor: 'bg-yellow-50',
+    textColor: 'text-yellow-600'
+  }, {
+    title: '減碳Chatbot',
+    description: 'AI智能助手提供即時減碳諮詢與建議',
+    icon: MessageSquare,
+    path: '/chatbot',
+    color: 'bg-purple-500',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-600'
+  }];
+  return <div className="min-h-screen bg-gray-50">
       <Navigation />
       
       {/* Hero Section */}
@@ -78,13 +70,8 @@ const Index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {modules.map((module, index) => {
-            const Icon = module.icon;
-            return (
-              <Link
-                key={index}
-                to={module.path}
-                className="group block p-8 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-green-300"
-              >
+          const Icon = module.icon;
+          return <Link key={index} to={module.path} className="group block p-8 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-green-300">
                 <div className="flex items-start space-x-4">
                   <div className={`p-3 rounded-lg ${module.bgColor}`}>
                     <Icon className={`h-8 w-8 ${module.textColor}`} />
@@ -102,9 +89,8 @@ const Index = () => {
                     </div>
                   </div>
                 </div>
-              </Link>
-            );
-          })}
+              </Link>;
+        })}
         </div>
       </div>
 
@@ -119,14 +105,10 @@ const Index = () => {
               <Leaf className="h-8 w-8 text-green-400" />
               <span className="text-xl font-bold">CarbonPath 教育平台</span>
             </div>
-            <p className="text-gray-400">
-              © 2024 CarbonPath 教育平台. 致力於推動永續發展教育
-            </p>
+            <p className="text-gray-400">© 2025 CarbonPath 教育平台. 致力於推動永續發展教育</p>
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
