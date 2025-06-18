@@ -34,8 +34,8 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .single();
 
       if (error) throw error;
-      setAssessment(newAssessment);
-      return newAssessment;
+      setAssessment(newAssessment as TCFDAssessment);
+      return newAssessment as TCFDAssessment;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
@@ -55,7 +55,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .single();
 
       if (error) throw error;
-      setAssessment(data);
+      setAssessment(data as TCFDAssessment);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -98,7 +98,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .select();
 
       if (error) throw error;
-      setRiskOpportunitySelections(data);
+      setRiskOpportunitySelections(data as RiskOpportunitySelection[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -115,7 +115,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .eq('assessment_id', assessment.id);
 
       if (error) throw error;
-      setRiskOpportunitySelections(data);
+      setRiskOpportunitySelections(data as RiskOpportunitySelection[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -131,8 +131,8 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .single();
 
       if (error) throw error;
-      setScenarioEvaluations(prev => [...prev, data]);
-      return data;
+      setScenarioEvaluations(prev => [...prev, data as ScenarioEvaluation]);
+      return data as ScenarioEvaluation;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
@@ -150,7 +150,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .eq('assessment_id', assessment.id);
 
       if (error) throw error;
-      setScenarioEvaluations(data);
+      setScenarioEvaluations(data as ScenarioEvaluation[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -166,8 +166,8 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .single();
 
       if (error) throw error;
-      setStrategyAnalysis(prev => [...prev, data]);
-      return data;
+      setStrategyAnalysis(prev => [...prev, data as StrategyAnalysis]);
+      return data as StrategyAnalysis;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
@@ -185,7 +185,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .eq('assessment_id', assessment.id);
 
       if (error) throw error;
-      setStrategyAnalysis(data);
+      setStrategyAnalysis(data as StrategyAnalysis[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -201,8 +201,8 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .single();
 
       if (error) throw error;
-      setReport(data);
-      return data;
+      setReport(data as TCFDReport);
+      return data as TCFDReport;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
@@ -220,10 +220,10 @@ export const useTCFDAssessment = (assessmentId?: string) => {
         .eq('assessment_id', assessment.id)
         .order('generated_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      setReport(data);
+      if (error) throw error;
+      setReport(data as TCFDReport | null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
