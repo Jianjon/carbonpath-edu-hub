@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
-import { Brain, Star, Loader2 } from 'lucide-react';
+import { Brain, Star, Loader2, Sparkles } from 'lucide-react';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
@@ -17,6 +17,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     riskOpportunitySelections, 
     scenarioEvaluations, 
     saveScenarioEvaluation,
+    generateScenarioWithLLM,
     loading 
   } = useTCFDAssessment(assessment.id);
   
@@ -34,20 +35,45 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const generateScenarios = async () => {
     setIsGeneratingScenarios(true);
     try {
-      // TODO: 實際呼叫 LLM API 生成情境
-      // 暫時使用模擬資料
-      const mockScenarios = riskOpportunitySelections
-        .filter(sel => sel.selected && sel.subcategory_name)
-        .map(selection => ({
-          id: `scenario-${selection.id}`,
-          risk_opportunity_id: selection.id,
-          category_name: selection.category_name,
-          subcategory_name: selection.subcategory_name,
-          scenario_description: `針對「${selection.subcategory_name}」的詳細情境描述將由 LLM 根據您的產業（${assessment.industry}）和企業規模（${assessment.company_size}）生成...`,
-          scenario_generated_by_llm: true,
-        }));
+      const selectedItems = riskOpportunitySelections.filter(sel => sel.selected && sel.subcategory_name);
+      const scenarios = [];
+
+      for (const selection of selectedItems) {
+        try {
+          console.log('正在生成情境：', selection.category_name, selection.subcategory_name);
+          
+          const scenarioDescription = await generateScenarioWithLLM(
+            selection.category_type as 'risk' | 'opportunity',
+            selection.category_name,
+            selection.subcategory_name!,
+            assessment.industry
+          );
+
+          scenarios.push({
+            id: `scenario-${selection.id}`,
+            risk_opportunity_id: selection.id,
+            category_name: selection.category_name,
+            subcategory_name: selection.subcategory_name,
+            category_type: selection.category_type,
+            scenario_description: scenarioDescription,
+            scenario_generated_by_llm: true,
+          });
+        } catch (error) {
+          console.error('生成情境失敗：', selection.subcategory_name, error);
+          // 使用備用內容
+          scenarios.push({
+            id: `scenario-${selection.id}`,
+            risk_opportunity_id: selection.id,
+            category_name: selection.category_name,
+            subcategory_name: selection.subcategory_name,
+            category_type: selection.category_type,
+            scenario_description: `針對「${selection.subcategory_name}」在${assessment.industry}的具體情境正在生成中，請稍後重新整理頁面查看完整內容。`,
+            scenario_generated_by_llm: true,
+          });
+        }
+      }
       
-      setGeneratedScenarios(mockScenarios);
+      setGeneratedScenarios(scenarios);
     } catch (error) {
       console.error('Error generating scenarios:', error);
     } finally {
@@ -123,12 +149,18 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       {isGeneratingScenarios && (
         <Card>
           <CardContent className="py-12 text-center">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-purple-600" />
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Sparkles className="h-8 w-8 text-purple-600 animate-pulse" />
+              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+            </div>
             <h3 className="text-lg font-medium mb-2">AI 正在生成情境...</h3>
             <p className="text-gray-600">
               根據您的產業別（{assessment.industry}）和企業規模，
               為您量身定制氣候相關情境描述
             </p>
+            <div className="mt-4 text-sm text-purple-600">
+              正在處理 {riskOpportunitySelections.filter(s => s.selected && s.subcategory_name).length} 個類別
+            </div>
           </CardContent>
         </Card>
       )}
@@ -147,7 +179,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-600">
-                    {Math.round((completedScenarios / totalScenarios) * 100)}%
+                    {totalScenarios > 0 ? Math.round((completedScenarios / totalScenarios) * 100) : 0}%
                   </div>
                   <div className="text-xs text-blue-600">完成度</div>
                 </div>
@@ -155,7 +187,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               <div className="mt-3 w-full bg-blue-200 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(completedScenarios / totalScenarios) * 100}%` }}
+                  style={{ width: `${totalScenarios > 0 ? (completedScenarios / totalScenarios) * 100 : 0}%` }}
                 ></div>
               </div>
             </CardContent>
@@ -173,8 +205,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                       </CardTitle>
                       <div className="flex space-x-2 mt-2">
                         <Badge variant="outline">{scenario.category_name}</Badge>
+                        <Badge className={scenario.category_type === 'risk' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}>
+                          {scenario.category_type === 'risk' ? '風險' : '機會'}
+                        </Badge>
                         <Badge className="bg-purple-100 text-purple-800">
-                          <Brain className="h-3 w-3 mr-1" />
+                          <Sparkles className="h-3 w-3 mr-1" />
                           AI 生成
                         </Badge>
                       </div>

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import { useAuth } from '@/hooks/useAuth';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
 import TCFDStage1 from '@/components/tcfd/TCFDStage1';
 import TCFDStage2 from '@/components/tcfd/TCFDStage2';
@@ -14,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const TCFDSimulator = () => {
-  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const assessmentId = searchParams.get('assessment');
@@ -48,47 +46,18 @@ const TCFDSimulator = () => {
     has_carbon_inventory: boolean;
   }) => {
     try {
-      const newAssessment = await createAssessment(data);
+      // 使用一個固定的模擬用戶 ID，因為已取消登入功能
+      const mockUserId = 'demo-user-' + Date.now();
+      const newAssessment = await createAssessment({
+        ...data,
+        user_id: mockUserId
+      });
       setSearchParams({ assessment: newAssessment.id });
       setCurrentStage(2);
     } catch (err) {
       console.error('Error creating assessment:', err);
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">載入中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-center">請先登入使用 TCFD 模擬器</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 mb-6">
-                TCFD 模擬器需要登入才能使用，以確保您的評估資料能夠安全儲存。
-              </p>
-              <Button onClick={() => navigate('/auth')}>
-                前往登入
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   const renderStageContent = () => {
     if (!assessment && currentStage > 1) {
