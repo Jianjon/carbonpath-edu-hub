@@ -99,6 +99,247 @@ export type Database = {
         }
         Relationships: []
       }
+      tcfd_assessments: {
+        Row: {
+          company_size: string
+          created_at: string
+          current_stage: number
+          has_carbon_inventory: boolean
+          id: string
+          industry: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_size: string
+          created_at?: string
+          current_stage?: number
+          has_carbon_inventory?: boolean
+          id?: string
+          industry: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_size?: string
+          created_at?: string
+          current_stage?: number
+          has_carbon_inventory?: boolean
+          id?: string
+          industry?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tcfd_reports: {
+        Row: {
+          assessment_id: string
+          disclosure_matrix: Json | null
+          generated_at: string
+          governance_content: string | null
+          id: string
+          json_output: Json | null
+          metrics_targets_content: string | null
+          pdf_url: string | null
+          report_format_content: string | null
+          risk_management_content: string | null
+          strategy_content: string | null
+        }
+        Insert: {
+          assessment_id: string
+          disclosure_matrix?: Json | null
+          generated_at?: string
+          governance_content?: string | null
+          id?: string
+          json_output?: Json | null
+          metrics_targets_content?: string | null
+          pdf_url?: string | null
+          report_format_content?: string | null
+          risk_management_content?: string | null
+          strategy_content?: string | null
+        }
+        Update: {
+          assessment_id?: string
+          disclosure_matrix?: Json | null
+          generated_at?: string
+          governance_content?: string | null
+          id?: string
+          json_output?: Json | null
+          metrics_targets_content?: string | null
+          pdf_url?: string | null
+          report_format_content?: string | null
+          risk_management_content?: string | null
+          strategy_content?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcfd_reports_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "tcfd_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcfd_risk_opportunity_selections: {
+        Row: {
+          assessment_id: string
+          category_name: string
+          category_type: string
+          created_at: string
+          id: string
+          selected: boolean
+          subcategory_name: string | null
+        }
+        Insert: {
+          assessment_id: string
+          category_name: string
+          category_type: string
+          created_at?: string
+          id?: string
+          selected?: boolean
+          subcategory_name?: string | null
+        }
+        Update: {
+          assessment_id?: string
+          category_name?: string
+          category_type?: string
+          created_at?: string
+          id?: string
+          selected?: boolean
+          subcategory_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcfd_risk_opportunity_selections_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "tcfd_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcfd_scenario_evaluations: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          id: string
+          llm_response: string | null
+          risk_opportunity_id: string
+          scenario_description: string
+          scenario_generated_by_llm: boolean
+          user_score: number | null
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          id?: string
+          llm_response?: string | null
+          risk_opportunity_id: string
+          scenario_description: string
+          scenario_generated_by_llm?: boolean
+          user_score?: number | null
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          id?: string
+          llm_response?: string | null
+          risk_opportunity_id?: string
+          scenario_description?: string
+          scenario_generated_by_llm?: boolean
+          user_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcfd_scenario_evaluations_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "tcfd_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcfd_scenario_evaluations_risk_opportunity_id_fkey"
+            columns: ["risk_opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "tcfd_risk_opportunity_selections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcfd_strategy_analysis: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          detailed_description: string | null
+          financial_impact_balance_sheet: string | null
+          financial_impact_cashflow: string | null
+          financial_impact_pnl: string | null
+          generated_by_llm: boolean
+          id: string
+          scenario_evaluation_id: string
+          selected_strategy: string | null
+          strategy_accept: string | null
+          strategy_avoid: string | null
+          strategy_mitigate: string | null
+          strategy_transfer: string | null
+          user_modifications: string | null
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          detailed_description?: string | null
+          financial_impact_balance_sheet?: string | null
+          financial_impact_cashflow?: string | null
+          financial_impact_pnl?: string | null
+          generated_by_llm?: boolean
+          id?: string
+          scenario_evaluation_id: string
+          selected_strategy?: string | null
+          strategy_accept?: string | null
+          strategy_avoid?: string | null
+          strategy_mitigate?: string | null
+          strategy_transfer?: string | null
+          user_modifications?: string | null
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          detailed_description?: string | null
+          financial_impact_balance_sheet?: string | null
+          financial_impact_cashflow?: string | null
+          financial_impact_pnl?: string | null
+          generated_by_llm?: boolean
+          id?: string
+          scenario_evaluation_id?: string
+          selected_strategy?: string | null
+          strategy_accept?: string | null
+          strategy_avoid?: string | null
+          strategy_mitigate?: string | null
+          strategy_transfer?: string | null
+          user_modifications?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcfd_strategy_analysis_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "tcfd_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcfd_strategy_analysis_scenario_evaluation_id_fkey"
+            columns: ["scenario_evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "tcfd_scenario_evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

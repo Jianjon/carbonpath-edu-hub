@@ -8,9 +8,10 @@ import Index from "./pages/Index";
 import CarbonPath from "./pages/CarbonPath";
 import CarbonTax from "./pages/CarbonTax";
 import CarbonCredits from "./pages/CarbonCredits";
+import TCFDSimulator from "./pages/TCFDSimulator";
 import Chatbot from "./pages/Chatbot";
-import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,10 +27,10 @@ const App = () => (
           <Route path="/carbon-path" element={<CarbonPath />} />
           <Route path="/carbon-tax" element={<CarbonTax />} />
           <Route path="/carbon-credits" element={<CarbonCredits />} />
+          <Route path="/tcfd-simulator" element={<TCFDSimulator />} />
           <Route path="/chatbot" element={<Chatbot />} />
-          <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
