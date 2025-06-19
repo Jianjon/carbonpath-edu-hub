@@ -48,6 +48,94 @@ serve(async (req) => {
       // 詳細的情境分析生成
       systemPrompt = `你是一位專精於氣候風險管理、財務分析和策略規劃的 TCFD 專業顧問。請根據情境描述和影響評分，提供完整且實用的財務影響分析和策略建議，幫助企業做出明智的管理決策。`;
       
+      // 根據風險或機會類型提供不同的策略選項
+      const strategiesSection = categoryType === 'risk' ? 
+        `"risk_strategies": {
+          "mitigate": {
+            "title": "減緩策略",
+            "description": "減緩風險的具體措施，如設備升級、流程改善、管理系統導入等（100-120字）",
+            "cost_estimate": "實施成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          },
+          "transfer": {
+            "title": "轉移策略",
+            "description": "風險轉移的具體作法，如保險、合約條款、外包等（100-120字）", 
+            "cost_estimate": "實施成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          },
+          "accept": {
+            "title": "接受策略",
+            "description": "接受風險的具體作法，如預留準備金、強化監控與揭露等（100-120字）",
+            "cost_estimate": "實施成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          },
+          "control": {
+            "title": "控制策略",
+            "description": "控制風險的具體作法，如強化內控制度、建立預警系統、定期監測等（100-120字）",
+            "cost_estimate": "實施成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          }
+        }` :
+        `"opportunity_strategies": {
+          "evaluate_explore": {
+            "title": "評估探索策略",
+            "description": "市場研究、技術評估、可行性分析等探索性作法（100-120字）",
+            "cost_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          },
+          "capability_building": {
+            "title": "能力建設策略",
+            "description": "人才培訓、技術學習、系統建置等能力提升作法（100-120字）",
+            "cost_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          },
+          "business_transformation": {
+            "title": "商業轉換策略",
+            "description": "業務模式調整、產品線轉型、市場定位改變等轉換作法（100-120字）",
+            "cost_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          },
+          "cooperation_participation": {
+            "title": "合作參與策略",
+            "description": "策略聯盟、產業合作、政府計畫參與等合作作法（100-120字）",
+            "cost_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          },
+          "aggressive_investment": {
+            "title": "積極投入策略",
+            "description": "大規模投資、快速市場進入、領先技術採用等積極作法（100-120字）",
+            "cost_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "可行性評分理由（50字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "預期效果描述"
+          }
+        }`;
+      
       prompt = `針對以下${categoryType === 'risk' ? '風險' : '機會'}情境，請提供完整的財務影響分析和管理策略建議：
 
 情境描述: ${scenarioDescription}
@@ -80,59 +168,13 @@ serve(async (req) => {
       "key_items": ["資產負債表影響項目1", "資產負債表影響項目2", "資產負債表影響項目3"]
     }
   },
-  "management_strategies": {
-    "avoid": {
-      "title": "避免策略",
-      "description": "具體的避免措施建議，如停止高風險業務、退出特定市場等（100-120字）",
-      "cost_estimate": "實施成本估算（如：一次性成本100-300萬元）",
-      "feasibility_score": 1-5,
-      "feasibility_reason": "可行性評分理由（50字內）",
-      "implementation_timeline": "預估實施時間",
-      "expected_effect": "預期效果描述"
-    },
-    "mitigate": {
-      "title": "減緩策略", 
-      "description": "減緩風險的具體措施，如設備升級、流程改善、管理系統導入等（100-120字）",
-      "cost_estimate": "實施成本估算",
-      "feasibility_score": 1-5,
-      "feasibility_reason": "可行性評分理由（50字內）",
-      "implementation_timeline": "預估實施時間",
-      "expected_effect": "預期效果描述"
-    },
-    "transfer": {
-      "title": "轉移策略",
-      "description": "風險轉移的具體作法，如保險、合約條款、外包等（100-120字）", 
-      "cost_estimate": "實施成本估算",
-      "feasibility_score": 1-5,
-      "feasibility_reason": "可行性評分理由（50字內）",
-      "implementation_timeline": "預估實施時間",
-      "expected_effect": "預期效果描述"
-    },
-    "accept": {
-      "title": "承擔策略",
-      "description": "承擔風險的具體作法，如預留準備金、強化監控與揭露等（100-120字）",
-      "cost_estimate": "實施成本估算",
-      "feasibility_score": 1-5, 
-      "feasibility_reason": "可行性評分理由（50字內）",
-      "implementation_timeline": "預估實施時間",
-      "expected_effect": "預期效果描述"
-    },
-    "opportunity_capture": {
-      "title": "機會掌握策略",
-      "description": "掌握機會的具體作法，如新產品開發、市場拓展、綠色金融申請等（100-120字）",
-      "cost_estimate": "投資成本估算", 
-      "feasibility_score": 1-5,
-      "feasibility_reason": "可行性評分理由（50字內）",
-      "implementation_timeline": "預估實施時間",
-      "expected_effect": "預期效果描述"
-    }
-  }
+  ${strategiesSection}
 }
 
 請確保：
-1. 所有建議具體可行，適合${industry}
+1. 所有建議具體可行，適合${industry}且與「${subcategoryName}」情境完全一致
 2. 財務影響分析要具體量化，提供實用的金額區間估計
-3. 策略建議包含具體執行方式、成本估算和時間規劃
+3. 策略建議必須針對「${subcategoryName}」這個具體情境，包含具體執行方式、成本估算和時間規劃
 4. 可行性評分要有合理依據和說明
 5. 所有內容專業且實用，符合 TCFD 報告標準
 6. 考慮企業規模和實際執行能力
