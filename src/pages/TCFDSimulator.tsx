@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -11,6 +10,8 @@ import TCFDStage5 from '@/components/tcfd/TCFDStage5';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import TCFDStepper, { TCFDStepConfig } from '@/components/tcfd/shared/TCFDStepper';
+import { Building2, Search, Brain, TrendingUp, FileText } from 'lucide-react';
 
 const TCFDSimulator = () => {
   const navigate = useNavigate();
@@ -75,6 +76,14 @@ const TCFDSimulator = () => {
     }
   };
 
+  const tcfdSteps: TCFDStepConfig[] = [
+    { title: '輸入條件', icon: Building2 },
+    { title: '選擇評估', icon: Search },
+    { title: 'LLM分析', icon: Brain },
+    { title: '策略財務', icon: TrendingUp },
+    { title: '生成報告', icon: FileText },
+  ];
+
   const renderStageContent = () => {
     console.log('Rendering stage content for stage:', currentStage, 'Assessment:', assessment);
     
@@ -129,7 +138,12 @@ const TCFDSimulator = () => {
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* TCFD Progress Stepper */}
+      {assessment && (
+        <TCFDStepper currentStep={currentStage} steps={tcfdSteps} />
+      )}
+
+      {/* Original Progress Bar - 保留作為詳細進度顯示 */}
       {assessment && (
         <div className="bg-white border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
