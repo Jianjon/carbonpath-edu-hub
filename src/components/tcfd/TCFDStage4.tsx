@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
-import { Target, DollarSign, Loader2, Sparkles } from 'lucide-react';
+import { Target, DollarSign, Loader2, Sparkles, BarChart3, TrendingUp, Building, CheckCircle, Calculator, LinkIcon } from 'lucide-react';
 import FinancialAnalysisReport from './FinancialAnalysisReport';
 import { generateFinancialAnalysis, FinancialAnalysisInput } from '@/services/tcfd/financialAnalysisService';
 
@@ -114,8 +114,8 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     }
   };
 
-  // 生成財務分析報告
-  const generateFinancialAnalysisForSelection = (selection: SelectedStrategyData) => {
+  // 生成財務分析報告組件
+  const FinancialAnalysisGrid = ({ selection }: { selection: SelectedStrategyData }) => {
     if (!selection.strategy || !selection.analysis) return null;
 
     // 從情境描述中判斷風險或機會類型
@@ -140,15 +140,110 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     };
 
     const financialAnalysis = generateFinancialAnalysis(financialAnalysisInput);
-    const strategyName = strategyMapping[selection.strategy] || selection.strategy;
+
+    // 6個分析類別的配置
+    const analysisCategories = [
+      {
+        title: '損益表影響分析',
+        content: financialAnalysis.profitLossAnalysis,
+        icon: BarChart3,
+        color: 'bg-blue-50 border-blue-200',
+        iconColor: 'text-blue-600'
+      },
+      {
+        title: '現金流影響分析',
+        content: financialAnalysis.cashFlowAnalysis,
+        icon: TrendingUp,
+        color: 'bg-green-50 border-green-200',
+        iconColor: 'text-green-600'
+      },
+      {
+        title: '資產負債表影響分析',
+        content: financialAnalysis.balanceSheetAnalysis,
+        icon: Building,
+        color: 'bg-purple-50 border-purple-200',
+        iconColor: 'text-purple-600'
+      },
+      {
+        title: '策略可行性與補充說明',
+        content: financialAnalysis.strategyFeasibilityAnalysis,
+        icon: CheckCircle,
+        color: 'bg-orange-50 border-orange-200',
+        iconColor: 'text-orange-600'
+      },
+      {
+        title: '分析建議方法',
+        content: financialAnalysis.analysisMethodology,
+        icon: Calculator,
+        color: 'bg-teal-50 border-teal-200',
+        iconColor: 'text-teal-600'
+      },
+      {
+        title: '財務連結的計算方法建議',
+        content: financialAnalysis.calculationMethodSuggestions,
+        icon: LinkIcon,
+        color: 'bg-red-50 border-red-200',
+        iconColor: 'text-red-600'
+      }
+    ];
 
     return (
-      <FinancialAnalysisReport
-        analysis={financialAnalysis}
-        scenarioTitle={subcategoryName}
-        strategyType={strategyName}
-        isRisk={isRisk}
-      />
+      <div className="mt-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <Sparkles className="h-5 w-5 text-gray-600" />
+          <h4 className="font-semibold text-gray-800">財務影響分析與計算建議</h4>
+        </div>
+        
+        {/* 3x2 網格佈局 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {analysisCategories.map((category, index) => {
+            const IconComponent = category.icon;
+            return (
+              <Card key={index} className={`${category.color} border-2`}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center space-x-2 text-sm">
+                    <IconComponent className={`h-4 w-4 ${category.iconColor}`} />
+                    <span className="text-gray-800">{category.title}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-xs text-gray-700 leading-relaxed">
+                    {category.content.length > 200 ? (
+                      <div>
+                        <p className="mb-2">{category.content.substring(0, 200)}...</p>
+                        <details className="cursor-pointer">
+                          <summary className="text-blue-600 hover:text-blue-800 text-xs">
+                            展開完整內容
+                          </summary>
+                          <div className="mt-2 pt-2 border-t border-gray-200">
+                            <p className="whitespace-pre-line">{category.content}</p>
+                          </div>
+                        </details>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-line">{category.content}</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+        
+        {/* 分析說明 */}
+        <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+            <div>
+              <h5 className="font-medium text-gray-800 mb-2 text-sm">分析說明</h5>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                本分析基於 TCFD 財務影響分類邏輯，提供結構化的財務評估框架與計算方法建議。
+                請企業結合實際營運資料，進行更深入的量化分析與情境模擬。計算公式僅供參考，實際應用時請依企業狀況調整。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -265,8 +360,8 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
                   )}
                 </div>
 
-                {/* 財務影響分析報告 */}
-                {generateFinancialAnalysisForSelection(selection)}
+                {/* 財務影響分析報告 - 使用新的網格佈局 */}
+                <FinancialAnalysisGrid selection={selection} />
 
                 {/* 用戶修改意見 */}
                 <div>
