@@ -15,6 +15,7 @@ export interface TCFDAssessment {
   status: 'in_progress' | 'completed' | 'draft';
   created_at: string;
   updated_at: string;
+  is_demo_data?: boolean;
 }
 
 export interface RiskOpportunitySelection {
@@ -26,21 +27,23 @@ export interface RiskOpportunitySelection {
   selected: boolean;
   custom_scenario_description?: string;
   created_at: string;
+  is_demo_data?: boolean;
 }
 
 export interface ScenarioEvaluation {
   id: string;
   assessment_id: string;
   risk_opportunity_id: string;
-  category_name: string;
-  subcategory_name: string;
+  category_name?: string;
+  subcategory_name?: string;
   scenario_description: string;
   scenario_generated_by_llm: boolean;
   user_score?: number;
-  likelihood_score: number;
+  likelihood_score?: number;
   llm_response?: string;
   selected_strategy?: string;
   created_at: string;
+  is_demo_data?: boolean;
 }
 
 export interface StrategyAnalysis {
@@ -59,6 +62,7 @@ export interface StrategyAnalysis {
   user_modifications?: string;
   generated_by_llm: boolean;
   created_at: string;
+  is_demo_data?: boolean;
 }
 
 export interface TCFDReport {
@@ -73,6 +77,7 @@ export interface TCFDReport {
   pdf_url?: string;
   json_output?: any;
   generated_at: string;
+  is_demo_data?: boolean;
 }
 
 export interface TCFDScenarioItem {
