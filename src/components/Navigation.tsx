@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Leaf, Calculator, MessageSquare, Home, Puzzle, Shield, LogOut, LogIn, X } from 'lucide-react';
+import { Leaf, Calculator, MessageSquare, Home, Puzzle, Shield, LogOut, LogIn, X, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 
@@ -15,6 +15,7 @@ const Navigation = () => {
     { name: '減碳路徑', path: '/carbon-path', icon: Leaf },
     { name: '碳費模擬', path: '/carbon-tax', icon: Calculator },
     { name: '減碳行動', path: '/carbon-credits', icon: Puzzle },
+    { name: 'TCFD模擬', path: '/tcfd-simulator', icon: FileText },
     { name: '減碳Chatbot', path: '/chatbot', icon: MessageSquare },
   ];
 
@@ -169,4 +170,3 @@ const Navigation = () => {
 };
 
 export default Navigation;
-

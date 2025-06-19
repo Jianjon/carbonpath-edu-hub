@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
-import { Brain, Star, Loader2, Sparkles, DollarSign, Target, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { Brain, Loader2, Sparkles, DollarSign, Target, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, Minus, Star, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
@@ -23,10 +24,10 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   
   const [generatedScenarios, setGeneratedScenarios] = useState<any[]>([]);
   const [isGeneratingScenarios, setIsGeneratingScenarios] = useState(false);
-  const [userScores, setUserScores] = useState<Record<string, number>>({});
   const [scenarioAnalyses, setScenarioAnalyses] = useState<Record<string, any>>({});
   const [isGeneratingAnalyses, setIsGeneratingAnalyses] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedScenarios, setExpadesscenarios] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (riskOpportunitySelections.length > 0 && generatedScenarios.length === 0) {
@@ -51,7 +52,14 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             assessment.industry
           );
 
-          scenarios.push({
+          // 自動生成分析
+          const analysis = await generateScenarioAnalysisWithLLM(
+            scenarioDescription,
+            3, // 預設高相關性
+            assessment.industry
+          );
+
+          const scenario = {
             id: `scenario-${selection.id}`,
             risk_opportunity_id: selection.id,
             category_name: selection.category_name,
@@ -59,7 +67,17 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             category_type: selection.category_type,
             scenario_description: scenarioDescription,
             scenario_generated_by_llm: true,
-          });
+            analysis: analysis
+          };
+
+          scenarios.push(scenario);
+          
+          // 儲存到分析狀態中
+          setScenarioAnalyses(prev => ({
+            ...prev,
+            [scenario.id]: analysis
+          }));
+
         } catch (error) {
           console.error('生成情境失敗：', selection.subcategory_name, error);
           scenarios.push({
@@ -82,37 +100,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  const generateAnalysisForScenario = async (scenarioId: string, scenarioDescription: string, userScore: number) => {
-    setIsGeneratingAnalyses(prev => ({ ...prev, [scenarioId]: true }));
-    try {
-      const analysis = await generateScenarioAnalysisWithLLM(
-        scenarioDescription,
-        userScore,
-        assessment.industry
-      );
-      
-      setScenarioAnalyses(prev => ({
-        ...prev,
-        [scenarioId]: analysis
-      }));
-    } catch (error) {
-      console.error('生成分析失敗：', error);
-    } finally {
-      setIsGeneratingAnalyses(prev => ({ ...prev, [scenarioId]: false }));
-    }
-  };
-
-  const handleScoreChange = async (scenarioId: string, score: number) => {
-    setUserScores(prev => ({
+  const toggleScenarioExpansion = (scenarioId: string) => {
+    setExpandedScenarios(prev => ({
       ...prev,
-      [scenarioId]: score
+      [scenarioId]: !prev[scenarioId]
     }));
-
-    // 自動生成分析
-    const scenario = generatedScenarios.find(s => s.id === scenarioId);
-    if (scenario && !scenarioAnalyses[scenarioId]) {
-      await generateAnalysisForScenario(scenarioId, scenario.scenario_description, score);
-    }
   };
 
   const handleSubmit = async () => {
@@ -120,19 +112,16 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     try {
       // 儲存所有評估結果
       for (const scenario of generatedScenarios) {
-        const score = userScores[scenario.id];
         const analysis = scenarioAnalyses[scenario.id];
         
-        if (score) {
-          await saveScenarioEvaluation({
-            assessment_id: assessment.id,
-            risk_opportunity_id: scenario.risk_opportunity_id,
-            scenario_description: scenario.scenario_description,
-            scenario_generated_by_llm: true,
-            user_score: score,
-            llm_response: analysis ? JSON.stringify(analysis) : undefined,
-          });
-        }
+        await saveScenarioEvaluation({
+          assessment_id: assessment.id,
+          risk_opportunity_id: scenario.risk_opportunity_id,
+          scenario_description: scenario.scenario_description,
+          scenario_generated_by_llm: true,
+          user_score: 3, // 預設高相關性
+          llm_response: analysis ? JSON.stringify(analysis) : undefined,
+        });
       }
       onComplete();
     } catch (error) {
@@ -141,22 +130,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       setIsSubmitting(false);
     }
   };
-
-  const ScoreButton = ({ score, selectedScore, onClick }: {
-    score: number;
-    selectedScore: number | undefined;
-    onClick: () => void;
-  }) => (
-    <Button
-      variant={selectedScore === score ? "default" : "outline"}
-      size="sm"
-      onClick={onClick}
-      className={`${selectedScore === score ? 'bg-blue-600' : ''}`}
-    >
-      <Star className={`h-4 w-4 mr-1 ${selectedScore === score ? 'fill-current' : ''}`} />
-      {score}
-    </Button>
-  );
 
   const getImpactIcon = (direction: string) => {
     switch (direction) {
@@ -187,7 +160,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
               <DollarSign className="h-4 w-4 text-blue-600" />
-              <h5 className="font-medium">損益表影響</h5>
+              <h5 className="font-medium">📉 損益表影響</h5>
               {getImpactIcon(impact.profit_loss?.impact_direction)}
             </div>
             <div className="flex items-center space-x-2">
@@ -218,7 +191,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
               <TrendingUp className="h-4 w-4 text-green-600" />
-              <h5 className="font-medium">現金流影響</h5>
+              <h5 className="font-medium">💸 現金流影響</h5>
               {getImpactIcon(impact.cash_flow?.impact_direction)}
             </div>
             <div className="flex items-center space-x-2">
@@ -249,7 +222,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
               <Target className="h-4 w-4 text-purple-600" />
-              <h5 className="font-medium">資產負債表影響</h5>
+              <h5 className="font-medium">🏦 資產負債表影響</h5>
               {getImpactIcon(impact.balance_sheet?.impact_direction)}
             </div>
             <div className="flex items-center space-x-2">
@@ -278,11 +251,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     </div>
   );
 
-  const renderManagementStrategies = (strategies: any) => (
+  const renderManagementStrategies = (strategies: any, categoryType: string) => (
     <div className="space-y-4">
       <h4 className="font-medium text-lg flex items-center space-x-2">
         <Target className="h-5 w-5 text-purple-600" />
-        <span>管理策略建議</span>
+        <span>📈 應對策略建議</span>
       </h4>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -333,9 +306,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     </div>
   );
 
-  const completedScenarios = Object.keys(userScores).length;
+  const completedScenarios = generatedScenarios.length;
   const totalScenarios = generatedScenarios.length;
-  const canProceed = completedScenarios === totalScenarios && totalScenarios > 0;
+  const canProceed = completedScenarios > 0;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -361,11 +334,8 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             <h3 className="text-lg font-medium mb-2">AI 正在生成情境...</h3>
             <p className="text-gray-600">
               根據您的產業別（{assessment.industry}）和企業規模，
-              為您量身定制氣候相關情境描述
+              為您量身定制氣候相關情境描述與策略分析
             </p>
-            <div className="mt-4 text-sm text-purple-600">
-              正在處理 {riskOpportunitySelections.filter(s => s.selected && s.subcategory_name).length} 個類別
-            </div>
           </CardContent>
         </Card>
       )}
@@ -377,40 +347,32 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-blue-900">評估進度</h3>
+                  <h3 className="font-medium text-blue-900">分析進度</h3>
                   <p className="text-sm text-blue-700">
-                    已完成 {completedScenarios} / {totalScenarios} 個情境評估
+                    已完成 {completedScenarios} 個情境分析
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {totalScenarios > 0 ? Math.round((completedScenarios / totalScenarios) * 100) : 0}%
-                  </div>
+                  <div className="text-2xl font-bold text-blue-600">100%</div>
                   <div className="text-xs text-blue-600">完成度</div>
                 </div>
-              </div>
-              <div className="mt-3 w-full bg-blue-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${totalScenarios > 0 ? (completedScenarios / totalScenarios) * 100 : 0}%` }}
-                ></div>
               </div>
             </CardContent>
           </Card>
 
-          {/* 情境評估卡片 */}
-          <div className="grid gap-8">
+          {/* 情境分析卡片 */}
+          <div className="grid gap-6">
             {generatedScenarios.map((scenario, index) => {
               const analysis = scenarioAnalyses[scenario.id];
-              const isGenerating = isGeneratingAnalyses[scenario.id];
+              const isExpanded = expandedScenarios[scenario.id];
               
               return (
                 <Card key={scenario.id} className="border-l-4 border-purple-500">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="text-lg">
-                          情境 {index + 1}: {scenario.subcategory_name}
+                          🟪 情境 {index + 1}: {scenario.subcategory_name}
                         </CardTitle>
                         <div className="flex space-x-2 mt-2">
                           <Badge variant="outline">{scenario.category_name}</Badge>
@@ -427,68 +389,43 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                           </Badge>
                         </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleScenarioExpansion(scenario.id)}
+                        className="ml-4"
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* 情境描述 */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">情境描述</h4>
-                      <p className="text-gray-800 leading-relaxed">
-                        {scenario.scenario_description}
-                      </p>
-                    </div>
-
-                    {/* 相關性評分 */}
-                    <div className="border-t pt-4">
-                      <h4 className="font-medium mb-3">
-                        此情境對您企業的相關性評分 <span className="text-red-500">*</span>
-                      </h4>
-                      <div className="flex space-x-3 mb-4">
-                        {[1, 2, 3].map(score => (
-                          <ScoreButton
-                            key={score}
-                            score={score}
-                            selectedScore={userScores[scenario.id]}
-                            onClick={() => handleScoreChange(scenario.id, score)}
-                          />
-                        ))}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        1分：低相關性 | 2分：中等相關性 | 3分：高相關性
-                      </div>
-                    </div>
-
-                    {/* AI 分析結果 */}
-                    {analysis && (
-                      <div className="space-y-6 border-t pt-6">
-                        {/* 概要說明 */}
-                        {analysis.scenario_summary && (
-                          <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-                            <h4 className="font-medium text-blue-900 mb-2">情境概要</h4>
-                            <p className="text-blue-800">{analysis.scenario_summary}</p>
-                          </div>
-                        )}
-
-                        {/* 財務影響分析 */}
-                        {analysis.financial_impact && renderFinancialImpact(analysis.financial_impact)}
-
-                        {/* 管理策略建議 */}
-                        {analysis.management_strategies && renderManagementStrategies(analysis.management_strategies)}
-                      </div>
-                    )}
-
-                    {/* 生成分析中的狀態 */}
-                    {userScores[scenario.id] && !analysis && isGenerating && (
-                      <div className="text-center py-8 border-t">
-                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-purple-600" />
-                        <h4 className="font-medium mb-2">AI 正在分析中...</h4>
-                        <p className="text-sm text-gray-600">正在生成詳細的財務影響分析與策略建議</p>
-                        <div className="mt-3 text-xs text-purple-600">
-                          包含損益表、現金流、資產負債表影響分析及五種管理策略建議
+                  
+                  {isExpanded && (
+                    <CardContent className="space-y-6">
+                      {/* 概要說明 */}
+                      {analysis?.scenario_summary && (
+                        <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+                          <h4 className="font-medium text-blue-900 mb-2">🔍 情境概要</h4>
+                          <p className="text-blue-800">{analysis.scenario_summary}</p>
                         </div>
-                      </div>
-                    )}
-                  </CardContent>
+                      )}
+
+                      {/* 財務影響分析 */}
+                      {analysis?.financial_impact && renderFinancialImpact(analysis.financial_impact)}
+
+                      {/* 管理策略建議 */}
+                      {analysis && (
+                        <>
+                          {analysis.risk_strategies && renderManagementStrategies(analysis.risk_strategies, 'risk')}
+                          {analysis.opportunity_strategies && renderManagementStrategies(analysis.opportunity_strategies, 'opportunity')}
+                        </>
+                      )}
+                    </CardContent>
+                  )}
                 </Card>
               );
             })}
