@@ -17,6 +17,12 @@ interface TCFDStage3Props {
   onComplete: () => void;
 }
 
+interface GenerationProgress {
+  total: number;
+  completed: number;
+  current: string;
+}
+
 const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const { riskOpportunitySelections } = useTCFDAssessment(assessment.id);
   const { 
@@ -27,17 +33,123 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Record<string, string>>({});
   const [strategyAnalyses, setStrategyAnalyses] = useState<Record<string, any>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [loadingAnalyses, setLoadingAnalyses] = useState<Record<string, boolean>>({});
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress>({ total: 0, completed: 0, current: '' });
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   // 從評估結果中獲取選擇的情境
   const selectedScenarios = riskOpportunitySelections.filter(selection => selection.selected);
 
+  // 優化：並行生成所有策略分析
+  const generateAllStrategiesAnalysis = useCallback(async () => {
+    if (selectedScenarios.length === 0) return;
+    
+    console.log('開始並行生成所有情境的策略分析');
+    setIsGenerating(true);
+    setGenerationProgress({ total: selectedScenarios.length, completed: 0, current: '' });
+
+    // 創建所有生成任務的 Promise 數組
+    const generationTasks = selectedScenarios.map(async (scenario, index) => {
+      const scenarioKey = `${scenario.category_name}-${scenario.subcategory_name}`;
+      
+      // 如果已經有分析結果，跳過
+      if (strategyAnalyses[scenarioKey]) {
+        return { scenarioKey, analysis: strategyAnalyses[scenarioKey] };
+      }
+
+      try {
+        // 更新當前進度
+        setGenerationProgress(prev => ({ 
+          ...prev, 
+          current: scenario.subcategory_name 
+        }));
+
+        // 尋找對應的scenario evaluation或創建默認值
+        let scenarioEvaluation = scenarioEvaluations.find(evaluation => 
+          evaluation.category_name === scenario.category_name && 
+          evaluation.subcategory_name === scenario.subcategory_name
+        );
+
+        if (!scenarioEvaluation) {
+          const defaultDescription = `${scenario.category_name}類型的${scenario.subcategory_name}情境，對${assessment.industry}行業的${assessment.company_size}企業可能造成${scenario.category_type === 'risk' ? '風險' : '機會'}影響。`;
+          scenarioEvaluation = {
+            id: `temp-${Date.now()}-${index}`,
+            assessment_id: assessment.id,
+            risk_opportunity_id: scenario.id,
+            category_name: scenario.category_name,
+            subcategory_name: scenario.subcategory_name,
+            scenario_description: defaultDescription,
+            scenario_generated_by_llm: false,
+            likelihood_score: 2,
+            user_score: 2,
+            created_at: new Date().toISOString()
+          };
+        }
+
+        const analysis = await generateComprehensiveScenarioAnalysis(
+          scenario.category_type,
+          scenario.category_name,
+          scenario.subcategory_name,
+          scenarioEvaluation.scenario_description,
+          scenarioEvaluation.likelihood_score,
+          assessment.industry,
+          assessment.company_size
+        );
+
+        // 更新完成進度
+        setGenerationProgress(prev => ({ 
+          ...prev, 
+          completed: prev.completed + 1 
+        }));
+
+        return { scenarioKey, analysis };
+      } catch (error) {
+        console.error(`策略分析生成失敗 (${scenarioKey}):`, error);
+        toast.error(`${scenario.subcategory_name} 策略分析生成失敗`);
+        
+        // 更新完成進度（即使失敗也算完成）
+        setGenerationProgress(prev => ({ 
+          ...prev, 
+          completed: prev.completed + 1 
+        }));
+        
+        return { scenarioKey, analysis: null };
+      }
+    });
+
+    try {
+      // 並行執行所有生成任務
+      const results = await Promise.all(generationTasks);
+      
+      // 批量更新狀態
+      const newAnalyses: Record<string, any> = {};
+      results.forEach(result => {
+        if (result.analysis) {
+          newAnalyses[result.scenarioKey] = result.analysis;
+        }
+      });
+      
+      setStrategyAnalyses(prev => ({ ...prev, ...newAnalyses }));
+      
+      const successCount = results.filter(r => r.analysis).length;
+      if (successCount > 0) {
+        toast.success(`成功生成 ${successCount} 個情境的策略分析`);
+      }
+      
+    } catch (error) {
+      console.error('批量生成策略分析失敗:', error);
+      toast.error('策略分析生成過程中發生錯誤');
+    } finally {
+      setIsGenerating(false);
+      setGenerationProgress({ total: 0, completed: 0, current: '' });
+    }
+  }, [selectedScenarios, strategyAnalyses, scenarioEvaluations, assessment, generateComprehensiveScenarioAnalysis]);
+
   // 使用 useCallback 避免重複渲染
   const initializeStrategies = useCallback(() => {
     if (selectedScenarios.length > 0 && !initialized) {
-      console.log('Initializing strategies for scenarios:', selectedScenarios.length);
+      console.log('初始化策略選擇狀態，情境數量:', selectedScenarios.length);
       const initialStrategies: Record<string, string> = {};
       selectedScenarios.forEach(scenario => {
         const key = `${scenario.category_name}-${scenario.subcategory_name}`;
@@ -46,84 +158,14 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       setSelectedStrategies(initialStrategies);
       setInitialized(true);
       
-      // 立即為所有情境生成策略分析
+      // 立即開始並行生成所有策略分析
       generateAllStrategiesAnalysis();
     }
-  }, [selectedScenarios, initialized]);
+  }, [selectedScenarios, initialized, generateAllStrategiesAnalysis]);
 
   useEffect(() => {
     initializeStrategies();
   }, [initializeStrategies]);
-
-  // 為所有情境生成策略分析
-  const generateAllStrategiesAnalysis = async () => {
-    console.log('開始為所有情境生成策略分析');
-    
-    for (const scenario of selectedScenarios) {
-      const scenarioKey = `${scenario.category_name}-${scenario.subcategory_name}`;
-      
-      // 如果已經有分析結果，跳過
-      if (strategyAnalyses[scenarioKey]) {
-        continue;
-      }
-      
-      await generateStrategyAnalysisForScenario(scenarioKey, scenario);
-    }
-  };
-
-  const generateStrategyAnalysisForScenario = async (scenarioKey: string, scenario: any) => {
-    console.log('生成策略分析:', scenarioKey);
-    
-    // 尋找對應的scenario evaluation或創建默認值
-    let scenarioEvaluation = scenarioEvaluations.find(evaluation => 
-      evaluation.category_name === scenario.category_name && 
-      evaluation.subcategory_name === scenario.subcategory_name
-    );
-
-    if (!scenarioEvaluation) {
-      const defaultDescription = `${scenario.category_name}類型的${scenario.subcategory_name}情境，對${assessment.industry}行業的${assessment.company_size}企業可能造成${scenario.category_type === 'risk' ? '風險' : '機會'}影響。`;
-      scenarioEvaluation = {
-        id: `temp-${Date.now()}`,
-        assessment_id: assessment.id,
-        risk_opportunity_id: scenario.id,
-        category_name: scenario.category_name,
-        subcategory_name: scenario.subcategory_name,
-        scenario_description: defaultDescription,
-        scenario_generated_by_llm: false,
-        likelihood_score: 2,
-        user_score: 2,
-        created_at: new Date().toISOString()
-      };
-    }
-
-    setLoadingAnalyses(prev => ({ ...prev, [scenarioKey]: true }));
-
-    try {
-      const analysis = await generateComprehensiveScenarioAnalysis(
-        scenario.category_type,
-        scenario.category_name,
-        scenario.subcategory_name,
-        scenarioEvaluation.scenario_description,
-        scenarioEvaluation.likelihood_score,
-        assessment.industry,
-        assessment.company_size
-      );
-
-      console.log('生成的策略分析:', analysis);
-
-      setStrategyAnalyses(prev => ({
-        ...prev,
-        [scenarioKey]: analysis
-      }));
-
-      toast.success(`${scenario.subcategory_name} 的策略分析已生成`);
-    } catch (error) {
-      console.error('策略分析生成失敗:', error);
-      toast.error('策略分析生成失敗，請稍後再試');
-    } finally {
-      setLoadingAnalyses(prev => ({ ...prev, [scenarioKey]: false }));
-    }
-  };
 
   const handleStrategyChange = (scenarioKey: string, strategyType: string) => {
     console.log('策略選擇:', scenarioKey, strategyType);
@@ -168,7 +210,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const scenarioKey = `${scenario.category_name}-${scenario.subcategory_name}`;
     const selectedStrategy = selectedStrategies[scenarioKey];
     const analysis = strategyAnalyses[scenarioKey];
-    const isLoading = loadingAnalyses[scenarioKey];
     
     const isRisk = scenario.category_type === 'risk';
     const IconComponent = isRisk ? AlertTriangle : TrendingUp;
@@ -208,22 +249,28 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {/* 載入狀態 */}
-          {isLoading && (
+          {/* 生成進度狀態 */}
+          {isGenerating && !analysis && (
             <div className="flex items-center justify-center p-6 bg-blue-50 rounded-lg">
               <Loader2 className="h-6 w-6 animate-spin text-blue-600 mr-2" />
-              <span className="text-blue-800">正在生成專屬策略分析...</span>
+              <div className="text-blue-800">
+                <div className="font-medium">正在生成策略分析...</div>
+                <div className="text-sm mt-1">
+                  進度: {generationProgress.completed}/{generationProgress.total}
+                  {generationProgress.current && ` - 當前: ${generationProgress.current}`}
+                </div>
+              </div>
             </div>
           )}
 
           {/* 策略分析結果 */}
-          {analysis && !isLoading && (
+          {analysis && (
             <div className="space-y-4">
               {/* 情境描述 */}
-              {analysis.scenario_summary && (
+              {analysis.scenario_description && (
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <h4 className="font-medium mb-2">情境描述</h4>
-                  <p className="text-gray-700 leading-relaxed">{analysis.scenario_summary}</p>
+                  <p className="text-gray-700 leading-relaxed">{analysis.scenario_description}</p>
                 </div>
               )}
 
@@ -316,9 +363,16 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                 <strong>策略制定進度：</strong>
                 {Object.values(selectedStrategies).filter(s => s).length} / {selectedScenarios.length} 個情境已選擇策略
               </p>
-              <p className="text-xs text-blue-600 mt-1">
-                💡 系統已自動為每個情境生成專屬的策略建議
-              </p>
+              {isGenerating && (
+                <p className="text-xs text-blue-600 mt-1">
+                  🔄 正在並行生成策略分析 ({generationProgress.completed}/{generationProgress.total})
+                </p>
+              )}
+              {!isGenerating && Object.keys(strategyAnalyses).length > 0 && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✅ 已生成 {Object.keys(strategyAnalyses).length} 個情境的策略分析
+                </p>
+              )}
             </div>
             <Badge variant="outline" className="">
               {assessment.company_size} · {assessment.industry}
@@ -339,13 +393,13 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           disabled={
             Object.values(selectedStrategies).filter(s => s).length !== selectedScenarios.length || 
             isSubmitting ||
-            Object.values(loadingAnalyses).some(loading => loading)
+            isGenerating
           }
           size="lg"
           className="px-8"
         >
           {isSubmitting ? '保存中...' : 
-           Object.values(loadingAnalyses).some(loading => loading) ? '分析生成中...' :
+           isGenerating ? `生成中... (${generationProgress.completed}/${generationProgress.total})` :
            `完成策略制定 (${Object.values(selectedStrategies).filter(s => s).length}/${selectedScenarios.length})`}
         </Button>
       </div>
