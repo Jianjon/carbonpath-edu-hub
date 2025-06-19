@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -236,7 +235,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           contextual_description: contextualDescription,
           strategy_recommendations: strategyRecommendations,
           scenario_summary: analysis?.scenario_summary || 
-            `針對${scenario.subcategory_name}情境，${companyContext.industry}企業需要建立完整的${scenario.category_type === 'risk' ? '風險管理' : '機會把握'}機制。建議透過系統性評估與規劃，制定符合企業資源與目標的策略方案，並定期檢討調整，以確保策略有效性與適應性，維持企業在變動環境中的競爭優勢。`
+            `針對${scenario.subcategory_name}情境，${companyContext.industry}企業需要建立完整的${scenario.category_type === 'risk' ? '風險管理' : '機會把握'}機制。建議透過系統性評估與規劃，制定符合企業資源與目標的策略方案，並定期檢討調整，以確保策略有效性與適應性，維持企業在變動環境中的競爭優勢。此情境預計對企業年度營收產生3-8%的潛在影響，建議企業提前布局相關因應措施，並納入中長期策略規劃考量。透過完善的風險評估機制，企業可更精準掌握情境變化趨勢，進而制定更具前瞻性的應對策略，確保在不確定的外部環境中仍能維持穩健營運。`
         }
       }));
 
@@ -246,9 +245,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       setScenarioAnalyses(prev => ({
         ...prev,
         [scenario.id]: {
-          contextual_description: `作為${companyContext.industry}且${companyContext.size}的企業，面對${scenario.subcategory_name}的挑戰時，需要綜合考量企業規模、資源配置與營運特性。建議建立系統性的評估機制，並根據企業實際情況制定適合的應對策略。`,
+          contextual_description: `作為${companyContext.industry}且${companyContext.size}的企業，面對${scenario.subcategory_name}的挑戰時，需要綜合考量企業規模、資源配置與營運特性。建議建立系統性的評估機制，並根據企業實際情況制定適合的應對策略。此情境可能對企業營運成本產生5-15%的影響，特別是在${companyContext.hasCarbonInventory === '已完成' ? '既有碳管理基礎上' : '建立碳管理能力的過程中'}，需要更謹慎的資源配置與時程規劃。建議企業評估內部資源與外部合作機會，制定階段性的實施計畫，確保策略的可行性與有效性。`,
           strategy_recommendations: generateStrategyRecommendations(scenario, companyContext),
-          scenario_summary: `針對${scenario.subcategory_name}情境，企業需要建立完整的管理機制。`
+          scenario_summary: `針對${scenario.subcategory_name}情境，企業需要建立完整的管理機制。此情境預計對企業財務表現產生中等程度影響，建議透過分階段實施策略，降低轉換成本並提升適應能力。企業應考量自身資源限制與市場定位，選擇最適合的應對方式，並建立持續監控機制以確保策略執行效果。同時建議定期檢視外部環境變化，適時調整策略方向，維持企業競爭優勢與營運韌性。`
         }
       }));
     } finally {
@@ -260,46 +259,50 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   const generateContextualDescription = (scenario: any, context: any) => {
-    const templates = {
+    type CategoryType = 'risk' | 'opportunity';
+    type IndustryType = 'manufacturing' | 'finance' | 'technology' | 'retail' | 'construction' | 'transportation' | 'energy' | 'healthcare' | 'hospitality' | 'education' | 'agriculture' | 'other';
+    
+    const templates: Record<CategoryType, Record<IndustryType | 'default', string>> = {
       risk: {
-        manufacturing: `作為${context.size}的${context.industry}企業，${context.revenue ? `（${context.revenue}）` : ''}面對${scenario.subcategory_name}風險時，您的生產製程和供應鏈將首當其衝。${context.hasInternational === '有' ? '由於具備國際營運據點，' : ''}此風險可能導致生產成本上升15-30%，並影響產品競爭力。${context.hasCarbonInventory === '已完成' ? '雖然已完成碳盤查基礎，但仍需' : '特別是在碳盤查基礎尚未完善的情況下，更需要'}建立完整的風險管控機制，以確保營運韌性和長期獲利能力。建議立即評估現有製程的脆弱點，並制定分階段的風險應對計畫。`,
-        default: `根據您企業的基本條件（${context.industry}、${context.size}${context.revenue ? `、${context.revenue}` : ''}），面對${scenario.subcategory_name}的挑戰時，需要考量企業規模限制與資源配置。此情境可能對營收和成本結構帶來顯著影響，${context.hasCarbonInventory === '已完成' ? '基於現有碳盤查基礎，' : '在建立碳盤查機制的同時，'}建議制定符合企業能力的應對策略，並設定可行的執行時程與預算規劃。`
+        manufacturing: `作為${context.size}的${context.industry}企業，${context.revenue ? `（${context.revenue}）` : ''}面對${scenario.subcategory_name}風險時，您的生產製程和供應鏈將首當其衝。${context.hasInternational === '有' ? '由於具備國際營運據點，' : ''}此風險可能導致生產成本上升15-30%，並影響產品競爭力。特別是在碳邊境調整機制(CBAM)實施後，出口產品將面臨額外的碳關稅負擔，預估每年可能增加數百萬至千萬元的額外成本。${context.hasCarbonInventory === '已完成' ? '雖然已完成碳盤查基礎，但仍需' : '特別是在碳盤查基礎尚未完善的情況下，更需要'}建立完整的風險管控機制，包含供應商碳足跡管理、生產流程優化、能源轉換等面向，以確保營運韌性和長期獲利能力。建議立即評估現有製程的脆弱點，制定分階段的風險應對計畫，並考慮申請相關政府補助資源，降低轉型成本負擔。`,
+        finance: `身為${context.size}的${context.industry}企業，${context.revenue ? `（${context.revenue}）` : ''}${scenario.subcategory_name}風險將直接衝擊您的投資組合與放貸政策。氣候風險可能導致不良債權增加10-25%，同時面臨法規要求揭露氣候相關財務風險的壓力。${context.hasInternational === '有' ? '國際業務' : '本土業務'}都需要重新評估風險定價模型，並建立氣候壓力測試機制。${context.hasCarbonInventory === '已完成' ? '基於現有永續管理基礎，' : '在建立永續金融能力的同時，'}建議強化ESG風險評估流程，開發綠色金融商品，並提升氣候風險管理能力，以滿足監管要求並把握永續金融商機。`,
+        default: `根據您企業的基本條件（${context.industry}、${context.size}${context.revenue ? `、${context.revenue}` : ''}），面對${scenario.subcategory_name}的挑戰時，需要考量企業規模限制與資源配置。此情境可能對營收和成本結構帶來顯著影響，預估影響幅度約為年營收的3-12%，具體程度取決於企業的應對策略與執行時程。${context.hasCarbonInventory === '已完成' ? '基於現有碳盤查基礎，' : '在建立碳盤查機制的同時，'}建議制定符合企業能力的應對策略，並設定可行的執行時程與預算規劃。${context.hasInternational === '有' ? '考量國際營運複雜度，' : ''}企業應建立跨部門協調機制，確保策略執行的一致性與有效性，同時建立持續監控與調整機制。`
       },
       opportunity: {
-        manufacturing: `作為${context.size}的${context.industry}企業，${context.revenue ? `（${context.revenue}）` : ''}${scenario.subcategory_name}為您帶來轉型升級的良機。${context.hasInternational === '有' ? '憑藉國際營運經驗，' : ''}此機會可望提升產品附加價值20-40%，並開拓新的市場商機。${context.hasCarbonInventory === '已完成' ? '基於既有的碳管理基礎，' : '建議同步建立碳管理能力，'}能更有效把握綠色轉型趨勢。建議評估投資回收期與預期效益，制定分階段的投資計畫，並考慮申請相關政府補助資源。`,
-        default: `根據您企業的條件（${context.industry}、${context.size}${context.revenue ? `、${context.revenue}` : ''}），${scenario.subcategory_name}提供了業務成長的新契機。此機會可能為企業帶來新的收入來源和競爭優勢，${context.hasCarbonInventory === '已完成' ? '結合現有的永續管理基礎，' : '建議同步強化永續管理能力，'}更能有效把握市場趨勢。建議進行詳細的可行性評估，並制定符合企業資源的投資策略。`
+        manufacturing: `作為${context.size}的${context.industry}企業，${context.revenue ? `（${context.revenue}）` : ''}${scenario.subcategory_name}為您帶來轉型升級的良機。此機會可望透過綠色製程創新、循環經濟模式導入等方式，提升產品附加價值20-40%，並開拓ESG供應鏈、綠色產品等新市場商機。${context.hasInternational === '有' ? '憑藉國際營運經驗，' : ''}更能把握全球淨零轉型趨勢帶來的商機，預估可增加年營收5-15%。${context.hasCarbonInventory === '已完成' ? '基於既有的碳管理基礎，' : '建議同步建立碳管理能力，'}能更有效把握綠色轉型趨勢，並滿足國際客戶的永續供應鏈要求。建議評估投資回收期與預期效益，制定分階段的投資計畫，並考慮申請相關政府補助資源，降低初期投資負擔。`,
+        technology: `身為${context.size}的${context.industry}企業，${context.revenue ? `（${context.revenue}）` : ''}${scenario.subcategory_name}提供了技術創新與市場擴張的重要契機。透過開發氣候科技解決方案、數位轉型服務等，預估可創造年營收10-30%的成長空間。${context.hasInternational === '有' ? '結合國際市場經驗，' : ''}更能掌握全球氣候科技趨勢，開發具競爭力的產品服務。${context.hasCarbonInventory === '已完成' ? '基於現有永續管理經驗，' : '建議同步建立永續營運能力，'}提升企業在ESG科技領域的競爭優勢，並吸引永續投資資金，加速事業發展。`,
+        default: `根據您企業的條件（${context.industry}、${context.size}${context.revenue ? `、${context.revenue}` : ''}），${scenario.subcategory_name}提供了業務成長的新契機。此機會可能為企業帶來新的收入來源和競爭優勢，預估營收成長潛力約8-20%，同時能提升企業在永續發展方面的品牌價值與市場定位。${context.hasCarbonInventory === '已完成' ? '結合現有的永續管理基礎，' : '建議同步強化永續管理能力，'}更能有效把握市場趨勢，滿足利害關係人期待。${context.hasInternational === '有' ? '憑藉國際營運視野，' : ''}建議進行詳細的可行性評估，制定符合企業資源的投資策略，並建立階段性的成效評估機制。`
       }
     };
 
-    const categoryKey = scenario.category_type as 'risk' | 'opportunity';
-    const industryTemplate = templates[categoryKey][assessment.industry as keyof typeof templates[categoryKey]] || 
-                           templates[categoryKey].default;
+    const categoryKey = scenario.category_type as CategoryType;
+    const industryKey = (assessment.industry in templates[categoryKey] ? assessment.industry : 'default') as IndustryType | 'default';
     
-    return industryTemplate;
+    return templates[categoryKey][industryKey];
   };
 
   const generateStrategyRecommendations = (scenario: any, context: any) => {
     if (scenario.category_type === 'risk') {
       return {
-        mitigate: `建議導入${context.industry === 'manufacturing' ? '自動化節能設備和智慧製程監控系統' : '數位化管理工具和節能技術'}，預估投資${context.size === 'large' ? '500-1000萬元' : context.size === 'medium' ? '100-300萬元' : '50-150萬元'}。${context.hasCarbonInventory === '已完成' ? '基於現有碳盤查數據，' : '建議先完成碳盤查，'}制定3-5年的減碳路徑圖，並申請相關節能補助，預期可降低風險影響60-80%。`,
+        mitigate: `建議導入${context.industry === 'manufacturing' ? '自動化節能設備和智慧製程監控系統，包含熱回收系統、變頻器、LED照明等' : context.industry === 'finance' ? 'ESG風險評估系統和綠色金融商品開發' : '數位化管理工具和節能技術'}，預估投資${context.size === 'large' ? '500-1000萬元' : context.size === 'medium' ? '100-300萬元' : '50-150萬元'}。${context.hasCarbonInventory === '已完成' ? '基於現有碳盤查數據，' : '建議先完成碳盤查，'}制定3-5年的減碳路徑圖，設定年減碳3-5%的目標，並申請經濟部節能補助、環保署低碳認證等資源，預期可降低風險影響60-80%，同時減少營運成本8-15%。`,
         
-        transfer: `考慮購買${scenario.subcategory_name.includes('極端天氣') ? '天災責任險和營業中斷險' : '環境責任險和碳風險保險'}，年保費約營收的0.1-0.3%。${context.hasInternational === '有' ? '針對國際據點，' : ''}可與主要客戶協商風險分攤條款，或透過期貨避險工具轉移價格波動風險。建議與專業保險公司討論客製化保單設計。`,
+        transfer: `考慮購買${scenario.subcategory_name.includes('極端天氣') ? '天災責任險和營業中斷險，涵蓋颱風、豪雨、乾旱等' : '環境責任險和碳風險保險，包含碳價波動、法規變更等風險'}，年保費約營收的0.1-0.3%。${context.hasInternational === '有' ? '針對國際據點，考慮跨國保險方案，' : ''}可與主要客戶協商風險分攤條款，或透過碳權期貨、綠電憑證等金融工具轉移價格波動風險。建議與專業保險公司討論客製化保單設計，並評估設立風險互助基金的可行性。`,
         
-        accept: `設立風險準備金約${context.revenue === 'large' ? '500-1000萬元' : context.revenue === 'medium' ? '100-300萬元' : '50-100萬元'}，並建立應急響應機制。${context.industry === 'manufacturing' ? '備妥替代供應商名單和緊急生產計畫，' : '制定業務持續營運計畫，'}定期進行風險壓力測試，確保企業能承受短期衝擊並逐步改善體質。`,
+        accept: `設立風險準備金約${context.revenue === 'large' ? '500-1000萬元' : context.revenue === 'medium' ? '100-300萬元' : '50-100萬元'}，相當於月營收的1-2倍，並建立應急響應機制。${context.industry === 'manufacturing' ? '備妥替代供應商名單和緊急生產計畫，建立多元化供應鏈' : '制定業務持續營運計畫，包含遠距辦公、數位化流程等'}，定期進行風險壓力測試，模擬不同情境下的財務衝擊，確保企業能承受短期衝擊並逐步改善體質。同時建立董事會層級的風險治理機制。`,
         
-        control: `建立${scenario.subcategory_name}風險監控儀表板，設定關鍵預警指標（如${context.industry === 'manufacturing' ? '能耗、排放量、供應鏈穩定度' : '營運成本、法規變化、市場波動'}）。成立跨部門風險管理小組，每季檢討風險狀況，並建立標準作業程序。投資監控系統約${context.size === 'large' ? '50-100萬元' : '20-50萬元'}。`
+        control: `建立${scenario.subcategory_name}風險監控儀表板，設定關鍵預警指標（如${context.industry === 'manufacturing' ? '能耗密度、碳排放量、供應鏈穩定度、原物料價格' : '營運成本、法規變化指數、市場波動率、客戶滿意度'}）。成立跨部門風險管理小組，每季檢討風險狀況，每月更新風險矩陣，並建立標準作業程序與應變手冊。投資監控系統約${context.size === 'large' ? '50-100萬元' : '20-50萬元'}，包含數據收集、分析預警、自動報告等功能。`
       };
     } else {
       return {
-        evaluate_explore: `建議投入${context.size === 'large' ? '100-300萬元' : context.size === 'medium' ? '50-150萬元' : '20-80萬元'}進行市場研究和技術評估。${context.industry === 'manufacturing' ? '分析生產線改善潛力和產品升級可行性，' : '評估服務模式創新和數位轉型機會，'}委託專業顧問進行投資報酬率分析，預期評估期3-6個月。`,
+        evaluate_explore: `建議投入${context.size === 'large' ? '100-300萬元' : context.size === 'medium' ? '50-150萬元' : '20-80萬元'}進行市場研究和技術評估，包含可行性分析、競爭對手研究、法規環境評估等。${context.industry === 'manufacturing' ? '分析生產線改善潛力和產品升級可行性，評估循環經濟、綠色製程等創新模式' : '評估服務模式創新和數位轉型機會，探索ESG科技、永續金融等新興領域'}，委託專業顧問進行投資報酬率分析，預期評估期3-6個月，ROI目標設定15-25%。`,
         
-        capability_building: `規劃${context.industry === 'manufacturing' ? '製程技術和品質管理' : '數位技能和永續管理'}人才培訓計畫，預算${context.size === 'large' ? '200-400萬元' : context.size === 'medium' ? '80-200萬元' : '30-100萬元'}。建立內部創新團隊，並考慮與大學或研究機構合作，強化技術研發能量。預期18-24個月建立核心能力。`,
+        capability_building: `規劃${context.industry === 'manufacturing' ? '製程技術和品質管理、環境工程、永續供應鏈管理' : '數位技能和永續管理、ESG報告、綠色金融'}等人才培訓計畫，預算${context.size === 'large' ? '200-400萬元' : context.size === 'medium' ? '80-200萬元' : '30-100萬元'}。建立內部創新團隊，設立永續發展部門或綠色創新實驗室，並考慮與大學或研究機構合作，申請產學合作計畫，強化技術研發能量。預期18-24個月建立核心能力，培養20-50位專業人才。`,
         
-        business_transformation: `制定${context.industry}數位轉型和永續發展策略，投資${context.size === 'large' ? '500-1500萬元' : context.size === 'medium' ? '200-600萬元' : '100-300萬元'}進行業務模式調整。${context.hasInternational === '有' ? '整合國際資源，' : ''}開發新產品線或服務項目，預期2-3年完成轉型，帶來20-50%營收成長。`,
+        business_transformation: `制定${context.industry}數位轉型和永續發展策略，投資${context.size === 'large' ? '500-1500萬元' : context.size === 'medium' ? '200-600萬元' : '100-300萬元'}進行業務模式調整，包含產品服務創新、通路策略優化、組織結構調整等。${context.hasInternational === '有' ? '整合國際資源，建立全球永續供應鏈，' : ''}開發ESG產品線或綠色服務項目，預期2-3年完成轉型，帶來20-50%營收成長，並提升企業ESG評等至前25%。`,
         
-        cooperation_participation: `尋求與${context.industry === 'manufacturing' ? '上下游廠商和技術供應商' : '同業夥伴和解決方案提供商'}的策略合作。參與產業聯盟或政府綠色轉型計畫，共同投資約${context.size === 'large' ? '300-800萬元' : context.size === 'medium' ? '100-300萬元' : '50-150萬元'}。透過合作分攤風險，加速市場進入。`,
+        cooperation_participation: `尋求與${context.industry === 'manufacturing' ? '上下游廠商和技術供應商、環保科技公司' : '同業夥伴和解決方案提供商、永續顧問公司'}的策略合作。參與產業聯盟（如台灣淨零排放協會）或政府綠色轉型計畫，共同投資約${context.size === 'large' ? '300-800萬元' : context.size === 'medium' ? '100-300萬元' : '50-150萬元'}。透過合作分攤風險，加速市場進入，並建立產業生態系，預期合作效益可提升投資效率30-50%。`,
         
-        aggressive_investment: `大膽投資${context.industry === 'manufacturing' ? '先進生產設備和自動化系統' : '創新技術和市場擴張'}，預算${context.size === 'large' ? '1000-3000萬元' : context.size === 'medium' ? '300-1000萬元' : '150-500萬元'}。${context.revenue === 'large' ? '憑藉充足資金實力，' : '可考慮申請政府補助或引進策略投資者，'}搶佔市場先機，預期3-5年回收投資。`
+        aggressive_investment: `大膽投資${context.industry === 'manufacturing' ? '先進生產設備和自動化系統、再生能源設施、循環經濟基礎建設' : '創新技術和市場擴張、數位平台、永續金融商品開發'}，預算${context.size === 'large' ? '1000-3000萬元' : context.size === 'medium' ? '300-1000萬元' : '150-500萬元'}。${context.revenue === 'large' ? '憑藉充足資金實力，' : '可考慮申請國發基金、綠色金融或引進策略投資者，'}搶佔市場先機，建立技術護城河，預期3-5年回收投資，並成為產業標竿企業。`
       };
     }
   };
