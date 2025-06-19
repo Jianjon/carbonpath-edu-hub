@@ -6,9 +6,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { INDUSTRIES, COMPANY_SIZES, REVENUE_RANGES, SUPPLY_CHAIN_OPTIONS, SUSTAINABILITY_TEAM_OPTIONS, EMISSION_SOURCES } from '@/types/tcfd';
 import { Building2, Users, FileCheck, Globe, DollarSign, Link, Shield, Zap, FileText } from 'lucide-react';
-import TCFDLayout from './shared/TCFDLayout';
 import TCFDContentCard from './shared/TCFDContentCard';
 import TCFDFormSection from './shared/TCFDFormSection';
+import InfoCard from '../shared/InfoCard';
 
 interface TCFDStage1Props {
   onComplete: (data: {
@@ -90,74 +90,94 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
   const placeholderText = getBusinessDescriptionPlaceholder(industry, companySize);
 
   return (
-    <TCFDLayout
-      stage="第一階段"
-      title="基本條件輸入"
-      description="請提供您的企業基本資訊，這些資料將作為後續風險與機會分析的基礎。資訊愈完整，AI 分析結果愈精準。"
-      icon={Building2}
-    >
-      {/* TCFD 介紹卡片 */}
-      <TCFDContentCard title="關於 TCFD 模擬器" icon={FileText}>
-        <div className="space-y-6">
-          <div className="text-center space-y-4">
-            <p className="text-slate-700 leading-relaxed">
-              氣候相關財務揭露工作小組（<span className="font-semibold text-slate-800">Task Force on Climate-related Financial Disclosures, TCFD</span>）
-              建議企業在年度財務申報中揭露氣候相關的財務資訊，協助投資者和其他利害關係人了解氣候變化對企業的影響。
-            </p>
-          </div>
-
-          <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-            <h3 className="text-lg font-semibold text-slate-800 mb-4 text-center">模組功能與特色</h3>
-            
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div className="space-y-3">
-                <h4 className="font-semibold text-slate-800">🎯 智能化評估</h4>
-                <ul className="text-sm text-slate-600 space-y-2 leading-relaxed">
-                  <li>• 根據產業特性客製化風險與機會識別</li>
-                  <li>• AI 生成情境分析與財務影響評估</li>
-                  <li>• 自動化報告產出，符合 TCFD 架構</li>
-                </ul>
-              </div>
-              <div className="space-y-3">
-                <h4 className="font-semibold text-slate-800">📊 專業級輸出</h4>
-                <ul className="text-sm text-slate-600 space-y-2 leading-relaxed">
-                  <li>• 完整四大核心要素分析報告</li>
-                  <li>• 可直接參考的揭露內容草稿</li>
-                  <li>• 財務影響量化分析與策略建議</li>
-                </ul>
-              </div>
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* 統一的標題區 */}
+      <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-lg">
+        <div className="text-center space-y-4 py-8 px-6">
+          <div className="flex items-center justify-center space-x-3">
+            <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center">
+              <Building2 className="h-6 w-6 text-white" />
             </div>
-
-            <div className="border-t border-slate-200 pt-6">
-              <h4 className="text-base font-semibold text-slate-800 mb-4 text-center">五步驟完成評估</h4>
-              <div className="flex flex-wrap justify-center items-center gap-4 text-sm">
-                {[
-                  { step: 1, title: '基本資料', desc: '企業基本資訊' },
-                  { step: 2, title: '風險機會', desc: '選擇相關項目' },
-                  { step: 3, title: 'AI 分析', desc: '情境評估生成' },
-                  { step: 4, title: '策略制定', desc: '財務影響分析' },
-                  { step: 5, title: '報告產出', desc: 'TCFD 報告' }
-                ].map((item, index) => (
-                  <div key={item.step} className="flex items-center">
-                    <div className="text-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                        item.step === 1 ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-600'
-                      }`}>
-                        {item.step}
-                      </div>
-                      <div className="mt-2 max-w-20">
-                        <div className="font-medium text-slate-800 text-xs">{item.title}</div>
-                        <div className="text-xs text-slate-600">{item.desc}</div>
-                      </div>
-                    </div>
-                    {index < 4 && <div className="mx-2 text-slate-400">→</div>}
-                  </div>
-                ))}
-              </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-800">
+                第一階段：基本條件輸入
+              </h1>
             </div>
           </div>
+          <p className="text-slate-600 text-base leading-relaxed max-w-3xl mx-auto">
+            請提供您的企業基本資訊，這些資料將作為後續風險與機會分析的基礎。資訊愈完整，AI 分析結果愈精準。
+          </p>
         </div>
-      </TCFDContentCard>
+      </div>
+
+      {/* TCFD 介紹卡片 */}
+      <InfoCard
+        icon={FileText}
+        title="關於 TCFD 模擬器"
+        description={
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <p className="text-slate-700 leading-relaxed">
+                氣候相關財務揭露工作小組（<span className="font-semibold text-slate-800">Task Force on Climate-related Financial Disclosures, TCFD</span>）
+                建議企業在年度財務申報中揭露氣候相關的財務資訊，協助投資者和其他利害關係人了解氣候變化對企業的影響。
+              </p>
+            </div>
+
+            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4 text-center">模組功能與特色</h3>
+              
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-slate-800">🎯 智能化評估</h4>
+                  <ul className="text-sm text-slate-600 space-y-2 leading-relaxed">
+                    <li>• 根據產業特性客製化風險與機會識別</li>
+                    <li>• AI 生成情境分析與財務影響評估</li>
+                    <li>• 自動化報告產出，符合 TCFD 架構</li>
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-slate-800">📊 專業級輸出</h4>
+                  <ul className="text-sm text-slate-600 space-y-2 leading-relaxed">
+                    <li>• 完整四大核心要素分析報告</li>
+                    <li>• 可直接參考的揭露內容草稿</li>
+                    <li>• 財務影響量化分析與策略建議</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-200 pt-6">
+                <h4 className="text-base font-semibold text-slate-800 mb-4 text-center">五步驟完成評估</h4>
+                <div className="flex flex-wrap justify-center items-center gap-4 text-sm">
+                  {[
+                    { step: 1, title: '基本資料', desc: '企業基本資訊' },
+                    { step: 2, title: '風險機會', desc: '選擇相關項目' },
+                    { step: 3, title: 'AI 分析', desc: '情境評估生成' },
+                    { step: 4, title: '策略制定', desc: '財務影響分析' },
+                    { step: 5, title: '報告產出', desc: 'TCFD 報告' }
+                  ].map((item, index) => (
+                    <div key={item.step} className="flex items-center">
+                      <div className="text-center">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                          item.step === 1 ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {item.step}
+                        </div>
+                        <div className="mt-2 max-w-20">
+                          <div className="font-medium text-slate-800 text-xs">{item.title}</div>
+                          <div className="text-xs text-slate-600">{item.desc}</div>
+                        </div>
+                      </div>
+                      {index < 4 && <div className="mx-2 text-slate-400">→</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+        themeColor="blue"
+        className="mb-8"
+      />
 
       {/* 主要表單 */}
       <TCFDContentCard title="企業基本資訊" icon={Building2}>
@@ -336,7 +356,7 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
           </div>
         </form>
       </TCFDContentCard>
-    </TCFDLayout>
+    </div>
   );
 };
 
