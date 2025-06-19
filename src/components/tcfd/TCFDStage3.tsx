@@ -22,6 +22,13 @@ interface GenerationProgress {
   current: string;
 }
 
+interface SelectedStrategyData {
+  scenarioKey: string;
+  strategy: string;
+  analysis: any;
+  notes: string;
+}
+
 const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const { riskOpportunitySelections } = useTCFDAssessment(assessment.id);
   const { 
@@ -60,6 +67,48 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     return translations[text] || text;
   };
 
+  // 生成具體的情境描述
+  const generateDetailedScenarioDescription = (scenario: any): string => {
+    const industryText = getChineseText(assessment.industry);
+    const sizeText = getChineseText(assessment.company_size);
+    const isRisk = scenario.category_type === 'risk';
+
+    // 根據不同類別生成具體描述
+    if (scenario.category_name === '政策和法規') {
+      if (scenario.subcategory_name.includes('碳定價')) {
+        return `主管機關預計於2026年正式實施碳費徵收制度，${sizeText}${industryText}企業將面臨每噸碳排放300-500元的徵收標準。此政策將直接影響企業營運成本結構，需要建立完整的碳排放盤查與申報機制。對於${industryText}而言，這將導致能源使用成本增加15-25%，同時需投入人力進行月度碳排放數據收集與季度申報作業。企業需重新評估能源採購策略，考慮導入再生能源或提升能源效率設備，預估初期合規成本將佔營收的2-3%。此外，供應商選擇也將納入碳足跡考量，可能影響既有供應鏈合作關係，並增加採購程序的複雜度。`;
+      } else if (scenario.subcategory_name.includes('強制性報告')) {
+        return `金管會規劃自2025年起，要求${sizeText}以上企業強制揭露氣候相關財務資訊，${industryText}企業需依循TCFD框架進行年度報告。此要求將使企業面臨全新的資訊揭露義務，需建立跨部門協作機制，包含財務、永續、營運等單位的整合。企業必須投入專職人力進行氣候風險識別、情境分析及財務量化評估，預估需要6-12個月的準備期建立相關制度。對於${industryText}來說，這將增加每年約200-500萬元的顧問費用及內部人力成本，同時需要董事會層級的治理參與。未能及時完成揭露將面臨主管機關裁罰，影響企業聲譽及投資人信心。`;
+      }
+    }
+
+    if (scenario.category_name === '技術') {
+      if (scenario.subcategory_name.includes('低碳技術')) {
+        return `市場對低碳技術解決方案的需求急速增長，${industryText}企業面臨技術轉型的關鍵時期。${sizeText}企業需要評估導入節能設備、智慧化系統或替代能源技術，以滿足客戶對低碳服務的期待。此轉型將要求企業投入大量資本支出，預估設備更新成本為既有設備價值的30-50%。對於${industryText}而言，技術升級將改變營運流程，需要員工重新培訓，並可能面臨3-6個月的磨合期影響營運效率。同時，新技術的維護成本及技術支援需求將增加營運複雜度，但成功轉型後可望獲得政府補助及綠色金融優惠，並提升市場競爭力，預期可帶來10-20%的營運效率提升。`;
+      }
+    }
+
+    if (scenario.category_name === '實體風險') {
+      if (scenario.subcategory_name.includes('極端天氣')) {
+        return `氣候變遷導致極端降雨及颱風強度增強，對${industryText}的${sizeText}企業營運場所造成直接威脅。根據氣象局資料，未來十年極端降雨事件發生頻率將增加40%，單次降雨量可能超過歷史記錄。此情境將使企業面臨設施淹水、停電及交通中斷等營運中斷風險，特別是位於低窪地區或沿海區域的設施。對於${industryText}來說，每次極端天氣事件可能造成3-7天的營運中斷，直接影響營收並增加緊急應變成本。企業需要投資防災設備、備援系統及緊急應變計畫，預估防災投資成本約為設施價值的5-10%。同時，保險費用將因風險提高而增加，供應鏈中斷也將影響正常營運節奏。`;
+      }
+    }
+
+    if (scenario.category_name === '市場') {
+      if (scenario.subcategory_name.includes('消費者偏好改變')) {
+        return `消費者環保意識抬頭，對低碳產品及服務的需求快速成長，${industryText}企業需要重新定位產品策略以符合市場期待。市場調查顯示，超過60%的消費者願意為環保產品支付10-15%的溢價，這為${sizeText}企業創造了差異化競爭的機會。然而，此趨勢也要求企業投入產品研發、認證取得及行銷宣傳，以建立綠色品牌形象。對於${industryText}而言，需要重新設計服務流程，導入環保材料或低碳作業方式，預估產品開發週期將延長2-3個月。企業必須投資綠色供應鏈建置，可能面臨原料成本上升15-25%的壓力，但成功轉型後可獲得新的客群及市場區隔，預期可提升品牌價值及客戶忠誠度。`;
+      }
+    }
+
+    // 機會類情境
+    if (scenario.category_name === '資源效率') {
+      return `透過數位化及自動化技術提升資源使用效率，${sizeText}${industryText}企業可以顯著降低營運成本並提升競爭力。智慧化系統導入將使企業能夠即時監控能源、水資源及原料使用情況，透過數據分析優化作業流程。此機會要求企業投入數位轉型，包含IoT設備、數據分析平台及員工培訓，預估初期投資約為年營收的3-5%。對於${industryText}來說，系統化管理將使資源使用效率提升20-30%，每年可節省能源成本15-25%。同時，精確的資源控制有助於減少浪費，提升產品品質穩定性。企業需要6-12個月的導入期，期間可能面臨作業流程調整的挑戰，但長期而言將建立可持續的成本優勢及營運韌性。`;
+    }
+
+    // 預設通用描述
+    return `${scenario.category_name}類型的${scenario.subcategory_name}情境將對${sizeText}${industryText}企業產生${isRisk ? '重要風險影響' : '潛在發展機會'}。此情境要求企業重新評估現有營運模式，投入相應資源進行應對準備。預計將影響企業的成本結構、作業流程及市場定位，需要管理層制定明確的因應策略。企業應建立跨部門協作機制，定期評估影響程度並調整應對措施，以確保營運韌性及競爭優勢的維持。`;
+  };
+
   // 優化：並行生成所有策略分析
   const generateAllStrategiesAnalysis = useCallback(async () => {
     if (selectedScenarios.length === 0) return;
@@ -84,6 +133,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           current: scenario.subcategory_name 
         }));
 
+        // 生成具體的情境描述
+        const detailedDescription = generateDetailedScenarioDescription(scenario);
+
         // 尋找對應的scenario evaluation或創建默認值
         let scenarioEvaluation = scenarioEvaluations.find(evaluation => 
           evaluation.category_name === scenario.category_name && 
@@ -91,14 +143,13 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         );
 
         if (!scenarioEvaluation) {
-          const defaultDescription = `${scenario.category_name}類型的${scenario.subcategory_name}情境，對${assessment.industry}行業的${assessment.company_size}企業可能造成${scenario.category_type === 'risk' ? '風險' : '機會'}影響。`;
           scenarioEvaluation = {
             id: `temp-${Date.now()}-${index}`,
             assessment_id: assessment.id,
             risk_opportunity_id: scenario.id,
             category_name: scenario.category_name,
             subcategory_name: scenario.subcategory_name,
-            scenario_description: defaultDescription,
+            scenario_description: detailedDescription,
             scenario_generated_by_llm: false,
             likelihood_score: 2,
             user_score: 2,
@@ -110,7 +161,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           scenario.category_type,
           scenario.category_name,
           scenario.subcategory_name,
-          scenarioEvaluation.scenario_description,
+          detailedDescription, // 使用生成的詳細描述
           scenarioEvaluation.likelihood_score,
           assessment.industry,
           assessment.company_size
@@ -122,7 +173,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           completed: prev.completed + 1 
         }));
 
-        return { scenarioKey, analysis };
+        return { scenarioKey, analysis: { ...analysis, scenario_description: detailedDescription } };
       } catch (error) {
         console.error(`策略分析生成失敗 (${scenarioKey}):`, error);
         toast.error(`${scenario.subcategory_name} 策略分析生成失敗`);
@@ -215,6 +266,23 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
     setIsSubmitting(true);
     try {
+      // 準備傳遞給第四階段的資料
+      const strategySelections: SelectedStrategyData[] = selectedScenarios.map(scenario => {
+        const scenarioKey = `${scenario.category_name}-${scenario.subcategory_name}`;
+        return {
+          scenarioKey,
+          strategy: selectedStrategies[scenarioKey],
+          analysis: strategyAnalyses[scenarioKey],
+          notes: notes[scenarioKey] || ''
+        };
+      });
+
+      // 將資料存儲到 sessionStorage 供第四階段使用
+      sessionStorage.setItem('tcfd-stage3-results', JSON.stringify({
+        assessment,
+        strategySelections
+      }));
+
       toast.success('策略選擇已完成');
       onComplete();
     } catch (error) {
@@ -266,14 +334,14 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             </div>
           </div>
           
-          {/* 情境描述 - 使用生成的描述 */}
+          {/* 情境描述 - 使用詳細生成的描述 */}
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-2 flex items-center">
               <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
               情境描述
             </h4>
             <p className="text-gray-700 leading-relaxed text-sm">
-              {analysis?.scenario_summary || analysis?.scenario_description || '正在生成情境描述...'}
+              {analysis?.scenario_description || generateDetailedScenarioDescription(scenario)}
             </p>
           </div>
         </CardHeader>
