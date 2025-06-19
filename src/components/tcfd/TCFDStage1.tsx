@@ -9,7 +9,6 @@ import TCFDContentCard from './shared/TCFDContentCard';
 import TCFDFormSection from './shared/TCFDFormSection';
 import TCFDProcessFlow from './shared/TCFDProcessFlow';
 import InfoCard from '../shared/InfoCard';
-
 interface TCFDStage1Props {
   onComplete: (data: {
     industry: string;
@@ -23,7 +22,6 @@ interface TCFDStage1Props {
     business_description?: string;
   }) => void;
 }
-
 const getBusinessDescriptionPlaceholder = (industry: string, companySize: string) => {
   const suggestions = {
     '製造業': {
@@ -42,15 +40,13 @@ const getBusinessDescriptionPlaceholder = (industry: string, companySize: string
       '微型企業': '投資顧問公司，專精於個人理財規劃及投資諮詢服務。'
     }
   };
-
   const industryKey = Object.keys(suggestions).find(key => industry.includes(key)) || '製造業';
-  const sizeKey = companySize.includes('大型') ? '大型企業' : 
-                 companySize.includes('中') ? '中小企業' : '微型企業';
-  
+  const sizeKey = companySize.includes('大型') ? '大型企業' : companySize.includes('中') ? '中小企業' : '微型企業';
   return suggestions[industryKey]?.[sizeKey] || '請簡述貴公司主要營運型態、產品服務、目標市場等資訊...';
 };
-
-const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
+const TCFDStage1 = ({
+  onComplete
+}: TCFDStage1Props) => {
   const [industry, setIndustry] = useState('');
   const [companySize, setCompanySize] = useState('');
   const [hasCarbonInventory, setHasCarbonInventory] = useState(false);
@@ -61,11 +57,9 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
   const [mainEmissionSource, setMainEmissionSource] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!industry || !companySize) return;
-
     setIsSubmitting(true);
     try {
       await onComplete({
@@ -85,21 +79,13 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
       setIsSubmitting(false);
     }
   };
-
   const isValid = industry && companySize;
   const placeholderText = getBusinessDescriptionPlaceholder(industry, companySize);
-
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
+  return <div className="max-w-4xl mx-auto space-y-8">
       {/* 標題區 - 統一風格 */}
       <div className="text-center space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 flex justify-center items-center gap-3">
-          <Building2 className="h-8 w-8 text-blue-600" />
-          TCFD 氣候風險財務揭露
-        </h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          依據 TCFD 官方框架，協助企業完成風險與機會評估，並自動生成報告草稿
-        </p>
+        
+        
       </div>
 
       {/* 流程圖 - 統一風格 */}
@@ -109,27 +95,21 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
       <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 border border-blue-200">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Target className="h-6 w-6 text-blue-600" />
-            </div>
+            
             <h3 className="font-semibold text-gray-900 mb-2">智能化評估</h3>
             <p className="text-sm text-gray-600">
               根據產業特性客製化風險識別，AI 驅動的情境分析與評估
             </p>
           </div>
           <div className="text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Lightbulb className="h-6 w-6 text-green-600" />
-            </div>
+            
             <h3 className="font-semibold text-gray-900 mb-2">專業級輸出</h3>
             <p className="text-sm text-gray-600">
               涵蓋 TCFD 四大核心要素，可直接參考的揭露內容草稿
             </p>
           </div>
           <div className="text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <ShieldCheck className="h-6 w-6 text-purple-600" />
-            </div>
+            
             <h3 className="font-semibold text-gray-900 mb-2">法規合規</h3>
             <p className="text-sm text-gray-600">
               符合金管會 ESG 資訊揭露要求，對接國際 TCFD 框架標準
@@ -150,40 +130,28 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* 基本資訊區塊 */}
           <div className="grid md:grid-cols-2 gap-6">
-            <TCFDFormSection
-              title="產業別"
-              description="請選擇最符合您企業的主要產業分類"
-              required
-            >
+            <TCFDFormSection title="產業別" description="請選擇最符合您企業的主要產業分類" required>
               <Select value={industry} onValueChange={setIndustry}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="請選擇您的產業別" />
                 </SelectTrigger>
                 <SelectContent>
-                  {INDUSTRIES.map((ind) => (
-                    <SelectItem key={ind.value} value={ind.value}>
+                  {INDUSTRIES.map(ind => <SelectItem key={ind.value} value={ind.value}>
                       {ind.label}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </TCFDFormSection>
 
-            <TCFDFormSection
-              title="企業規模"
-              description="請根據員工人數或營業額選擇企業規模"
-              required
-            >
+            <TCFDFormSection title="企業規模" description="請根據員工人數或營業額選擇企業規模" required>
               <Select value={companySize} onValueChange={setCompanySize}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="請選擇您的企業規模" />
                 </SelectTrigger>
                 <SelectContent>
-                  {COMPANY_SIZES.map((size) => (
-                    <SelectItem key={size.value} value={size.value}>
+                  {COMPANY_SIZES.map(size => <SelectItem key={size.value} value={size.value}>
                       {size.label}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </TCFDFormSection>
@@ -194,7 +162,7 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
             <h3 className="text-base font-semibold text-gray-900 mb-4">專業評估資訊</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <TCFDFormSection title="國際營運狀況" description="是否有跨地區或國際營運據點">
-                <Select value={hasInternationalOperations?.toString() || ''} onValueChange={(value) => setHasInternationalOperations(value === 'true')}>
+                <Select value={hasInternationalOperations?.toString() || ''} onValueChange={value => setHasInternationalOperations(value === 'true')}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="請選擇" />
                   </SelectTrigger>
@@ -211,11 +179,9 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
                     <SelectValue placeholder="請選擇營業額區間" />
                   </SelectTrigger>
                   <SelectContent>
-                    {REVENUE_RANGES.map((range) => (
-                      <SelectItem key={range.value} value={range.value}>
+                    {REVENUE_RANGES.map(range => <SelectItem key={range.value} value={range.value}>
                         {range.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </TCFDFormSection>
@@ -226,11 +192,9 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
                     <SelectValue placeholder="請選擇" />
                   </SelectTrigger>
                   <SelectContent>
-                    {SUPPLY_CHAIN_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                    {SUPPLY_CHAIN_OPTIONS.map(option => <SelectItem key={option.value} value={option.value}>
                         {option.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </TCFDFormSection>
@@ -241,11 +205,9 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
                     <SelectValue placeholder="請選擇" />
                   </SelectTrigger>
                   <SelectContent>
-                    {SUSTAINABILITY_TEAM_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                    {SUSTAINABILITY_TEAM_OPTIONS.map(option => <SelectItem key={option.value} value={option.value}>
                         {option.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </TCFDFormSection>
@@ -258,11 +220,9 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
                     <SelectValue placeholder="請選擇主要排放源" />
                   </SelectTrigger>
                   <SelectContent>
-                    {EMISSION_SOURCES.map((source) => (
-                      <SelectItem key={source.value} value={source.value}>
+                    {EMISSION_SOURCES.map(source => <SelectItem key={source.value} value={source.value}>
                         {source.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </TCFDFormSection>
@@ -273,11 +233,7 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
           <div className="border-t border-gray-200 pt-6">
             <TCFDFormSection title="碳盤查完成狀態" description="是否已完成溫室氣體盤查作業">
               <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <Checkbox 
-                  id="carbon_inventory" 
-                  checked={hasCarbonInventory} 
-                  onCheckedChange={(checked) => setHasCarbonInventory(!!checked)} 
-                />
+                <Checkbox id="carbon_inventory" checked={hasCarbonInventory} onCheckedChange={checked => setHasCarbonInventory(!!checked)} />
                 <label htmlFor="carbon_inventory" className="text-sm text-gray-700 cursor-pointer">
                   我們已完成溫室氣體盤查（GHG Inventory）
                 </label>
@@ -287,18 +243,8 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
 
           {/* 組織營運簡述 */}
           <div className="border-t border-gray-200 pt-6">
-            <TCFDFormSection 
-              title="組織營運簡述" 
-              description="請簡述企業主要營運型態、產品服務等（選填，200字內）"
-            >
-              <Textarea 
-                placeholder={placeholderText}
-                value={businessDescription} 
-                onChange={(e) => setBusinessDescription(e.target.value)} 
-                maxLength={200} 
-                rows={4}
-                className="resize-none" 
-              />
+            <TCFDFormSection title="組織營運簡述" description="請簡述企業主要營運型態、產品服務等（選填，200字內）">
+              <Textarea placeholder={placeholderText} value={businessDescription} onChange={e => setBusinessDescription(e.target.value)} maxLength={200} rows={4} className="resize-none" />
               <div className="flex justify-between items-center text-sm mt-2">
                 <p className="text-gray-500">
                   {businessDescription.length}/200 字
@@ -312,18 +258,12 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
 
           {/* 提交按鈕 */}
           <div className="flex justify-center pt-6">
-            <Button 
-              type="submit" 
-              disabled={!isValid || isSubmitting} 
-              className="px-8 py-3 text-base"
-            >
+            <Button type="submit" disabled={!isValid || isSubmitting} className="px-8 py-3 text-base">
               {isSubmitting ? '建立評估中...' : '開始 TCFD 評估'}
             </Button>
           </div>
         </form>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default TCFDStage1;
