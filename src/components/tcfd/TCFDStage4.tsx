@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +27,6 @@ interface Stage3Results {
 }
 
 const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
-  const {
-    saveStrategyAnalysis,
-    loading
-  } = useTCFDAssessment(assessment.id);
-
   const [stage3Results, setStage3Results] = useState<Stage3Results | null>(null);
   const [userModifications, setUserModifications] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,15 +62,6 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     'business_transformation': '商業轉換',
     'cooperation_participation': '合作參與',
     'aggressive_investment': '積極投入'
-  };
-
-  // 生成 UUID 的輔助函數
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
   };
 
   useEffect(() => {
@@ -116,34 +101,14 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
         completedAt: new Date().toISOString()
       };
 
-      for (const selection of stage3Results.strategySelections) {
-        const modifications = userModifications[selection.scenarioKey];
-        const scenarioEvaluationId = generateUUID(); // 生成真正的 UUID
-
-        await saveStrategyAnalysis({
-          assessment_id: assessment.id,
-          scenario_evaluation_id: scenarioEvaluationId,
-          detailed_description: selection.analysis?.scenario_description || '',
-          financial_impact_pnl: '',
-          financial_impact_cashflow: '',
-          financial_impact_balance_sheet: '',
-          strategy_avoid: '',
-          strategy_accept: '',
-          strategy_transfer: '',
-          strategy_mitigate: '',
-          selected_strategy: selection.strategy,
-          user_modifications: modifications,
-          generated_by_llm: true,
-        });
-      }
-      
-      // 將第四階段結果儲存到 sessionStorage 供第五階段使用
+      // 直接將第四階段結果儲存到 sessionStorage，不依賴資料庫
       sessionStorage.setItem('tcfd-stage4-results', JSON.stringify(stage4Results));
-      console.log('第四階段結果已儲存:', stage4Results);
+      console.log('第四階段結果已儲存到 sessionStorage:', stage4Results);
       
+      // 直接完成第四階段，進入第五階段
       onComplete();
     } catch (error) {
-      console.error('Error saving strategy analysis:', error);
+      console.error('Error saving stage 4 results:', error);
     } finally {
       setIsSubmitting(false);
     }

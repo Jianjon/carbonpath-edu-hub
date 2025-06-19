@@ -54,13 +54,15 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
   };
 
   useEffect(() => {
+    console.log('第五階段正在載入資料...');
+    
     // 優先從 sessionStorage 讀取第四階段的結果
     const storedStage4Results = sessionStorage.getItem('tcfd-stage4-results');
     if (storedStage4Results) {
       try {
         const results: Stage4Results = JSON.parse(storedStage4Results);
         setStage4Results(results);
-        console.log('第五階段載入第四階段結果:', results);
+        console.log('第五階段成功載入第四階段結果:', results);
         return;
       } catch (error) {
         console.error('解析第四階段結果失敗:', error);
@@ -112,6 +114,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
 
       await generateReport(reportData);
       setReportGenerated(true);
+      console.log('報告生成成功');
     } catch (error) {
       console.error('生成報告失敗:', error);
     } finally {
@@ -119,6 +122,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
     }
   };
 
+  // 如果還沒載入到資料，顯示載入畫面
   if (!stage4Results) {
     return (
       <div className="max-w-6xl mx-auto space-y-8">
@@ -141,7 +145,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
             </div>
             <h3 className="text-lg font-medium mb-2">載入分析資料...</h3>
             <p className="text-gray-600">
-              請確保已完成前四個階段的分析
+              正在從前四個階段載入分析結果...
             </p>
           </CardContent>
         </Card>
