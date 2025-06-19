@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -99,9 +98,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       scenarioEvaluation = {
         id: `temp-${Date.now()}`,
         assessment_id: assessment.id,
+        risk_opportunity_id: scenario.id, // 添加缺失的屬性
         category_name: categoryName,
         subcategory_name: subcategoryName,
         scenario_description: defaultDescription,
+        scenario_generated_by_llm: false, // 添加缺失的屬性
         likelihood_score: 2, // 默認中等影響
         user_score: 2,
         created_at: new Date().toISOString()
@@ -198,9 +199,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       scenarioEvaluation = {
         id: `temp-${scenarioKey}`,
         assessment_id: assessment.id,
+        risk_opportunity_id: scenario.id, // 添加缺失的屬性
         category_name: scenario.category_name,
         subcategory_name: scenario.subcategory_name,
         scenario_description: `${scenario.category_name}類型的${scenario.subcategory_name}情境，對${assessment.industry}行業可能造成重要影響。`,
+        scenario_generated_by_llm: false, // 添加缺失的屬性
         likelihood_score: 2,
         user_score: 2,
         created_at: new Date().toISOString()
