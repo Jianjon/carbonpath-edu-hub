@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { INDUSTRIES, COMPANY_SIZES, REVENUE_RANGES, SUPPLY_CHAIN_OPTIONS, SUSTAINABILITY_TEAM_OPTIONS, EMISSION_SOURCES } from '@/types/tcfd';
-import { Building2, Users, FileCheck, Globe, DollarSign, Link, Shield, Zap, FileText, Info } from 'lucide-react';
+import { Building2, Users, FileCheck, Globe, DollarSign, Link, Shield, Zap, FileText, Info, Target, Lightbulb, BarChart3, ClipboardCheck } from 'lucide-react';
 import Stepper, { StepConfig } from '@/components/carbon-tax/Stepper';
 interface TCFDStage1Props {
   onComplete: (data: {
@@ -75,34 +75,117 @@ const TCFDStage1 = ({
   const isValid = industry && companySize;
   return <div className="max-w-6xl mx-auto space-y-8">
       {/* TCFD 架構說明 */}
-      <Card className="bg-gradient-to-r from-blue-50 to-green-50 bg-zinc-50">
-        
-        <CardContent className="space-y-6 bg-zinc-50">
-          
-
-          {/* TCFD 階段圖示 */}
-          <div>
-            <h3 className="font-medium text-gray-900 mb-4 text-center">TCFD 評估五階段流程</h3>
-            <Stepper currentStep={1} steps={tcfdSteps} themeColor="blue" />
+      <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+        <CardContent className="space-y-8 p-8">
+          {/* TCFD 核心理念介紹 */}
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center space-x-3 mb-6">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                <Info className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900">關於 TCFD 架構</h2>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                氣候相關財務揭露工作小組（<span className="font-semibold text-blue-700">Task Force on Climate-related Financial Disclosures, TCFD</span>）
+                建議企業在年度財務申報中揭露氣候相關的財務資訊。
+              </p>
+              
+              <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <Target className="h-5 w-5 text-blue-600 mr-2" />
+                  TCFD 四大核心要素
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <Shield className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">治理 (Governance)</h4>
+                      <p className="text-sm text-gray-600">氣候風險與機會的監督與管理</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                    <Lightbulb className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">策略 (Strategy)</h4>
+                      <p className="text-sm text-gray-600">氣候風險與機會對企業的實際影響</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 p-3 bg-orange-50 rounded-lg">
+                    <Shield className="h-5 w-5 text-orange-600 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">風險管理 (Risk Management)</h4>
+                      <p className="text-sm text-gray-600">識別、評估與管理氣候風險的流程</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 p-3 bg-purple-50 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">指標與目標 (Metrics & Targets)</h4>
+                      <p className="text-sm text-gray-600">衡量與管理氣候風險的指標</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-xl">
-            <h3 className="font-medium text-green-900 mb-2">關於 TCFD 架構</h3>
-            <p className="text-green-800 text-sm leading-relaxed">
-              氣候相關財務揭露工作小組（TCFD）建議企業在年度財務申報中揭露氣候相關的財務資訊。
-              本模擬器將協助您依據 TCFD 四大核心要素（治理、策略、風險管理、指標與目標）
-              完成風險與機會的識別、評估與揭露內容準備。
-            </p>
+          {/* 模擬器功能說明 */}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl border border-green-200">
+            <h3 className="text-xl font-semibold text-green-900 mb-4 flex items-center">
+              <ClipboardCheck className="h-5 w-5 text-green-700 mr-2" />
+              本模擬器將協助您完成
+            </h3>
+            <div className="grid md:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-center space-x-2 text-green-800">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                <span>氣候風險與機會的識別</span>
+              </div>
+              <div className="flex items-center space-x-2 text-green-800">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                <span>情境分析與財務影響評估</span>
+              </div>
+              <div className="flex items-center space-x-2 text-green-800">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                <span>TCFD 報告草稿自動生成</span>
+              </div>
+            </div>
+          </div>
+
+          {/* TCFD 階段圖示 */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">TCFD 評估五階段流程</h3>
+            <Stepper currentStep={1} steps={tcfdSteps} themeColor="blue" />
+            
+            <div className="mt-6 grid md:grid-cols-5 gap-3 text-xs text-gray-600">
+              <div className="text-center">
+                <p className="font-medium">蒐集企業基本資訊</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium">選擇相關風險與機會</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium">AI 生成情境分析</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium">策略制定與財務量化</p>
+              </div>
+              <div className="text-center">
+                <p className="font-medium">產出完整 TCFD 報告</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* 主要表單 */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">第一階段：基本條件輸入</CardTitle>
-          <p className="text-gray-600 text-center">
-            請提供您的企業基本資訊，這些資料將作為後續風險與機會分析的基礎
+        <CardHeader className="text-center space-y-4">
+          <CardTitle className="text-2xl">第一階段：基本條件輸入</CardTitle>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            請提供您的企業基本資訊，這些資料將作為後續風險與機會分析的基礎。
+            資訊愈完整，AI 分析結果愈精準。
           </p>
         </CardHeader>
         <CardContent>
