@@ -1,4 +1,3 @@
-
 export interface TCFDAssessment {
   id: string;
   user_id: string;
@@ -416,18 +415,16 @@ export const COMPANY_SIZES = [
 ];
 
 export const INDUSTRIES = [
-  { value: 'manufacturing', label: '製造業' },
-  { value: 'finance', label: '金融業' },
-  { value: 'technology', label: '科技業' },
+  { value: 'restaurant', label: '餐飲業' },
   { value: 'retail', label: '零售業' },
+  { value: 'manufacturing', label: '製造業' },
   { value: 'construction', label: '營建業' },
   { value: 'transportation', label: '運輸業' },
-  { value: 'energy', label: '能源業' },
-  { value: 'healthcare', label: '醫療保健業' },
-  { value: 'hospitality', label: '餐旅業' },
-  { value: 'education', label: '教育業' },
-  { value: 'agriculture', label: '農業' },
-  { value: 'other', label: '其他' },
+  { value: 'technology', label: '科技業' },
+  { value: 'finance', label: '金融業' },
+  { value: 'healthcare', label: '醫療保健' },
+  { value: 'education', label: '教育服務' },
+  { value: 'hospitality', label: '旅宿業' },
 ];
 
 // 新增的選項定義
