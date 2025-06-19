@@ -24,6 +24,7 @@ export interface RiskOpportunitySelection {
   category_name: string;
   subcategory_name?: string;
   selected: boolean;
+  custom_scenario_description?: string;
   created_at: string;
 }
 
@@ -35,6 +36,7 @@ export interface ScenarioEvaluation {
   scenario_generated_by_llm: boolean;
   user_score?: number;
   llm_response?: string;
+  selected_strategy?: string;
   created_at: string;
 }
 
