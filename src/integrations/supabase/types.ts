@@ -111,6 +111,7 @@ export type Database = {
           has_sustainability_team: string | null
           id: string
           industry: string
+          is_demo_data: boolean | null
           main_emission_source: string | null
           status: string
           supply_chain_carbon_disclosure: string | null
@@ -128,6 +129,7 @@ export type Database = {
           has_sustainability_team?: string | null
           id?: string
           industry: string
+          is_demo_data?: boolean | null
           main_emission_source?: string | null
           status?: string
           supply_chain_carbon_disclosure?: string | null
@@ -145,6 +147,7 @@ export type Database = {
           has_sustainability_team?: string | null
           id?: string
           industry?: string
+          is_demo_data?: boolean | null
           main_emission_source?: string | null
           status?: string
           supply_chain_carbon_disclosure?: string | null
@@ -160,6 +163,7 @@ export type Database = {
           generated_at: string
           governance_content: string | null
           id: string
+          is_demo_data: boolean | null
           json_output: Json | null
           metrics_targets_content: string | null
           pdf_url: string | null
@@ -173,6 +177,7 @@ export type Database = {
           generated_at?: string
           governance_content?: string | null
           id?: string
+          is_demo_data?: boolean | null
           json_output?: Json | null
           metrics_targets_content?: string | null
           pdf_url?: string | null
@@ -186,6 +191,7 @@ export type Database = {
           generated_at?: string
           governance_content?: string | null
           id?: string
+          is_demo_data?: boolean | null
           json_output?: Json | null
           metrics_targets_content?: string | null
           pdf_url?: string | null
@@ -210,6 +216,7 @@ export type Database = {
           category_type: string
           created_at: string
           id: string
+          is_demo_data: boolean | null
           selected: boolean
           subcategory_name: string | null
         }
@@ -219,6 +226,7 @@ export type Database = {
           category_type: string
           created_at?: string
           id?: string
+          is_demo_data?: boolean | null
           selected?: boolean
           subcategory_name?: string | null
         }
@@ -228,6 +236,7 @@ export type Database = {
           category_type?: string
           created_at?: string
           id?: string
+          is_demo_data?: boolean | null
           selected?: boolean
           subcategory_name?: string | null
         }
@@ -246,6 +255,7 @@ export type Database = {
           assessment_id: string
           created_at: string
           id: string
+          is_demo_data: boolean | null
           llm_response: string | null
           risk_opportunity_id: string
           scenario_description: string
@@ -256,6 +266,7 @@ export type Database = {
           assessment_id: string
           created_at?: string
           id?: string
+          is_demo_data?: boolean | null
           llm_response?: string | null
           risk_opportunity_id: string
           scenario_description: string
@@ -266,6 +277,7 @@ export type Database = {
           assessment_id?: string
           created_at?: string
           id?: string
+          is_demo_data?: boolean | null
           llm_response?: string | null
           risk_opportunity_id?: string
           scenario_description?: string
@@ -299,6 +311,7 @@ export type Database = {
           financial_impact_pnl: string | null
           generated_by_llm: boolean
           id: string
+          is_demo_data: boolean | null
           scenario_evaluation_id: string
           selected_strategy: string | null
           strategy_accept: string | null
@@ -316,6 +329,7 @@ export type Database = {
           financial_impact_pnl?: string | null
           generated_by_llm?: boolean
           id?: string
+          is_demo_data?: boolean | null
           scenario_evaluation_id: string
           selected_strategy?: string | null
           strategy_accept?: string | null
@@ -333,6 +347,7 @@ export type Database = {
           financial_impact_pnl?: string | null
           generated_by_llm?: boolean
           id?: string
+          is_demo_data?: boolean | null
           scenario_evaluation_id?: string
           selected_strategy?: string | null
           strategy_accept?: string | null
