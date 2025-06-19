@@ -206,6 +206,37 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
+  // 生成切身相關的情境描述
+  const generateScenarioDescription = (scenario: any, analysis: any) => {
+    const isRisk = scenario.category_type === 'risk';
+    const companyContext = `${assessment.company_size}的${assessment.industry}企業`;
+    
+    // 從分析中提取情境描述，如果沒有就用默認描述
+    if (analysis?.scenario_description) {
+      return analysis.scenario_description;
+    }
+    
+    // 根據不同情境類型生成具體描述
+    const scenarioDescriptions: Record<string, string> = {
+      // 實體風險
+      '急性實體風險-極端天氣事件': `對於${companyContext}而言，極端天氣如颱風、暴雨可能導致生產設施受損、供應鏈中斷，每次災害可能造成數百萬至千萬元損失。特別是依賴戶外作業或精密設備的企業，更需要提前建立應變機制。`,
+      '慢性實體風險-氣溫上升': `隨著全球暖化，${companyContext}將面臨冷卻成本增加、員工工作效率下降等挑戰。製造業可能需要額外投資空調設備，服務業則需考慮顧客舒適度對營收的影響。`,
+      
+      // 轉型風險
+      '政策法規風險-碳定價機制': `政府推動碳費、碳稅政策，${companyContext}每年可能面臨數十萬至數百萬元的碳成本。高排放行業如製造業、運輸業影響尤為顯著，需要儘早規劃減碳措施。`,
+      '技術風險-低碳技術轉換': `隨著低碳技術快速發展，${companyContext}若未及時導入新技術，可能在競爭中落後。傳統製程面臨淘汰壓力，需要投資設備升級或技術轉型。`,
+      '市場風險-消費者偏好改變': `消費者越來越重視環保，${companyContext}若無法提供綠色產品或服務，可能失去市場份額。零售業、服務業需要調整產品組合以滿足新需求。`,
+      
+      // 機會
+      '資源效率機會-能源使用效率': `透過提升能源效率，${companyContext}可以顯著降低營運成本。導入LED照明、變頻空調等措施，每年可節省數十萬元電費，投資回收期通常在3-5年內。`,
+      '產品服務機會-低碳產品開發': `開發低碳產品為${companyContext}帶來新商機。環保意識抬頭下，綠色產品往往能獲得價格溢價，有助於提升獲利能力和品牌形象。`,
+      '市場機會-新興市場進入': `綠色轉型為${companyContext}開啟新市場機會。政府綠色採購、ESG投資熱潮等趨勢，為具備環保認證的企業創造更多商業機會。`,
+    };
+    
+    const key = `${scenario.category_name}-${scenario.subcategory_name}`;
+    return scenarioDescriptions[key] || `${scenario.subcategory_name}對${companyContext}可能帶來重要的${isRisk ? '風險' : '機會'}影響，需要制定相應的管理策略來因應。`;
+  };
+
   const renderScenarioCard = (scenario: any) => {
     const scenarioKey = `${scenario.category_name}-${scenario.subcategory_name}`;
     const selectedStrategy = selectedStrategies[scenarioKey];
@@ -246,6 +277,17 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               </div>
             </div>
           </div>
+          
+          {/* 情境描述 - 新增這個區塊 */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+              情境描述
+            </h4>
+            <p className="text-gray-700 leading-relaxed text-sm">
+              {generateScenarioDescription(scenario, analysis)}
+            </p>
+          </div>
         </CardHeader>
         
         <CardContent className="space-y-4">
@@ -266,14 +308,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           {/* 策略分析結果 */}
           {analysis && (
             <div className="space-y-4">
-              {/* 情境描述 */}
-              {analysis.scenario_description && (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium mb-2">情境描述</h4>
-                  <p className="text-gray-700 leading-relaxed">{analysis.scenario_description}</p>
-                </div>
-              )}
-
               {/* 四個策略選項 */}
               <div>
                 <Label className="text-sm font-medium mb-3 block">
