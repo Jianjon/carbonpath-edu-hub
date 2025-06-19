@@ -1,12 +1,14 @@
+
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { INDUSTRIES, COMPANY_SIZES, REVENUE_RANGES, SUPPLY_CHAIN_OPTIONS, SUSTAINABILITY_TEAM_OPTIONS, EMISSION_SOURCES } from '@/types/tcfd';
 import { Building2, Users, FileCheck, Globe, DollarSign, Link, Shield, Zap, FileText } from 'lucide-react';
+import TCFDLayout from './shared/TCFDLayout';
+import TCFDContentCard from './shared/TCFDContentCard';
+import TCFDFormSection from './shared/TCFDFormSection';
 
 interface TCFDStage1Props {
   onComplete: (data: {
@@ -88,48 +90,37 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
   const placeholderText = getBusinessDescriptionPlaceholder(industry, companySize);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <TCFDLayout
+      stage="第一階段"
+      title="基本條件輸入"
+      description="請提供您的企業基本資訊，這些資料將作為後續風險與機會分析的基礎。資訊愈完整，AI 分析結果愈精準。"
+      icon={Building2}
+    >
       {/* TCFD 介紹卡片 */}
-      <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
-        <CardHeader className="text-center pb-4">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-              <FileText className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-3xl font-bold text-gray-900">TCFD 模擬器</CardTitle>
-              <p className="text-lg text-blue-700 font-medium">氣候相關財務揭露架構評估工具</p>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-8">
-          {/* 關於 TCFD */}
+      <TCFDContentCard title="關於 TCFD 模擬器" icon={FileText}>
+        <div className="space-y-6">
           <div className="text-center space-y-4">
-            <div className="max-w-4xl mx-auto">
-              <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                氣候相關財務揭露工作小組（<span className="font-semibold text-blue-700">Task Force on Climate-related Financial Disclosures, TCFD</span>）
-                建議企業在年度財務申報中揭露氣候相關的財務資訊，協助投資者和其他利害關係人了解氣候變化對企業的影響。
-              </p>
-            </div>
+            <p className="text-slate-700 leading-relaxed">
+              氣候相關財務揭露工作小組（<span className="font-semibold text-slate-800">Task Force on Climate-related Financial Disclosures, TCFD</span>）
+              建議企業在年度財務申報中揭露氣候相關的財務資訊，協助投資者和其他利害關係人了解氣候變化對企業的影響。
+            </p>
           </div>
 
-          {/* 模組功能說明 */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">模組功能與特色</h3>
+          <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4 text-center">模組功能與特色</h3>
             
             <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-800">🎯 智能化評估</h4>
-                <ul className="text-sm text-gray-600 space-y-2">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-slate-800">🎯 智能化評估</h4>
+                <ul className="text-sm text-slate-600 space-y-2 leading-relaxed">
                   <li>• 根據產業特性客製化風險與機會識別</li>
                   <li>• AI 生成情境分析與財務影響評估</li>
                   <li>• 自動化報告產出，符合 TCFD 架構</li>
                 </ul>
               </div>
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-800">📊 專業級輸出</h4>
-                <ul className="text-sm text-gray-600 space-y-2">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-slate-800">📊 專業級輸出</h4>
+                <ul className="text-sm text-slate-600 space-y-2 leading-relaxed">
                   <li>• 完整四大核心要素分析報告</li>
                   <li>• 可直接參考的揭露內容草稿</li>
                   <li>• 財務影響量化分析與策略建議</li>
@@ -137,9 +128,8 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
               </div>
             </div>
 
-            {/* 使用流程 */}
-            <div className="border-t pt-6">
-              <h4 className="text-lg font-medium text-gray-900 mb-4 text-center">五步驟完成評估</h4>
+            <div className="border-t border-slate-200 pt-6">
+              <h4 className="text-base font-semibold text-slate-800 mb-4 text-center">五步驟完成評估</h4>
               <div className="flex flex-wrap justify-center items-center gap-4 text-sm">
                 {[
                   { step: 1, title: '基本資料', desc: '企業基本資訊' },
@@ -151,193 +141,132 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
                   <div key={item.step} className="flex items-center">
                     <div className="text-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                        item.step === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+                        item.step === 1 ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-600'
                       }`}>
                         {item.step}
                       </div>
                       <div className="mt-2 max-w-20">
-                        <div className="font-medium text-gray-900 text-xs">{item.title}</div>
-                        <div className="text-xs text-gray-600">{item.desc}</div>
+                        <div className="font-medium text-slate-800 text-xs">{item.title}</div>
+                        <div className="text-xs text-slate-600">{item.desc}</div>
                       </div>
                     </div>
-                    {index < 4 && <div className="mx-2 text-gray-400">→</div>}
+                    {index < 4 && <div className="mx-2 text-slate-400">→</div>}
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* 預期效益 */}
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg mt-6">
-              <h4 className="font-medium text-green-900 mb-3">完成後您將獲得：</h4>
-              <div className="grid md:grid-cols-2 gap-3">
-                <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <span className="text-sm text-green-800">氣候風險與機會的系統性分析架構</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <span className="text-sm text-green-800">產業專屬的情境模擬與評估報告</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <span className="text-sm text-green-800">財務影響量化分析與應對策略建議</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <span className="text-sm text-green-800">符合 TCFD 架構的完整揭露草稿</span>
-                </div>
-              </div>
-            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </TCFDContentCard>
 
       {/* 主要表單 */}
-      <Card>
-        <CardHeader className="text-center space-y-4">
-          <CardTitle className="text-2xl">第一階段：基本條件輸入</CardTitle>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            請提供您的企業基本資訊，這些資料將作為後續風險與機會分析的基礎。
-            資訊愈完整，AI 分析結果愈精準。
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* 基本資訊區塊 */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* 產業別選擇 */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Building2 className="h-5 w-5 text-blue-600" />
-                  <Label htmlFor="industry" className="text-lg font-medium">
-                    產業別 <span className="text-red-500">*</span>
-                  </Label>
-                </div>
-                <Select value={industry} onValueChange={setIndustry}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="請選擇您的產業別" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INDUSTRIES.map((ind) => (
-                      <SelectItem key={ind.value} value={ind.value}>
-                        {ind.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      <TCFDContentCard title="企業基本資訊" icon={Building2}>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* 基本資訊區塊 */}
+          <div className="grid md:grid-cols-2 gap-8">
+            <TCFDFormSection
+              title="產業別"
+              description="請選擇最符合您企業的主要產業分類"
+              required
+            >
+              <Select value={industry} onValueChange={setIndustry}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="請選擇您的產業別" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INDUSTRIES.map((ind) => (
+                    <SelectItem key={ind.value} value={ind.value}>
+                      {ind.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </TCFDFormSection>
 
-              {/* 企業規模選擇 */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-green-600" />
-                  <Label htmlFor="company_size" className="text-lg font-medium">
-                    企業規模 <span className="text-red-500">*</span>
-                  </Label>
-                </div>
-                <Select value={companySize} onValueChange={setCompanySize}>
+            <TCFDFormSection
+              title="企業規模"
+              description="請根據員工人數或營業額選擇企業規模"
+              required
+            >
+              <Select value={companySize} onValueChange={setCompanySize}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="請選擇您的企業規模" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMPANY_SIZES.map((size) => (
+                    <SelectItem key={size.value} value={size.value}>
+                      {size.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </TCFDFormSection>
+          </div>
+
+          {/* 專業評估資訊 */}
+          <div className="border-t border-slate-200 pt-8">
+            <h3 className="text-lg font-semibold text-slate-800 mb-6">專業評估資訊</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <TCFDFormSection title="國際營運狀況" description="是否有跨地區或國際營運據點">
+                <Select value={hasInternationalOperations?.toString() || ''} onValueChange={(value) => setHasInternationalOperations(value === 'true')}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="請選擇您的企業規模" />
+                    <SelectValue placeholder="請選擇" />
                   </SelectTrigger>
                   <SelectContent>
-                    {COMPANY_SIZES.map((size) => (
-                      <SelectItem key={size.value} value={size.value}>
-                        {size.label}
+                    <SelectItem value="true">是</SelectItem>
+                    <SelectItem value="false">否</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TCFDFormSection>
+
+              <TCFDFormSection title="營業額區間" description="去年度企業營業額範圍">
+                <Select value={annualRevenueRange} onValueChange={setAnnualRevenueRange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="請選擇營業額區間" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REVENUE_RANGES.map((range) => (
+                      <SelectItem key={range.value} value={range.value}>
+                        {range.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </TCFDFormSection>
+
+              <TCFDFormSection title="供應鏈碳揭露" description="是否被要求進行供應鏈碳排放揭露">
+                <Select value={supplyChainDisclosure} onValueChange={setSupplyChainDisclosure}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="請選擇" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPLY_CHAIN_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </TCFDFormSection>
+
+              <TCFDFormSection title="永續管理組織" description="是否設有專責永續管理人員或團隊">
+                <Select value={hasSustainabilityTeam} onValueChange={setHasSustainabilityTeam}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="請選擇" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUSTAINABILITY_TEAM_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </TCFDFormSection>
             </div>
 
-            {/* 專業顧問建議欄位 */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-medium mb-4 text-gray-800">專業評估資訊</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* 國際營運 */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Globe className="h-5 w-5 text-purple-600" />
-                    <Label className="text-base font-medium">企業是否具跨地區／國際營運</Label>
-                  </div>
-                  <Select value={hasInternationalOperations?.toString() || ''} onValueChange={(value) => setHasInternationalOperations(value === 'true')}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="請選擇" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">是</SelectItem>
-                      <SelectItem value="false">否</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* 營業額區間 */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    <Label className="text-base font-medium">去年營業額區間</Label>
-                  </div>
-                  <Select value={annualRevenueRange} onValueChange={setAnnualRevenueRange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="請選擇營業額區間" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {REVENUE_RANGES.map((range) => (
-                        <SelectItem key={range.value} value={range.value}>
-                          {range.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* 供應鏈碳揭露 */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Link className="h-5 w-5 text-orange-600" />
-                    <Label className="text-base font-medium">是否有被列入供應鏈碳揭露要求</Label>
-                  </div>
-                  <Select value={supplyChainDisclosure} onValueChange={setSupplyChainDisclosure}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="請選擇" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SUPPLY_CHAIN_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* 永續管理人員 */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Shield className="h-5 w-5 text-blue-600" />
-                    <Label className="text-base font-medium">是否設有專責永續管理人員或小組</Label>
-                  </div>
-                  <Select value={hasSustainabilityTeam} onValueChange={setHasSustainabilityTeam}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="請選擇" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SUSTAINABILITY_TEAM_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* 主要溫室氣體來源 */}
-              <div className="space-y-4 mt-6">
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-5 w-5 text-yellow-600" />
-                  <Label className="text-base font-medium">預估主要溫室氣體來源</Label>
-                </div>
+            <div className="mt-8">
+              <TCFDFormSection title="主要溫室氣體來源" description="預估企業營運中最主要的溫室氣體排放來源">
                 <Select value={mainEmissionSource} onValueChange={setMainEmissionSource}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="請選擇主要排放源" />
@@ -350,63 +279,64 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </TCFDFormSection>
             </div>
+          </div>
 
-            {/* 碳盤查完成狀態 */}
-            <div className="space-y-4 border-t pt-6">
-              <div className="flex items-center space-x-2">
-                <FileCheck className="h-5 w-5 text-purple-600" />
-                <Label className="text-lg font-medium">碳盤查完成狀態</Label>
-              </div>
-              <div className="flex items-center space-x-2">
+          {/* 碳盤查完成狀態 */}
+          <div className="border-t border-slate-200 pt-8">
+            <TCFDFormSection title="碳盤查完成狀態" description="是否已完成溫室氣體盤查作業">
+              <div className="flex items-center space-x-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <Checkbox 
                   id="carbon_inventory" 
                   checked={hasCarbonInventory} 
                   onCheckedChange={(checked) => setHasCarbonInventory(!!checked)} 
                 />
-                <Label htmlFor="carbon_inventory" className="text-sm">
+                <label htmlFor="carbon_inventory" className="text-sm text-slate-700 cursor-pointer">
                   我們已完成溫室氣體盤查（GHG Inventory）
-                </Label>
+                </label>
               </div>
-            </div>
+            </TCFDFormSection>
+          </div>
 
-            {/* 組織營運簡述 - 更新為200字並增加智能提示 */}
-            <div className="space-y-4 border-t pt-6">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-5 w-5 text-indigo-600" />
-                <Label className="text-lg font-medium">組織營運簡述（選填）</Label>
+          {/* 組織營運簡述 */}
+          <div className="border-t border-slate-200 pt-8">
+            <TCFDFormSection 
+              title="組織營運簡述" 
+              description="請簡述企業主要營運型態、產品服務等（選填，200字內）"
+            >
+              <Textarea 
+                placeholder={placeholderText}
+                value={businessDescription} 
+                onChange={(e) => setBusinessDescription(e.target.value)} 
+                maxLength={200} 
+                rows={4}
+                className="resize-none" 
+              />
+              <div className="flex justify-between items-center text-sm">
+                <p className="text-slate-500">
+                  {businessDescription.length}/200 字
+                </p>
+                <p className="text-slate-500 text-xs">
+                  💡 請避免透露具體數據、客戶名稱等機密資訊
+                </p>
               </div>
-              <div className="space-y-2">
-                <Textarea 
-                  placeholder={placeholderText}
-                  value={businessDescription} 
-                  onChange={(e) => setBusinessDescription(e.target.value)} 
-                  maxLength={200} 
-                  rows={4}
-                  className="resize-none" 
-                />
-                <div className="flex justify-between items-center text-sm">
-                  <p className="text-gray-500">
-                    {businessDescription.length}/200 字
-                  </p>
-                  <p className="text-gray-500 text-xs">
-                    💡 請避免透露具體數據、客戶名稱等機密資訊
-                  </p>
-                </div>
-              </div>
-            </div>
+            </TCFDFormSection>
+          </div>
 
-            {/* 提交按鈕 */}
-            <div className="flex justify-center pt-6">
-              <Button type="submit" disabled={!isValid || isSubmitting} className="px-8 py-3 text-lg">
-                {isSubmitting ? '建立評估中...' : '開始 TCFD 評估'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          {/* 提交按鈕 */}
+          <div className="flex justify-center pt-8">
+            <Button 
+              type="submit" 
+              disabled={!isValid || isSubmitting} 
+              className="px-12 py-3 text-base bg-slate-700 hover:bg-slate-800"
+            >
+              {isSubmitting ? '建立評估中...' : '開始 TCFD 評估'}
+            </Button>
+          </div>
+        </form>
+      </TCFDContentCard>
+    </TCFDLayout>
   );
 };
 
