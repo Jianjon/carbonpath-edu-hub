@@ -5,6 +5,13 @@ export interface TCFDAssessment {
   industry: string;
   company_size: string;
   has_carbon_inventory: boolean;
+  // 新增的專業顧問建議欄位
+  has_international_operations?: boolean;
+  annual_revenue_range?: string;
+  supply_chain_carbon_disclosure?: string;
+  has_sustainability_team?: string;
+  main_emission_source?: string;
+  business_description?: string;
   current_stage: number;
   status: 'in_progress' | 'completed' | 'draft';
   created_at: string;
@@ -175,4 +182,31 @@ export const INDUSTRIES = [
   { value: 'education', label: '教育業' },
   { value: 'agriculture', label: '農業' },
   { value: 'other', label: '其他' },
+];
+
+// 新增的選項定義
+export const REVENUE_RANGES = [
+  { value: 'small', label: '小於 1,000 萬元' },
+  { value: 'medium', label: '1,000 萬 ~ 1 億元' },
+  { value: 'large', label: '大於 1 億元' },
+];
+
+export const SUPPLY_CHAIN_OPTIONS = [
+  { value: 'yes', label: '是' },
+  { value: 'no', label: '否' },
+  { value: 'uncertain', label: '不確定' },
+];
+
+export const SUSTAINABILITY_TEAM_OPTIONS = [
+  { value: 'yes', label: '是' },
+  { value: 'no', label: '否' },
+  { value: 'planning', label: '規劃中' },
+];
+
+export const EMISSION_SOURCES = [
+  { value: 'electricity', label: '電力' },
+  { value: 'fuel', label: '燃料' },
+  { value: 'process', label: '製程排放' },
+  { value: 'logistics', label: '上下游物流' },
+  { value: 'uncertain', label: '不確定' },
 ];

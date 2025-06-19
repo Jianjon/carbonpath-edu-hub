@@ -16,6 +16,12 @@ export const useTCFDAssessment = (assessmentId?: string) => {
     industry: string;
     company_size: string;
     has_carbon_inventory: boolean;
+    has_international_operations?: boolean;
+    annual_revenue_range?: string;
+    supply_chain_carbon_disclosure?: string;
+    has_sustainability_team?: string;
+    main_emission_source?: string;
+    business_description?: string;
     user_id: string;
   }) => {
     setLoading(true);
@@ -27,14 +33,24 @@ export const useTCFDAssessment = (assessmentId?: string) => {
           industry: data.industry,
           company_size: data.company_size,
           has_carbon_inventory: data.has_carbon_inventory,
+          has_international_operations: data.has_international_operations,
+          annual_revenue_range: data.annual_revenue_range,
+          supply_chain_carbon_disclosure: data.supply_chain_carbon_disclosure,
+          has_sustainability_team: data.has_sustainability_team,
+          main_emission_source: data.main_emission_source,
+          business_description: data.business_description,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       setAssessment(newAssessment as TCFDAssessment);
       return newAssessment as TCFDAssessment;
     } catch (err) {
+      console.error('Create assessment error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
       throw err;
     } finally {

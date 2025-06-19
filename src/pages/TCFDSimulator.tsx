@@ -44,6 +44,12 @@ const TCFDSimulator = () => {
     industry: string;
     company_size: string;
     has_carbon_inventory: boolean;
+    has_international_operations?: boolean;
+    annual_revenue_range?: string;
+    supply_chain_carbon_disclosure?: string;
+    has_sustainability_team?: string;
+    main_emission_source?: string;
+    business_description?: string;
   }) => {
     try {
       // 使用一個固定的模擬用戶 ID，因為已取消登入功能
