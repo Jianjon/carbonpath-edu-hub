@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -321,31 +322,35 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
   if (scenarios.length === 0) {
     return (
-      <TCFDLayout
-        stage="第三階段"
-        title="LLM 情境評估"
-        description="使用 AI 技術生成具體的風險與機會情境，並進行詳細的影響評估"
-        icon={Lightbulb}
-        assessment={assessment}
-      >
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* 標題區 - 統一風格 */}
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold text-gray-900">第三階段：LLM 情境評估</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            使用 AI 技術生成具體的風險與機會情境，並進行詳細的影響評估
+          </p>
+        </div>
+
         <TCFDContentCard title="載入中" className="text-center">
           <div className="py-12">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-600" />
             <p className="text-slate-600">正在載入選擇的風險機會項目...</p>
           </div>
         </TCFDContentCard>
-      </TCFDLayout>
+      </div>
     );
   }
 
   return (
-    <TCFDLayout
-      stage="第三階段"
-      title="LLM 情境評估"
-      description="針對您選擇的風險與機會項目，使用 AI 技術生成具體情境並進行影響評估"
-      icon={Lightbulb}
-      assessment={assessment}
-    >
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* 標題區 - 統一風格 */}
+      <div className="text-center space-y-4">
+        <h1 className="text-3xl font-bold text-gray-900">第三階段：LLM 情境評估</h1>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          針對您選擇的風險與機會項目，使用 AI 技術生成具體情境並進行影響評估
+        </p>
+      </div>
+
       {/* 進度指示器 */}
       <Card className="bg-slate-50 border-slate-200">
         <CardContent className="pt-6">
@@ -374,15 +379,24 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
       {/* 當前情境評估 */}
       {currentScenario && (
-        <TCFDContentCard
-          title={`${currentScenario.categoryType === 'risk' ? '風險' : '機會'} - ${currentScenario.categoryName}`}
-          icon={currentScenario.categoryType === 'risk' ? AlertTriangle : TrendingUp}
-          badge={{
-            text: currentScenario.subcategoryName,
-            variant: 'outline'
-          }}
-        >
-          <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                {currentScenario.categoryType === 'risk' ? (
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                ) : (
+                  <TrendingUp className="h-5 w-5 text-green-500" />
+                )}
+                {currentScenario.categoryType === 'risk' ? '風險' : '機會'} - {currentScenario.categoryName}
+              </h2>
+              {currentScenario.subcategoryName && (
+                <Badge variant="outline">{currentScenario.subcategoryName}</Badge>
+              )}
+            </div>
+          </div>
+          
+          <div className="p-6 space-y-6">
             {/* 情境描述生成 */}
             <TCFDFormSection
               title="情境描述"
@@ -483,18 +497,25 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
                     <h4 className="font-medium text-slate-800">AI 分析結果</h4>
                     <div className="text-sm text-slate-600 space-y-2">
-                      <div>
-                        <span className="font-medium">影響評估：</span>
-                        {scenarioAnalysis[currentScenario.id].impact_assessment}
-                      </div>
-                      <div>
-                        <span className="font-medium">建議策略：</span>
-                        {scenarioAnalysis[currentScenario.id].recommended_strategy}
-                      </div>
-                      <div>
-                        <span className="font-medium">時間框架：</span>
-                        {scenarioAnalysis[currentScenario.id].time_horizon}
-                      </div>
+                      {scenarioAnalysis[currentScenario.id].scenario_summary && (
+                        <div>
+                          <span className="font-medium">情境摘要：</span>
+                          <p className="mt-1">{scenarioAnalysis[currentScenario.id].scenario_summary}</p>
+                        </div>
+                      )}
+                      {scenarioAnalysis[currentScenario.id].financial_impact && (
+                        <div>
+                          <span className="font-medium">財務影響：</span>
+                          <div className="mt-1 space-y-1">
+                            {scenarioAnalysis[currentScenario.id].financial_impact.profit_loss && (
+                              <p><strong>損益影響：</strong>{scenarioAnalysis[currentScenario.id].financial_impact.profit_loss.description}</p>
+                            )}
+                            {scenarioAnalysis[currentScenario.id].financial_impact.cash_flow && (
+                              <p><strong>現金流影響：</strong>{scenarioAnalysis[currentScenario.id].financial_impact.cash_flow.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -535,9 +556,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               )}
             </div>
           </div>
-        </TCFDContentCard>
+        </div>
       )}
-    </TCFDLayout>
+    </div>
   );
 };
 
