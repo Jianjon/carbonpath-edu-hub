@@ -28,7 +28,9 @@ const TCFDSimulator = () => {
   const [currentStage, setCurrentStage] = useState(1);
 
   useEffect(() => {
+    console.log('Assessment data:', assessment);
     if (assessment) {
+      console.log('Setting current stage to:', assessment.current_stage);
       setCurrentStage(assessment.current_stage);
     }
   }, [assessment]);
@@ -36,6 +38,7 @@ const TCFDSimulator = () => {
   const handleStageComplete = async (nextStage: number) => {
     if (assessment) {
       try {
+        console.log('Completing stage, moving to:', nextStage);
         await updateAssessmentStage(nextStage);
         setCurrentStage(nextStage);
       } catch (err) {
@@ -63,9 +66,9 @@ const TCFDSimulator = () => {
         user_id: '' // 這個值會在 service 中被覆蓋
       });
       
-      console.log('Assessment created, navigating to next stage:', newAssessment.id);
+      console.log('Assessment created, navigating to assessment:', newAssessment.id);
       setSearchParams({ assessment: newAssessment.id });
-      setCurrentStage(2);
+      // 不需要手動設定 currentStage，因為 useEffect 會在 assessment 更新後自動設定
     } catch (err) {
       console.error('Error creating assessment:', err);
       // Error will be displayed through the error state
@@ -73,7 +76,10 @@ const TCFDSimulator = () => {
   };
 
   const renderStageContent = () => {
+    console.log('Rendering stage content for stage:', currentStage, 'Assessment:', assessment);
+    
     if (!assessment && currentStage > 1) {
+      console.log('No assessment found, showing stage 1');
       return <TCFDStage1 onComplete={handleNewAssessment} />;
     }
 
