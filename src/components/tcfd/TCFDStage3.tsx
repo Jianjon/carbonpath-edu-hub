@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,19 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
 import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
-import { AlertTriangle, TrendingUp, Loader2, CheckCircle, DollarSign, Clock, Target } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
   onComplete: () => void;
-}
-
-interface StrategyAnalysis {
-  scenario_id: string;
-  selected_strategy: string;
-  analysis_result: any;
-  notes?: string;
 }
 
 const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
@@ -51,6 +45,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       });
       setSelectedStrategies(initialStrategies);
       setInitialized(true);
+      
+      // 立即為所有情境生成策略分析
+      generateAllStrategiesAnalysis();
     }
   }, [selectedScenarios, initialized]);
 
@@ -58,73 +55,50 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     initializeStrategies();
   }, [initializeStrategies]);
 
-  const handleStrategyChange = async (scenarioKey: string, strategyType: string) => {
-    console.log('Strategy change:', scenarioKey, strategyType);
+  // 為所有情境生成策略分析
+  const generateAllStrategiesAnalysis = async () => {
+    console.log('開始為所有情境生成策略分析');
     
-    setSelectedStrategies(prev => ({
-      ...prev,
-      [scenarioKey]: strategyType
-    }));
-
-    // 生成該策略的詳細分析
-    await generateStrategyAnalysis(scenarioKey, strategyType);
+    for (const scenario of selectedScenarios) {
+      const scenarioKey = `${scenario.category_name}-${scenario.subcategory_name}`;
+      
+      // 如果已經有分析結果，跳過
+      if (strategyAnalyses[scenarioKey]) {
+        continue;
+      }
+      
+      await generateStrategyAnalysisForScenario(scenarioKey, scenario);
+    }
   };
 
-  const generateStrategyAnalysis = async (scenarioKey: string, strategyType: string) => {
-    console.log('Generating strategy analysis for:', scenarioKey, strategyType);
+  const generateStrategyAnalysisForScenario = async (scenarioKey: string, scenario: any) => {
+    console.log('生成策略分析:', scenarioKey);
     
-    const [categoryName, subcategoryName] = scenarioKey.split('-');
-    const scenario = selectedScenarios.find(s => 
-      s.category_name === categoryName && s.subcategory_name === subcategoryName
-    );
-    
-    if (!scenario) {
-      console.error('Scenario not found:', categoryName, subcategoryName);
-      return;
-    }
-
-    console.log('Found scenario:', scenario);
-    console.log('Available scenario evaluations:', scenarioEvaluations.length);
-    
-    // 如果沒有scenario evaluation，我們創建一個默認的
+    // 尋找對應的scenario evaluation或創建默認值
     let scenarioEvaluation = scenarioEvaluations.find(evaluation => 
-      evaluation.category_name === categoryName && evaluation.subcategory_name === subcategoryName
+      evaluation.category_name === scenario.category_name && 
+      evaluation.subcategory_name === scenario.subcategory_name
     );
 
     if (!scenarioEvaluation) {
-      console.log('No scenario evaluation found, creating default scenario description');
-      // 創建默認的情境描述
-      const defaultDescription = `${categoryName}類型的${subcategoryName}情境，對${assessment.industry}行業的${assessment.company_size}企業可能造成${scenario.category_type === 'risk' ? '風險' : '機會'}影響。`;
+      const defaultDescription = `${scenario.category_name}類型的${scenario.subcategory_name}情境，對${assessment.industry}行業的${assessment.company_size}企業可能造成${scenario.category_type === 'risk' ? '風險' : '機會'}影響。`;
       scenarioEvaluation = {
         id: `temp-${Date.now()}`,
         assessment_id: assessment.id,
-        risk_opportunity_id: scenario.id, // 添加缺失的屬性
-        category_name: categoryName,
-        subcategory_name: subcategoryName,
+        risk_opportunity_id: scenario.id,
+        category_name: scenario.category_name,
+        subcategory_name: scenario.subcategory_name,
         scenario_description: defaultDescription,
-        scenario_generated_by_llm: false, // 添加缺失的屬性
-        likelihood_score: 2, // 默認中等影響
+        scenario_generated_by_llm: false,
+        likelihood_score: 2,
         user_score: 2,
         created_at: new Date().toISOString()
       };
-      console.log('Created default scenario evaluation:', scenarioEvaluation);
     }
-
-    console.log('Using scenario evaluation:', scenarioEvaluation);
 
     setLoadingAnalyses(prev => ({ ...prev, [scenarioKey]: true }));
 
     try {
-      console.log('Calling generateComprehensiveScenarioAnalysis with:', {
-        categoryType: scenario.category_type,
-        categoryName: scenario.category_name,
-        subcategoryName: scenario.subcategory_name,
-        scenarioDescription: scenarioEvaluation.scenario_description,
-        likelihoodScore: scenarioEvaluation.likelihood_score,
-        industry: assessment.industry,
-        companySize: assessment.company_size
-      });
-
       const analysis = await generateComprehensiveScenarioAnalysis(
         scenario.category_type,
         scenario.category_name,
@@ -135,20 +109,29 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         assessment.company_size
       );
 
-      console.log('Generated analysis:', analysis);
+      console.log('生成的策略分析:', analysis);
 
       setStrategyAnalyses(prev => ({
         ...prev,
         [scenarioKey]: analysis
       }));
 
-      toast.success(`${subcategoryName} 的策略分析已生成`);
+      toast.success(`${scenario.subcategory_name} 的策略分析已生成`);
     } catch (error) {
-      console.error('Error generating strategy analysis:', error);
+      console.error('策略分析生成失敗:', error);
       toast.error('策略分析生成失敗，請稍後再試');
     } finally {
       setLoadingAnalyses(prev => ({ ...prev, [scenarioKey]: false }));
     }
+  };
+
+  const handleStrategyChange = (scenarioKey: string, strategyType: string) => {
+    console.log('策略選擇:', scenarioKey, strategyType);
+    
+    setSelectedStrategies(prev => ({
+      ...prev,
+      [scenarioKey]: strategyType
+    }));
   };
 
   const handleNotesChange = (scenarioKey: string, value: string) => {
@@ -171,12 +154,10 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
     setIsSubmitting(true);
     try {
-      // 這裡應該保存策略選擇結果
-      // 暫時直接進入下一階段
       toast.success('策略選擇已完成');
       onComplete();
     } catch (error) {
-      console.error('Error saving strategy selections:', error);
+      console.error('保存策略選擇錯誤:', error);
       toast.error('保存失敗，請稍後再試');
     } finally {
       setIsSubmitting(false);
@@ -189,27 +170,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const analysis = strategyAnalyses[scenarioKey];
     const isLoading = loadingAnalyses[scenarioKey];
     
-    // 尋找對應的scenario evaluation或創建默認值
-    let scenarioEvaluation = scenarioEvaluations.find(evaluation => 
-      evaluation.category_name === scenario.category_name && 
-      evaluation.subcategory_name === scenario.subcategory_name
-    );
-
-    if (!scenarioEvaluation) {
-      scenarioEvaluation = {
-        id: `temp-${scenarioKey}`,
-        assessment_id: assessment.id,
-        risk_opportunity_id: scenario.id, // 添加缺失的屬性
-        category_name: scenario.category_name,
-        subcategory_name: scenario.subcategory_name,
-        scenario_description: `${scenario.category_name}類型的${scenario.subcategory_name}情境，對${assessment.industry}行業可能造成重要影響。`,
-        scenario_generated_by_llm: false, // 添加缺失的屬性
-        likelihood_score: 2,
-        user_score: 2,
-        created_at: new Date().toISOString()
-      };
-    }
-
     const isRisk = scenario.category_type === 'risk';
     const IconComponent = isRisk ? AlertTriangle : TrendingUp;
     const colorClass = isRisk ? 'border-red-200' : 'border-green-200';
@@ -241,9 +201,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   <Badge variant={badgeColor} className="text-xs">
                     {scenario.category_name}
                   </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    影響評分: {scenarioEvaluation.likelihood_score}/3
-                  </Badge>
                 </div>
               </div>
             </div>
@@ -251,36 +208,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700">
-              <strong>情境描述：</strong>{scenarioEvaluation.scenario_description}
-            </p>
-          </div>
-          
-          <div>
-            <Label className="text-sm font-medium">
-              選擇管理策略 <span className="text-red-500">*</span>
-            </Label>
-            <RadioGroup
-              value={selectedStrategy}
-              onValueChange={(value) => handleStrategyChange(scenarioKey, value)}
-              className="mt-2"
-            >
-              {strategyOptions.map((option) => (
-                <div key={option.value} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                  <RadioGroupItem value={option.value} id={`${scenarioKey}-${option.value}`} className="mt-1" />
-                  <div className="flex-1">
-                    <Label htmlFor={`${scenarioKey}-${option.value}`} className="cursor-pointer">
-                      <div className="font-medium">{option.label}</div>
-                      <div className="text-sm text-gray-600 mt-1">{option.description}</div>
-                    </Label>
-                  </div>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-
-          {/* 策略分析結果 */}
+          {/* 載入狀態 */}
           {isLoading && (
             <div className="flex items-center justify-center p-6 bg-blue-50 rounded-lg">
               <Loader2 className="h-6 w-6 animate-spin text-blue-600 mr-2" />
@@ -288,131 +216,50 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             </div>
           )}
 
-          {analysis && selectedStrategy && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <h4 className="font-medium text-green-800">策略分析完成</h4>
-              </div>
-              
-              {/* 情境摘要 */}
+          {/* 策略分析結果 */}
+          {analysis && !isLoading && (
+            <div className="space-y-4">
+              {/* 情境描述 */}
               {analysis.scenario_summary && (
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>情境摘要：</strong>{analysis.scenario_summary}
-                  </p>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">情境描述</h4>
+                  <p className="text-gray-700 leading-relaxed">{analysis.scenario_summary}</p>
                 </div>
               )}
 
-              {/* 財務影響摘要 */}
-              {analysis.financial_impact && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {analysis.financial_impact.profit_loss && (
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <DollarSign className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm font-medium">損益影響</span>
+              {/* 四個策略選項 */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">
+                  選擇管理策略 <span className="text-red-500">*</span>
+                </Label>
+                <RadioGroup
+                  value={selectedStrategy}
+                  onValueChange={(value) => handleStrategyChange(scenarioKey, value)}
+                  className="space-y-3"
+                >
+                  {strategyOptions.map((option) => {
+                    const strategyData = analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies']?.[option.value];
+                    
+                    return (
+                      <div key={option.value} className="border rounded-lg p-4 hover:bg-gray-50">
+                        <div className="flex items-start space-x-3">
+                          <RadioGroupItem value={option.value} id={`${scenarioKey}-${option.value}`} className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor={`${scenarioKey}-${option.value}`} className="cursor-pointer">
+                              <div className="font-medium text-base mb-1">{option.label}</div>
+                              {strategyData && (
+                                <div className="text-sm text-gray-700 leading-relaxed">
+                                  {strategyData.description}
+                                </div>
+                              )}
+                            </Label>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-600">
-                        {analysis.financial_impact.profit_loss.impact_direction === 'positive' ? '正面' : 
-                         analysis.financial_impact.profit_loss.impact_direction === 'negative' ? '負面' : '中性'}
-                        {analysis.financial_impact.profit_loss.timeframe && ` · ${analysis.financial_impact.profit_loss.timeframe}`}
-                      </p>
-                      {analysis.financial_impact.profit_loss.amount_estimate && (
-                        <p className="text-xs text-gray-500 mt-1">{analysis.financial_impact.profit_loss.amount_estimate}</p>
-                      )}
-                    </div>
-                  )}
-                  {analysis.financial_impact.cash_flow && (
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Clock className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm font-medium">現金流影響</span>
-                      </div>
-                      <p className="text-xs text-gray-600">
-                        {analysis.financial_impact.cash_flow.impact_direction === 'positive' ? '正面' : 
-                         analysis.financial_impact.cash_flow.impact_direction === 'negative' ? '負面' : '中性'}
-                        {analysis.financial_impact.cash_flow.timeframe && ` · ${analysis.financial_impact.cash_flow.timeframe}`}
-                      </p>
-                      {analysis.financial_impact.cash_flow.amount_estimate && (
-                        <p className="text-xs text-gray-500 mt-1">{analysis.financial_impact.cash_flow.amount_estimate}</p>
-                      )}
-                    </div>
-                  )}
-                  {analysis.financial_impact.balance_sheet && (
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Target className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm font-medium">資產負債影響</span>
-                      </div>
-                      <p className="text-xs text-gray-600">
-                        {analysis.financial_impact.balance_sheet.impact_direction === 'positive' ? '正面' : 
-                         analysis.financial_impact.balance_sheet.impact_direction === 'negative' ? '負面' : '中性'}
-                        {analysis.financial_impact.balance_sheet.timeframe && ` · ${analysis.financial_impact.balance_sheet.timeframe}`}
-                      </p>
-                      {analysis.financial_impact.balance_sheet.amount_estimate && (
-                        <p className="text-xs text-gray-500 mt-1">{analysis.financial_impact.balance_sheet.amount_estimate}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* 選擇的策略詳細資訊 */}
-              {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies']?.[selectedStrategy] && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h5 className="font-medium text-green-800 mb-2">
-                    {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].title}
-                  </h5>
-                  <p className="text-sm text-green-700 mb-3">
-                    {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].description}
-                  </p>
-                  
-                  {/* 具體行動清單 */}
-                  {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].specific_actions && (
-                    <div className="mb-3">
-                      <h6 className="text-sm font-medium text-green-800 mb-1">具體執行行動：</h6>
-                      <ul className="text-xs text-green-700 space-y-1">
-                        {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].specific_actions.map((action: string, idx: number) => (
-                          <li key={idx} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{action}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* 成本與時程資訊 */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                    <div>
-                      <span className="font-medium text-green-800">成本估算：</span>
-                      <p className="text-green-700">
-                        {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy][isRisk ? 'cost_estimate' : 'investment_estimate']}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-green-800">實施時程：</span>
-                      <p className="text-green-700">
-                        {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].implementation_timeline}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-green-800">可行性評分：</span>
-                      <p className="text-green-700">
-                        {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].feasibility_score}/5
-                      </p>
-                    </div>
-                  </div>
-
-                  {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].feasibility_reason && (
-                    <div className="mt-2 text-xs text-green-700">
-                      <span className="font-medium">可行性說明：</span>
-                      {analysis[isRisk ? 'risk_strategies' : 'opportunity_strategies'][selectedStrategy].feasibility_reason}
-                    </div>
-                  )}
-                </div>
-              )}
+                    );
+                  })}
+                </RadioGroup>
+              </div>
             </div>
           )}
 
@@ -470,25 +317,12 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                 {Object.values(selectedStrategies).filter(s => s).length} / {selectedScenarios.length} 個情境已選擇策略
               </p>
               <p className="text-xs text-blue-600 mt-1">
-                💡 選擇策略後將自動生成專屬的財務影響分析和執行建議
+                💡 系統已自動為每個情境生成專屬的策略建議
               </p>
             </div>
             <Badge variant="outline" className="">
               {assessment.company_size} · {assessment.industry}
             </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 調試資訊 */}
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardContent className="pt-4">
-          <div className="text-xs text-yellow-800">
-            <p><strong>調試資訊：</strong></p>
-            <p>選中情境數量: {selectedScenarios.length}</p>
-            <p>情境評估數量: {scenarioEvaluations.length}</p>
-            <p>已選策略數量: {Object.keys(selectedStrategies).length}</p>
-            <p>已生成分析數量: {Object.keys(strategyAnalyses).length}</p>
           </div>
         </CardContent>
       </Card>
