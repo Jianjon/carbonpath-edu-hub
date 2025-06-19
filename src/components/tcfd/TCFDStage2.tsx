@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,25 @@ interface TCFDStage2Props {
   assessment: TCFDAssessment;
   onComplete: () => void;
 }
+
+// 風險類別說明文字
+const RISK_CATEGORY_DESCRIPTIONS = {
+  '政策和法規': '氣候政策如碳稅、排放限制、揭露要求會影響企業營運成本與法遵壓力，特別是高碳產業。建議企業確認自身排放狀況與合規能力。',
+  '技術': '為符合減碳或提升效率，技術革新速度加快，若未能及時升級設備或導入新製程，恐被淘汰或面臨高投資壓力。',
+  '市場': '消費者偏好與市場需求轉向低碳產品，傳統產品可能面臨需求下降與報廢風險。企業需關注客戶變化與替代策略。',
+  '聲譽': '公開揭露或媒體報導若揭露企業未積極減碳或違反承諾，將損害品牌形象、影響投資人或消費者信任。',
+  '急性': '極端氣候事件如洪水、颱風、熱浪等可能造成生產中斷、資產損毀與物流延誤，風險日增。',
+  '慢性': '氣溫上升、海平面上升等長期變遷會影響作物、能源、水資源與營運成本，需提早因應。'
+};
+
+// 機會類別說明文字
+const OPPORTUNITY_CATEGORY_DESCRIPTIONS = {
+  '資源效率': '提升生產效率、減少資源浪費（如水、電、原料），不僅能減碳也能降本，尤其對能源密集型企業具高潛力。',
+  '能源來源': '採用再生能源可降低碳排風險、取得客戶加分與政府補助，企業也能藉此展現永續承諾。',
+  '產品和服務': '開發低碳或具永續標示的新產品可創造競爭優勢，並搶占 ESG 要求日漸嚴格的新市場。',
+  '市場': '氣候轉型帶來全新產業與需求，如碳管理、綠色建築、節能裝置等，企業可積極參與與擴張。',
+  '韌性': '提升企業抗氣候風險能力如多元供應來源、提升營運備援設施，也會強化企業的長期可持續性。'
+};
 
 const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
   const { saveRiskOpportunitySelections, riskOpportunitySelections, loading } = useTCFDAssessment(assessment.id);
@@ -141,6 +161,15 @@ const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900">{category.name}</h3>
                       <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+                      {/* 添加詳細說明 */}
+                      <div className="mt-2 p-3 bg-blue-50 border-l-4 border-blue-300 rounded">
+                        <p className="text-sm text-blue-800">
+                          📋 {type === 'risk' 
+                            ? RISK_CATEGORY_DESCRIPTIONS[category.name as keyof typeof RISK_CATEGORY_DESCRIPTIONS] 
+                            : OPPORTUNITY_CATEGORY_DESCRIPTIONS[category.name as keyof typeof OPPORTUNITY_CATEGORY_DESCRIPTIONS]
+                          }
+                        </p>
+                      </div>
                       {category.scenarios && (
                         <div className="mt-2">
                           <Badge variant="outline" className="text-xs">
