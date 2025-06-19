@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ScenarioEvaluation } from '@/types/tcfd';
 import * as scenarioService from '@/services/tcfd/scenarioService';
@@ -10,7 +11,19 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
   const saveScenarioEvaluation = async (evaluation: Omit<ScenarioEvaluation, 'id' | 'created_at'>) => {
     try {
       const data = await scenarioService.saveScenarioEvaluation(evaluation);
-      setScenarioEvaluations(prev => [...prev, data]);
+      
+      // 更新本地狀態
+      setScenarioEvaluations(prev => {
+        const existingIndex = prev.findIndex(e => e.risk_opportunity_id === evaluation.risk_opportunity_id);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = data;
+          return updated;
+        } else {
+          return [...prev, data];
+        }
+      });
+      
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -24,6 +37,7 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
     try {
       const data = await scenarioService.loadScenarioEvaluations(assessmentId);
       setScenarioEvaluations(data);
+      console.log('載入情境評估資料:', data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -36,7 +50,18 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
     industry: string
   ) => {
     try {
-      return await scenarioService.generateScenarioWithLLM(
+      // 檢查是否已有相同參數的情境
+      const existingScenario = scenarioEvaluations.find(e => 
+        e.scenario_description && 
+        e.scenario_description.length > 0
+      );
+
+      if (existingScenario) {
+        console.log('使用現有的情境描述');
+        return { scenario_description: existingScenario.scenario_description };
+      }
+
+      return await scenario Service.generateScenarioWithLLM(
         categoryType,
         categoryName,
         subcategoryName,
