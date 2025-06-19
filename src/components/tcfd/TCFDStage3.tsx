@@ -84,17 +84,32 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       return;
     }
 
-    const scenarioEvaluation = scenarioEvaluations.find(evaluation => 
+    console.log('Found scenario:', scenario);
+    console.log('Available scenario evaluations:', scenarioEvaluations.length);
+    
+    // 如果沒有scenario evaluation，我們創建一個默認的
+    let scenarioEvaluation = scenarioEvaluations.find(evaluation => 
       evaluation.category_name === categoryName && evaluation.subcategory_name === subcategoryName
     );
 
     if (!scenarioEvaluation) {
-      console.error('Scenario evaluation not found:', categoryName, subcategoryName);
-      toast.error('請先完成情境評估再選擇策略');
-      return;
+      console.log('No scenario evaluation found, creating default scenario description');
+      // 創建默認的情境描述
+      const defaultDescription = `${categoryName}類型的${subcategoryName}情境，對${assessment.industry}行業的${assessment.company_size}企業可能造成${scenario.category_type === 'risk' ? '風險' : '機會'}影響。`;
+      scenarioEvaluation = {
+        id: `temp-${Date.now()}`,
+        assessment_id: assessment.id,
+        category_name: categoryName,
+        subcategory_name: subcategoryName,
+        scenario_description: defaultDescription,
+        likelihood_score: 2, // 默認中等影響
+        user_score: 2,
+        created_at: new Date().toISOString()
+      };
+      console.log('Created default scenario evaluation:', scenarioEvaluation);
     }
 
-    console.log('Found scenario evaluation:', scenarioEvaluation);
+    console.log('Using scenario evaluation:', scenarioEvaluation);
 
     setLoadingAnalyses(prev => ({ ...prev, [scenarioKey]: true }));
 
@@ -173,10 +188,24 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const analysis = strategyAnalyses[scenarioKey];
     const isLoading = loadingAnalyses[scenarioKey];
     
-    const scenarioEvaluation = scenarioEvaluations.find(evaluation => 
+    // 尋找對應的scenario evaluation或創建默認值
+    let scenarioEvaluation = scenarioEvaluations.find(evaluation => 
       evaluation.category_name === scenario.category_name && 
       evaluation.subcategory_name === scenario.subcategory_name
     );
+
+    if (!scenarioEvaluation) {
+      scenarioEvaluation = {
+        id: `temp-${scenarioKey}`,
+        assessment_id: assessment.id,
+        category_name: scenario.category_name,
+        subcategory_name: scenario.subcategory_name,
+        scenario_description: `${scenario.category_name}類型的${scenario.subcategory_name}情境，對${assessment.industry}行業可能造成重要影響。`,
+        likelihood_score: 2,
+        user_score: 2,
+        created_at: new Date().toISOString()
+      };
+    }
 
     const isRisk = scenario.category_type === 'risk';
     const IconComponent = isRisk ? AlertTriangle : TrendingUp;
@@ -209,11 +238,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   <Badge variant={badgeColor} className="text-xs">
                     {scenario.category_name}
                   </Badge>
-                  {scenarioEvaluation && (
-                    <Badge variant="outline" className="text-xs">
-                      影響評分: {scenarioEvaluation.likelihood_score}/3
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="text-xs">
+                    影響評分: {scenarioEvaluation.likelihood_score}/3
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -221,13 +248,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {scenarioEvaluation && (
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700">
-                <strong>情境描述：</strong>{scenarioEvaluation.scenario_description}
-              </p>
-            </div>
-          )}
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-700">
+              <strong>情境描述：</strong>{scenarioEvaluation.scenario_description}
+            </p>
+          </div>
           
           <div>
             <Label className="text-sm font-medium">
