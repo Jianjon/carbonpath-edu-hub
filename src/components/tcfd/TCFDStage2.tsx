@@ -6,7 +6,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { TCFDAssessment, TCFD_RISK_CATEGORIES, TCFD_OPPORTUNITY_CATEGORIES } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
-import { AlertTriangle, TrendingUp, Check } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Check, ChevronDown, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface TCFDStage2Props {
   assessment: TCFDAssessment;
@@ -15,95 +16,66 @@ interface TCFDStage2Props {
 
 const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
   const { saveRiskOpportunitySelections, riskOpportunitySelections, loading } = useTCFDAssessment(assessment.id);
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
-  const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
+  const [selectedScenarios, setSelectedScenarios] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // 載入已選擇的項目
-    const selectedCats = new Set<string>();
-    const selectedSubcats = new Set<string>();
+    // 載入已選擇的情境
+    const selectedItems = new Set<string>();
     
     riskOpportunitySelections.forEach(selection => {
-      if (selection.selected) {
-        selectedCats.add(selection.category_name);
-        if (selection.subcategory_name) {
-          selectedSubcats.add(`${selection.category_name}-${selection.subcategory_name}`);
-        }
+      if (selection.selected && selection.subcategory_name) {
+        selectedItems.add(`${selection.category_name}-${selection.subcategory_name}`);
       }
     });
     
-    setSelectedCategories(selectedCats);
-    setSelectedSubcategories(selectedSubcats);
+    setSelectedScenarios(selectedItems);
   }, [riskOpportunitySelections]);
 
-  const handleCategoryChange = (categoryName: string, checked: boolean) => {
-    const newSelected = new Set(selectedCategories);
-    if (checked) {
-      newSelected.add(categoryName);
-    } else {
-      newSelected.delete(categoryName);
-      // 同時取消該類別下的所有子類別
-      const categoryData = [...TCFD_RISK_CATEGORIES, ...TCFD_OPPORTUNITY_CATEGORIES]
-        .find(cat => cat.name === categoryName);
-      if (categoryData?.subcategories) {
-        categoryData.subcategories.forEach(sub => {
-          selectedSubcategories.delete(`${categoryName}-${sub}`);
-        });
+  const handleCategoryToggle = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
       }
-    }
-    setSelectedCategories(newSelected);
+      return newSet;
+    });
   };
 
-  const handleSubcategoryChange = (categoryName: string, subcategoryName: string, checked: boolean) => {
-    const key = `${categoryName}-${subcategoryName}`;
-    const newSelected = new Set(selectedSubcategories);
-    if (checked) {
-      newSelected.add(key);
-      // 自動勾選主類別
-      setSelectedCategories(prev => new Set(prev).add(categoryName));
-    } else {
-      newSelected.delete(key);
-    }
-    setSelectedSubcategories(newSelected);
+  const handleScenarioChange = (categoryName: string, scenarioId: string, checked: boolean) => {
+    const key = `${categoryName}-${scenarioId}`;
+    setSelectedScenarios(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(key);
+      } else {
+        newSet.delete(key);
+      }
+      return newSet;
+    });
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const selections = [];
-      
-      // 處理主類別選擇
-      selectedCategories.forEach(categoryName => {
-        const categoryData = [...TCFD_RISK_CATEGORIES, ...TCFD_OPPORTUNITY_CATEGORIES]
-          .find(cat => cat.name === categoryName);
+      const selections = Array.from(selectedScenarios).map(key => {
+        const [categoryName, scenarioId] = key.split('-');
         
-        if (categoryData) {
-          selections.push({
-            assessment_id: assessment.id,
-            category_type: categoryData.type,
-            category_name: categoryName,
-            subcategory_name: null,
-            selected: true,
-          });
-        }
-      });
-
-      // 處理子類別選擇
-      selectedSubcategories.forEach(key => {
-        const [categoryName, subcategoryName] = key.split('-');
-        const categoryData = [...TCFD_RISK_CATEGORIES, ...TCFD_OPPORTUNITY_CATEGORIES]
-          .find(cat => cat.name === categoryName);
+        // 找到對應的類別和情境
+        const allCategories = [...TCFD_RISK_CATEGORIES, ...TCFD_OPPORTUNITY_CATEGORIES];
+        const category = allCategories.find(cat => cat.name === categoryName);
+        const scenario = category?.scenarios?.find(s => s.id === scenarioId);
         
-        if (categoryData) {
-          selections.push({
-            assessment_id: assessment.id,
-            category_type: categoryData.type,
-            category_name: categoryName,
-            subcategory_name: subcategoryName,
-            selected: true,
-          });
-        }
+        return {
+          assessment_id: assessment.id,
+          category_type: category?.type as 'risk' | 'opportunity',
+          category_name: categoryName,
+          subcategory_name: scenario?.title || scenarioId,
+          selected: true,
+        };
       });
 
       await saveRiskOpportunitySelections(selections);
@@ -129,44 +101,76 @@ const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
             <span>{type === 'risk' ? '氣候相關風險' : '氣候相關機會'}</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {categories.map((category) => (
-            <div key={category.id} className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Checkbox
-                  id={category.id}
-                  checked={selectedCategories.has(category.name)}
-                  onCheckedChange={(checked) => handleCategoryChange(category.name, !!checked)}
-                />
-                <div className="flex-1">
-                  <label htmlFor={category.id} className="font-medium text-gray-900 cursor-pointer">
-                    {category.name}
-                  </label>
-                  <p className="text-sm text-gray-600">{category.description}</p>
-                </div>
-              </div>
-              
-              {category.subcategories && selectedCategories.has(category.name) && (
-                <div className="ml-6 pl-4 border-l-2 border-gray-200 space-y-2">
-                  {category.subcategories.map((subcategory: string) => (
-                    <div key={subcategory} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${category.id}-${subcategory}`}
-                        checked={selectedSubcategories.has(`${category.name}-${subcategory}`)}
-                        onCheckedChange={(checked) => 
-                          handleSubcategoryChange(category.name, subcategory, !!checked)
-                        }
-                      />
-                      <label 
-                        htmlFor={`${category.id}-${subcategory}`}
-                        className="text-sm text-gray-700 cursor-pointer"
-                      >
-                        {subcategory}
-                      </label>
+            <div key={category.id} className="border rounded-lg">
+              <Collapsible
+                open={expandedCategories.has(category.id)}
+                onOpenChange={() => handleCategoryToggle(category.id)}
+              >
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{category.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+                      {category.scenarios && (
+                        <div className="mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {category.scenarios.length} 個具體情境
+                          </Badge>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="ml-4">
+                      {expandedCategories.has(category.id) ? (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  <div className="px-4 pb-4 space-y-3 border-t bg-white">
+                    <div className="pt-3">
+                      <p className="text-sm font-medium text-gray-700 mb-3">
+                        請選擇與您企業相關的具體情境：
+                      </p>
+                      {category.scenarios?.map((scenario: any) => (
+                        <div key={scenario.id} className="space-y-2 p-3 border rounded-lg hover:bg-gray-50">
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              id={`${category.id}-${scenario.id}`}
+                              checked={selectedScenarios.has(`${category.name}-${scenario.id}`)}
+                              onCheckedChange={(checked) => 
+                                handleScenarioChange(category.name, scenario.id, !!checked)
+                              }
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <label 
+                                htmlFor={`${category.id}-${scenario.id}`}
+                                className="text-sm font-medium text-gray-900 cursor-pointer block"
+                              >
+                                📌 {scenario.title}
+                              </label>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {scenario.description}
+                              </p>
+                              <div className="mt-2 p-2 bg-blue-50 border-l-2 border-blue-300 rounded">
+                                <p className="text-xs text-blue-800">
+                                  💡 {scenario.hint}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           ))}
         </CardContent>
@@ -174,15 +178,15 @@ const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
     );
   };
 
-  const hasSelections = selectedCategories.size > 0;
+  const hasSelections = selectedScenarios.size > 0;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl text-center">第二階段：風險與機會類別選擇</CardTitle>
+          <CardTitle className="text-2xl text-center">第二階段：風險與機會情境選擇</CardTitle>
           <p className="text-gray-600 text-center">
-            根據 TCFD 官方架構，請選擇與您企業最相關的氣候風險與機會類別
+            從抽象分類到具體情境 - 請選擇與您企業最相關的氣候風險與機會情境
           </p>
         </CardHeader>
       </Card>
@@ -201,7 +205,7 @@ const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
             )}
           </div>
           <p className="text-sm text-blue-800">
-            建議根據您的產業特性和企業規模，重點關注最可能影響業務營運的風險與機會類別。
+            💡 <strong>操作說明：</strong>點擊各類別可展開具體情境選項，每個情境都包含背景說明和評估提示，幫助您判斷相關性。
           </p>
         </CardContent>
       </Card>
@@ -221,26 +225,26 @@ const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">已選擇的主要類別：</h4>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(selectedCategories).map(category => (
-                    <Badge key={category} variant="secondary">
-                      {category}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
                 <h4 className="font-medium text-gray-900 mb-2">
-                  已選擇的子類別：（共 {selectedSubcategories.size} 項）
+                  已選擇的具體情境：（共 {selectedScenarios.size} 項）
                 </h4>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(selectedSubcategories).map(key => {
-                    const [, subcategory] = key.split('-');
+                <div className="grid grid-cols-1 gap-2">
+                  {Array.from(selectedScenarios).map(key => {
+                    const [categoryName, scenarioId] = key.split('-');
+                    const allCategories = [...TCFD_RISK_CATEGORIES, ...TCFD_OPPORTUNITY_CATEGORIES];
+                    const category = allCategories.find(cat => cat.name === categoryName);
+                    const scenario = category?.scenarios?.find(s => s.id === scenarioId);
+                    
                     return (
-                      <Badge key={key} variant="outline" className="text-xs">
-                        {subcategory}
-                      </Badge>
+                      <div key={key} className="p-2 bg-white border rounded text-sm">
+                        <Badge 
+                          variant={category?.type === 'risk' ? 'destructive' : 'default'} 
+                          className="mr-2 text-xs"
+                        >
+                          {categoryName}
+                        </Badge>
+                        {scenario?.title}
+                      </div>
                     );
                   })}
                 </div>
@@ -258,7 +262,7 @@ const TCFDStage2 = ({ assessment, onComplete }: TCFDStage2Props) => {
           size="lg"
           className="px-8"
         >
-          {isSubmitting ? '儲存中...' : '進入情境評估階段'}
+          {isSubmitting ? '儲存中...' : `進入情境評估階段（已選 ${selectedScenarios.size} 項）`}
         </Button>
       </div>
     </div>
