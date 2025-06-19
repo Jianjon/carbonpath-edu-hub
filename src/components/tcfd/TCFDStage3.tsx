@@ -31,67 +31,109 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState<number>(-1);
 
-  // 風險策略選項定義
-  const riskStrategies = [
-    { 
-      id: 'mitigate', 
-      name: '減緩策略', 
-      icon: '🛡️',
-      description: '主動降低風險發生的可能性或影響程度'
-    },
-    { 
-      id: 'transfer', 
-      name: '轉移策略', 
-      icon: '🔄',
-      description: '透過保險、合約等方式將風險轉移給第三方'
-    },
-    { 
-      id: 'accept', 
-      name: '接受策略', 
-      icon: '✅',
-      description: '承擔風險並建立相應的應對準備'
-    },
-    { 
-      id: 'control', 
-      name: '控制策略', 
-      icon: '📊',
-      description: '建立監控機制以管理和控制風險'
-    }
-  ];
+  // 風險策略選項定義 - 根據企業規模調整
+  const getRiskStrategies = (companySize: string) => {
+    const baseStrategies = [
+      { 
+        id: 'mitigate', 
+        name: '減緩策略', 
+        icon: '🛡️',
+        description: companySize === 'small' 
+          ? '採用成本效益高的措施降低風險影響'
+          : companySize === 'medium'
+          ? '投資中等規模的設備與技術改善來減緩風險'
+          : '大規模投資先進技術與系統性改善來減緩風險'
+      },
+      { 
+        id: 'transfer', 
+        name: '轉移策略', 
+        icon: '🔄',
+        description: companySize === 'small'
+          ? '透過保險或合約條款將風險轉移給第三方'
+          : companySize === 'medium'
+          ? '結合保險、合約與策略夥伴關係分散風險'
+          : '建立完整風險轉移機制，包含保險、期貨與策略聯盟'
+      },
+      { 
+        id: 'accept', 
+        name: '接受策略', 
+        icon: '✅',
+        description: companySize === 'small'
+          ? '建立基本應急準備金並持續監控風險'
+          : companySize === 'medium'
+          ? '設立風險準備金並建立標準應變程序'
+          : '建立完整風險承受機制與董事會層級治理'
+      },
+      { 
+        id: 'control', 
+        name: '控制策略', 
+        icon: '📊',
+        description: companySize === 'small'
+          ? '建立簡單有效的風險監控與預警機制'
+          : companySize === 'medium'
+          ? '投資數位化監控系統與定期風險評估'
+          : '建立智慧化風險管理平台與預測性分析'
+      }
+    ];
+    return baseStrategies;
+  };
 
-  // 機會策略選項定義
-  const opportunityStrategies = [
-    { 
-      id: 'evaluate_explore', 
-      name: '評估探索策略', 
-      icon: '🔍',
-      description: '深入研究機會的可行性和潛在價值'
-    },
-    { 
-      id: 'capability_building', 
-      name: '能力建設策略', 
-      icon: '💪',
-      description: '強化內部能力以把握機會'
-    },
-    { 
-      id: 'business_transformation', 
-      name: '商業轉換策略', 
-      icon: '🔄',
-      description: '調整商業模式以充分利用機會'
-    },
-    { 
-      id: 'cooperation_participation', 
-      name: '合作參與策略', 
-      icon: '🤝',
-      description: '透過合作夥伴關係共同開發機會'
-    },
-    { 
-      id: 'aggressive_investment', 
-      name: '積極投入策略', 
-      icon: '🚀',
-      description: '大規模投資以快速把握機會'
-    }
-  ];
+  // 機會策略選項定義 - 根據企業規模調整
+  const getOpportunityStrategies = (companySize: string) => {
+    const baseStrategies = [
+      { 
+        id: 'evaluate_explore', 
+        name: '評估探索策略', 
+        icon: '🔍',
+        description: companySize === 'small'
+          ? '進行基礎市場調研與可行性評估'
+          : companySize === 'medium'
+          ? '委託專業顧問進行深度市場與技術評估'
+          : '建立專業評估團隊進行全面的戰略分析'
+      },
+      { 
+        id: 'capability_building', 
+        name: '能力建設策略', 
+        icon: '💪',
+        description: companySize === 'small'
+          ? '培訓核心人員並建立基本永續管理能力'
+          : companySize === 'medium'
+          ? '建立永續發展部門並投資人才培育'
+          : '建立卓越中心並與頂尖機構合作'
+      },
+      { 
+        id: 'business_transformation', 
+        name: '商業轉換策略', 
+        icon: '🔄',
+        description: companySize === 'small'
+          ? '調整產品服務組合並優化營運模式'
+          : companySize === 'medium'
+          ? '投資新技術並拓展綠色產品線'
+          : '全面數位轉型並重新定義商業模式'
+      },
+      { 
+        id: 'cooperation_participation', 
+        name: '合作參與策略', 
+        icon: '🤝',
+        description: companySize === 'small'
+          ? '參與產業聯盟並尋求政府計畫支持'
+          : companySize === 'medium'
+          ? '建立策略夥伴關係並參與產業標準制定'
+          : '領導產業聯盟並主導生態系建立'
+      },
+      { 
+        id: 'aggressive_investment', 
+        name: '積極投入策略', 
+        icon: '🚀',
+        description: companySize === 'small'
+          ? '在資源範圍內積極投入核心機會'
+          : companySize === 'medium'
+          ? '大膽投資關鍵技術與市場機會'
+          : '領先投入前瞻技術並搶佔市場先機'
+      }
+    ];
+    return baseStrategies;
+  };
 
   // 生成企業背景描述
   const generateCompanyContext = () => {
@@ -302,27 +344,134 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   const generateStrategyRecommendations = (scenario: any, context: any) => {
+    const companySize = assessment.company_size;
+    const industry = assessment.industry;
+    const hasInternational = context.hasInternational === '有';
+    const hasCarbonInventory = context.hasCarbonInventory === '已完成';
+    
+    // 根據企業規模設定投資金額範圍
+    const getInvestmentRange = (low: number, medium: number, high: number) => {
+      switch (companySize) {
+        case 'small': return `${low}-${Math.round(low * 1.5)}萬元`;
+        case 'medium': return `${medium}-${Math.round(medium * 1.5)}萬元`;
+        case 'large': return `${high}-${Math.round(high * 2)}萬元`;
+        default: return `${medium}-${Math.round(medium * 1.5)}萬元`;
+      }
+    };
+
+    // 根據企業規模設定實施時程
+    const getImplementationTimeline = (strategy: string) => {
+      const timelines = {
+        small: { quick: '2-4個月', medium: '6-12個月', long: '1-2年' },
+        medium: { quick: '3-6個月', medium: '12-18個月', long: '2-3年' },
+        large: { quick: '6-12個月', medium: '18-24個月', long: '3-5年' }
+      };
+      
+      const sizeKey = companySize as keyof typeof timelines;
+      const timelineMap = timelines[sizeKey] || timelines.medium;
+      
+      if (strategy.includes('evaluate') || strategy.includes('accept')) return timelineMap.quick;
+      if (strategy.includes('mitigate') || strategy.includes('control')) return timelineMap.medium;
+      return timelineMap.long;
+    };
+
     if (scenario.category_type === 'risk') {
       return {
-        mitigate: `建議導入${context.industry === 'manufacturing' ? '自動化節能設備和智慧製程監控系統，包含熱回收系統、變頻器、LED照明等' : context.industry === 'finance' ? 'ESG風險評估系統和綠色金融商品開發' : '數位化管理工具和節能技術'}，預估投資${context.size === 'large' ? '500-1000萬元' : context.size === 'medium' ? '100-300萬元' : '50-150萬元'}。${context.hasCarbonInventory === '已完成' ? '基於現有碳盤查數據，' : '建議先完成碳盤查，'}制定3-5年的減碳路徑圖，設定年減碳3-5%的目標，並申請經濟部節能補助、環保署低碳認證等資源，預期可降低風險影響60-80%，同時減少營運成本8-15%。`,
-        
-        transfer: `考慮購買${scenario.subcategory_name.includes('極端天氣') ? '天災責任險和營業中斷險，涵蓋颱風、豪雨、乾旱等' : '環境責任險和碳風險保險，包含碳價波動、法規變更等風險'}，年保費約營收的0.1-0.3%。${context.hasInternational === '有' ? '針對國際據點，考慮跨國保險方案，' : ''}可與主要客戶協商風險分攤條款，或透過碳權期貨、綠電憑證等金融工具轉移價格波動風險。建議與專業保險公司討論客製化保單設計，並評估設立風險互助基金的可行性。`,
-        
-        accept: `設立風險準備金約${context.revenue === 'large' ? '500-1000萬元' : context.revenue === 'medium' ? '100-300萬元' : '50-100萬元'}，相當於月營收的1-2倍，並建立應急響應機制。${context.industry === 'manufacturing' ? '備妥替代供應商名單和緊急生產計畫，建立多元化供應鏈' : '制定業務持續營運計畫，包含遠距辦公、數位化流程等'}，定期進行風險壓力測試，模擬不同情境下的財務衝擊，確保企業能承受短期衝擊並逐步改善體質。同時建立董事會層級的風險治理機制。`,
-        
-        control: `建立${scenario.subcategory_name}風險監控儀表板，設定關鍵預警指標（如${context.industry === 'manufacturing' ? '能耗密度、碳排放量、供應鏈穩定度、原物料價格' : '營運成本、法規變化指數、市場波動率、客戶滿意度'}）。成立跨部門風險管理小組，每季檢討風險狀況，每月更新風險矩陣，並建立標準作業程序與應變手冊。投資監控系統約${context.size === 'large' ? '50-100萬元' : '20-50萬元'}，包含數據收集、分析預警、自動報告等功能。`
+        mitigate: `【具體執行方案】${companySize === 'small' ? 
+          `優先導入低成本高效益措施：LED照明汰換、變頻空調、節水設備等基礎節能改善。` :
+          companySize === 'medium' ?
+          `投資中階節能設備：智慧電表、能源管理系統、高效率馬達，並建立能源監控機制。` :
+          `大規模導入先進技術：AI能源管理、自動化製程、再生能源系統，建立碳中和示範工廠。`
+        }
+        【投資預算】${getInvestmentRange(30, 150, 800)}
+        【實施時程】${getImplementationTimeline('mitigate')}
+        【預期效益】降低${companySize === 'small' ? '10-20%' : companySize === 'medium' ? '20-35%' : '35-50%'}能耗成本
+        ${hasCarbonInventory ? '【碳管理整合】結合現有碳盤查數據，設定年減碳3-8%目標' : '【建議先期作業】建議先完成碳盤查，建立減碳基準線'}
+        【政府資源】${companySize === 'small' ? '申請中小企業節能補助' : '爭取工業局智慧製造補助'}`,
+
+        transfer: `【風險轉移方案】${companySize === 'small' ?
+          `購買基礎氣候風險保險（年保費約營收0.1-0.3%），與主要客戶協商風險分攤條款。` :
+          companySize === 'medium' ?
+          `建立完整保險組合：環境責任險、營業中斷險、碳風險保險，並與供應商建立風險共擔機制。` :
+          `建立企業級風險轉移策略：國際保險、碳權期貨避險、設立海外風險基金，並主導供應鏈風險分攤協議。`
+        }
+        【年度成本】${getInvestmentRange(5, 25, 100)}
+        【實施時程】${getImplementationTimeline('transfer')}
+        ${hasInternational ? '【國際布局】整合全球據點風險管理，建立跨國保險網絡' : '【本土重點】聚焦台灣市場風險特性'}
+        【預期效果】轉移60-80%潛在損失風險`,
+
+        accept: `【風險承擔策略】${companySize === 'small' ?
+          `設立應急基金${getInvestmentRange(20, 80, 300)}（約2-3個月營運成本），建立基本應變SOP。` :
+          companySize === 'medium' ?
+          `建立風險準備金${getInvestmentRange(50, 200, 800)}，成立跨部門危機處理小組，制定完整BCP計畫。` :
+          `設立專業風險管理基金${getInvestmentRange(200, 800, 2000)}，建立董事會層級治理機制，定期進行情境壓力測試。`
+        }
+        【監控機制】${companySize === 'small' ? '每季檢討風險狀況' : companySize === 'medium' ? '每月風險評估會議' : '即時風險監控儀表板'}
+        【應變能力】確保能承受${companySize === 'small' ? '3-6個月' : companySize === 'medium' ? '6-12個月' : '12-24個月'}的營運衝擊`,
+
+        control: `【監控管理系統】${companySize === 'small' ?
+          `建立簡易監控機制：Excel追蹤表、月報系統、關鍵指標警示，投資${getInvestmentRange(10, 30, 80)}建置基礎監控工具。` :
+          companySize === 'medium' ?
+          `投資${getInvestmentRange(30, 100, 300)}建立數位化監控平台：即時儀表板、自動預警、趨勢分析功能。` :
+          `建立${getInvestmentRange(100, 300, 1000)}的智慧風險管理中心：AI預測分析、情境模擬、自動化應變機制。`
+        }
+        【關鍵指標】${industry === 'manufacturing' ? '能耗密度、碳排放量、供應鏈穩定度' : '營運成本波動、法規合規度、客戶滿意度'}
+        【組織架構】${companySize === 'small' ? '指派專責人員' : companySize === 'medium' ? '成立永續管理小組' : '設立企業永續長職位'}
+        【檢討頻率】${companySize === 'small' ? '每季檢討' : companySize === 'medium' ? '每月評估' : '即時監控＋每週檢討'}`
       };
     } else {
       return {
-        evaluate_explore: `建議投入${context.size === 'large' ? '100-300萬元' : context.size === 'medium' ? '50-150萬元' : '20-80萬元'}進行市場研究和技術評估，包含可行性分析、競爭對手研究、法規環境評估等。${context.industry === 'manufacturing' ? '分析生產線改善潛力和產品升級可行性，評估循環經濟、綠色製程等創新模式' : '評估服務模式創新和數位轉型機會，探索ESG科技、永續金融等新興領域'}，委託專業顧問進行投資報酬率分析，預期評估期3-6個月，ROI目標設定15-25%。`,
-        
-        capability_building: `規劃${context.industry === 'manufacturing' ? '製程技術和品質管理、環境工程、永續供應鏈管理' : '數位技能和永續管理、ESG報告、綠色金融'}等人才培訓計畫，預算${context.size === 'large' ? '200-400萬元' : context.size === 'medium' ? '80-200萬元' : '30-100萬元'}。建立內部創新團隊，設立永續發展部門或綠色創新實驗室，並考慮與大學或研究機構合作，申請產學合作計畫，強化技術研發能量。預期18-24個月建立核心能力，培養20-50位專業人才。`,
-        
-        business_transformation: `制定${context.industry}數位轉型和永續發展策略，投資${context.size === 'large' ? '500-1500萬元' : context.size === 'medium' ? '200-600萬元' : '100-300萬元'}進行業務模式調整，包含產品服務創新、通路策略優化、組織結構調整等。${context.hasInternational === '有' ? '整合國際資源，建立全球永續供應鏈，' : ''}開發ESG產品線或綠色服務項目，預期2-3年完成轉型，帶來20-50%營收成長，並提升企業ESG評等至前25%。`,
-        
-        cooperation_participation: `尋求與${context.industry === 'manufacturing' ? '上下游廠商和技術供應商、環保科技公司' : '同業夥伴和解決方案提供商、永續顧問公司'}的策略合作。參與產業聯盟（如台灣淨零排放協會）或政府綠色轉型計畫，共同投資約${context.size === 'large' ? '300-800萬元' : context.size === 'medium' ? '100-300萬元' : '50-150萬元'}。透過合作分攤風險，加速市場進入，並建立產業生態系，預期合作效益可提升投資效率30-50%。`,
-        
-        aggressive_investment: `大膽投資${context.industry === 'manufacturing' ? '先進生產設備和自動化系統、再生能源設施、循環經濟基礎建設' : '創新技術和市場擴張、數位平台、永續金融商品開發'}，預算${context.size === 'large' ? '1000-3000萬元' : context.size === 'medium' ? '300-1000萬元' : '150-500萬元'}。${context.revenue === 'large' ? '憑藉充足資金實力，' : '可考慮申請國發基金、綠色金融或引進策略投資者，'}搶佔市場先機，建立技術護城河，預期3-5年回收投資，並成為產業標竿企業。`
+        evaluate_explore: `【市場評估計畫】${companySize === 'small' ?
+          `投資${getInvestmentRange(20, 60, 200)}進行基礎調研：競爭對手分析、客戶需求調查、政策環境評估。` :
+          companySize === 'medium' ?
+          `委託專業顧問投資${getInvestmentRange(80, 200, 500)}進行深度分析：市場規模評估、技術可行性研究、財務影響評估。` :
+          `建立內部評估團隊，投資${getInvestmentRange(200, 500, 1500)}進行全面戰略分析：全球趨勢研究、技術路徑圖、商業模式創新。`
+        }
+        【評估期程】${getImplementationTimeline('evaluate_explore')}
+        【ROI目標】${companySize === 'small' ? '15-20%' : companySize === 'medium' ? '20-30%' : '25-35%'}
+        【決策里程碑】${companySize === 'small' ? '3個月內完成go/no-go決策' : '6個月內完成投資決策'}`,
+
+        capability_building: `【人才培育計畫】${companySize === 'small' ?
+          `投資${getInvestmentRange(30, 80, 200)}培訓5-10位核心人員：永續管理、碳盤查、ESG報告撰寫能力。` :
+          companySize === 'medium' ?
+          `建立專業團隊，投資${getInvestmentRange(100, 300, 800)}培育20-50位專業人才，設立永續發展部門。` :
+          `成立卓越中心，投資${getInvestmentRange(300, 800, 2000)}與頂尖大學合作，培養100+永續專業人才。`
+        }
+        【技術能力】${industry === 'manufacturing' ? '綠色製程、循環經濟、能源管理' : industry === 'technology' ? 'ESG科技、碳足跡軟體、永續創新' : '永續營運、綠色供應鏈、ESG管理'}
+        【認證目標】${companySize === 'small' ? 'ISO 14001環境管理' : companySize === 'medium' ? 'ISO 50001能源管理 + B Corp認證' : 'SBTi科學減碳目標 + TCFD揭露'}
+        【建置時程】${getImplementationTimeline('capability_building')}`,
+
+        business_transformation: `【轉型投資計畫】${companySize === 'small' ?
+          `調整產品組合，投資${getInvestmentRange(100, 300, 800)}開發環保產品線，優化現有服務流程。` :
+          companySize === 'medium' ?
+          `投資${getInvestmentRange(300, 800, 2000)}進行數位轉型：導入IoT、AI技術，開發綠色解決方案。` :
+          `全面重塑商業模式，投資${getInvestmentRange(800, 2000, 5000)}建立循環經濟平台，引領產業轉型。`
+        }
+        【新業務方向】${industry === 'manufacturing' ? '循環經濟產品、碳中和製程服務' : industry === 'technology' ? '氣候科技解決方案、ESG數據平台' : '永續品牌、綠色服務'}
+        【市場預期】${companySize === 'small' ? '新業務佔營收10-20%' : companySize === 'medium' ? '新業務佔營收20-40%' : '新業務佔營收40-60%'}
+        【轉型時程】${getImplementationTimeline('business_transformation')}
+        ${hasInternational ? '【國際拓展】結合全球永續趨勢，開拓國際綠色市場' : '【本土深耕】先在台灣建立成功模式，再擴展海外'}`,
+
+        cooperation_participation: `【合作策略方案】${companySize === 'small' ?
+          `參與產業聯盟（如台灣淨零協會），投資${getInvestmentRange(20, 50, 150)}加入政府綠色轉型計畫，尋求技術合作夥伴。` :
+          companySize === 'medium' ?
+          `建立策略聯盟，投資${getInvestmentRange(100, 300, 800)}與上下游夥伴共同開發綠色解決方案，參與國際永續標準制定。` :
+          `領導產業生態系，投資${getInvestmentRange(300, 800, 2000)}主導永續供應鏈建設，與國際頂尖企業建立戰略夥伴關係。`
+        }
+        【合作對象】${industry === 'manufacturing' ? '綠色技術供應商、循環經濟夥伴、研發機構' : '同業領導企業、永續顧問、學術機構'}
+        【政府資源】申請${companySize === 'small' ? '中小企業創新補助' : companySize === 'medium' ? '產業創新條例獎勵' : '前瞻基礎建設計畫'}
+        【預期綜效】降低投資風險30-50%，加速市場進入時間`,
+
+        aggressive_investment: `【積極投入計畫】${companySize === 'small' ?
+          `在核心優勢領域投資${getInvestmentRange(150, 400, 1000)}，包含設備升級、技術採購、人才招募，搶攻利基市場。` :
+          companySize === 'medium' ?
+          `大膽投資${getInvestmentRange(500, 1500, 4000)}建立競爭優勢：先進設備、專利技術、品牌建設，搶佔市場領導地位。` :
+          `領先投入${getInvestmentRange(1500, 4000, 10000)}突破性技術：前瞻研發、國際併購、生態系建立，成為產業標竿。`
+        }
+        【投資重點】${industry === 'manufacturing' ? '智慧製造、綠色工廠、循環經濟設施' : industry === 'technology' ? '氣候科技、永續平台、AI解決方案' : '數位轉型、綠色服務、品牌升級'}
+        【風險控制】分階段投入，設定明確里程碑，${companySize === 'small' ? '6個月' : companySize === 'medium' ? '12個月' : '18個月'}檢討調整
+        【預期回報】3-5年達成${companySize === 'small' ? '50-100%' : companySize === 'medium' ? '100-200%' : '200-300%'}投資回報率
+        【市場地位】${companySize === 'small' ? '在利基市場建立領導地位' : companySize === 'medium' ? '成為區域永續標竿企業' : '引領全球產業永續轉型'}`
       };
     }
   };
@@ -383,6 +532,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
   const riskScenarios = generatedScenarios.filter(s => s.category_type === 'risk');
   const opportunityScenarios = generatedScenarios.filter(s => s.category_type === 'opportunity');
+
+  const riskStrategies = getRiskStrategies(assessment.company_size);
+  const opportunityStrategies = getOpportunityStrategies(assessment.company_size);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -448,6 +600,10 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               <h3 className="text-xl font-bold text-red-700 flex items-center space-x-2">
                 <AlertTriangle className="h-6 w-6" />
                 <span>風險情境分析與策略建議</span>
+                <Badge variant="outline" className="ml-2">
+                  {assessment.company_size === 'small' ? '中小企業適用' : 
+                   assessment.company_size === 'medium' ? '中型企業適用' : '大型企業適用'}
+                </Badge>
               </h3>
 
               <div className="grid gap-6">
@@ -534,9 +690,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                                             </p>
                                             {analysis.strategy_recommendations[strategy.id] && (
                                               <div className="bg-white p-3 rounded border-l-4 border-red-300">
-                                                <p className="text-sm text-gray-700 leading-relaxed">
+                                                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                                                   {analysis.strategy_recommendations[strategy.id]}
-                                                </p>
+                                                </div>
                                               </div>
                                             )}
                                           </div>
@@ -587,6 +743,10 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               <h3 className="text-xl font-bold text-green-700 flex items-center space-x-2">
                 <TrendingUp className="h-6 w-6" />
                 <span>機會情境分析與策略建議</span>
+                <Badge variant="outline" className="ml-2">
+                  {assessment.company_size === 'small' ? '中小企業適用' : 
+                   assessment.company_size === 'medium' ? '中型企業適用' : '大型企業適用'}
+                </Badge>
               </h3>
 
               <div className="grid gap-6">
@@ -673,9 +833,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                                             </p>
                                             {analysis.strategy_recommendations[strategy.id] && (
                                               <div className="bg-white p-3 rounded border-l-4 border-green-300">
-                                                <p className="text-sm text-gray-700 leading-relaxed">
+                                                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                                                   {analysis.strategy_recommendations[strategy.id]}
-                                                </p>
+                                                </div>
                                               </div>
                                             )}
                                           </div>
