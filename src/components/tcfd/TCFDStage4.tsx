@@ -172,7 +172,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center flex items-center justify-center space-x-2">
-              <Target className="h-8 w-8 text-orange-600" />
+              <Target className="h-8 w-8 text-gray-600" />
               <span>第四階段：財務影響分析與計算建議</span>
             </CardTitle>
             <p className="text-gray-600 text-center">
@@ -184,7 +184,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
         <Card>
           <CardContent className="py-12 text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
             </div>
             <h3 className="text-lg font-medium mb-2">載入策略選擇資料...</h3>
             <p className="text-gray-600">
@@ -203,14 +203,14 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl text-center flex items-center justify-center space-x-2">
-            <Target className="h-8 w-8 text-orange-600" />
+            <Target className="h-8 w-8 text-gray-600" />
             <span>第四階段：財務影響分析與計算建議</span>
           </CardTitle>
           <p className="text-gray-600 text-center">
             針對每個氣候風險／機會情境與選定策略，提供結構化的財務分析與計算方法建議
           </p>
           <div className="flex justify-center mt-2">
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-gray-700">
               {getChineseText(assessment.company_size)} · {getChineseText(assessment.industry)}
             </Badge>
           </div>
@@ -218,20 +218,20 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
       </Card>
 
       {/* 進度指示 */}
-      <Card className="bg-orange-50 border-orange-200">
+      <Card className="bg-gray-50 border-gray-200">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-orange-900">財務分析進度</h3>
-              <p className="text-sm text-orange-700">
+              <h3 className="font-medium text-gray-800">財務分析進度</h3>
+              <p className="text-sm text-gray-600">
                 完成 {totalAnalysis} 個「風險／機會 × 策略」組合的財務分析與計算建議
               </p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-gray-700">
                 {totalAnalysis}
               </div>
-              <div className="text-xs text-orange-600">個組合分析</div>
+              <div className="text-xs text-gray-600">個組合分析</div>
             </div>
           </div>
         </CardContent>
@@ -245,13 +245,13 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
           const isRisk = selection.analysis.risk_strategies ? true : false;
 
           return (
-            <Card key={selection.scenarioKey} className="border-l-4 border-orange-500">
-              <CardHeader>
-                <CardTitle className="text-lg">
+            <Card key={selection.scenarioKey} className="border-l-4 border-gray-400">
+              <CardHeader className="bg-gray-50 border-b border-gray-100">
+                <CardTitle className="text-lg text-gray-800">
                   組合分析 {index + 1}: {subcategoryName} × {strategyName}
                 </CardTitle>
                 <div className="flex space-x-2">
-                  <Badge className="bg-orange-100 text-orange-800">
+                  <Badge className="bg-gray-100 text-gray-800 border border-gray-300">
                     <Sparkles className="h-3 w-3 mr-1" />
                     財務影響分析
                   </Badge>
@@ -262,13 +262,13 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* 情境回顧 */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">情境描述</h4>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <h4 className="font-medium mb-2 text-gray-800">情境描述</h4>
                   <p className="text-sm text-gray-700">{selection.analysis.scenario_description}</p>
                 </div>
 
                 {/* 選擇的策略 */}
-                <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="bg-blue-50 p-4 rounded border border-blue-200">
                   <h4 className="font-medium mb-2 text-blue-900">選定管理策略</h4>
                   <p className="text-sm text-blue-800">{strategyName}</p>
                   {selection.notes && (
@@ -284,12 +284,13 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
 
                 {/* 用戶修改意見 */}
                 <div>
-                  <h4 className="font-medium mb-2">補充意見或修改建議</h4>
+                  <h4 className="font-medium mb-2 text-gray-800">補充意見或修改建議</h4>
                   <Textarea
                     placeholder="您可以在此補充對財務分析的修改意見、內部實際狀況或額外考量因素..."
                     value={userModifications[selection.scenarioKey] || ''}
                     onChange={(e) => handleModificationChange(selection.scenarioKey, e.target.value)}
                     rows={3}
+                    className="border-gray-300 focus:border-gray-400"
                   />
                 </div>
               </CardContent>
@@ -304,7 +305,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
           onClick={handleSubmit}
           disabled={isSubmitting}
           size="lg"
-          className="px-8"
+          className="px-8 bg-gray-800 hover:bg-gray-700"
         >
           {isSubmitting ? '儲存分析中...' : '完成財務分析，進入報告生成'}
         </Button>
