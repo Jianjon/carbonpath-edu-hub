@@ -5,9 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { INDUSTRIES, COMPANY_SIZES, REVENUE_RANGES, SUPPLY_CHAIN_OPTIONS, SUSTAINABILITY_TEAM_OPTIONS, EMISSION_SOURCES } from '@/types/tcfd';
-import { Building2, FileText } from 'lucide-react';
+import { Building2, FileText, Target, Lightbulb, ShieldCheck } from 'lucide-react';
 import TCFDContentCard from './shared/TCFDContentCard';
 import TCFDFormSection from './shared/TCFDFormSection';
+import TCFDProcessFlow from './shared/TCFDProcessFlow';
 import InfoCard from '../shared/InfoCard';
 
 interface TCFDStage1Props {
@@ -91,7 +92,7 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* 簡化的標題區 - 跟減碳行動模組一致 */}
+      {/* 標題區 */}
       <div className="text-center space-y-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 flex justify-center items-center gap-2">
           <Building2 className="h-8 w-8" />
@@ -102,32 +103,55 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
         </p>
       </div>
 
+      {/* TCFD 流程圖 */}
+      <TCFDProcessFlow />
+
       {/* TCFD 介紹卡片 */}
       <InfoCard
         icon={FileText}
-        title="關於 TCFD 模擬器"
+        title="什麼是 TCFD 氣候風險財務揭露？"
         description={
           <div className="space-y-4">
             <p className="text-gray-700 leading-relaxed">
-              氣候相關財務揭露工作小組（<span className="font-semibold text-gray-800">TCFD</span>）
-              建議企業在年度財務申報中揭露氣候相關的財務資訊，協助投資者和其他利害關係人了解氣候變化對企業的影響。
+              <span className="font-semibold text-gray-800">TCFD（氣候相關財務揭露工作小組）</span>
+              是由國際金融穩定委員會成立的專業組織，建議企業在年度財務申報中揭露氣候相關的財務資訊，
+              協助投資者和利害關係人了解氣候變化對企業的潛在影響。
             </p>
             
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-gray-800">🎯 智能化評估</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• 根據產業特性客製化風險與機會識別</li>
-                  <li>• AI 生成情境分析與財務影響評估</li>
-                  <li>• 自動化報告產出，符合 TCFD 架構</li>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-600" />
+                  <h4 className="font-semibold text-blue-800">智能化評估</h4>
+                </div>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• 根據產業特性客製化風險識別</li>
+                  <li>• AI 驅動的情境分析與評估</li>
+                  <li>• 自動化報告產出符合國際標準</li>
                 </ul>
               </div>
-              <div className="space-y-2">
-                <h4 className="font-semibold text-gray-800">📊 專業級輸出</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• 完整四大核心要素分析報告</li>
+              
+              <div className="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-green-600" />
+                  <h4 className="font-semibold text-green-800">專業級輸出</h4>
+                </div>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li>• 涵蓋 TCFD 四大核心要素</li>
                   <li>• 可直接參考的揭露內容草稿</li>
-                  <li>• 財務影響量化分析與策略建議</li>
+                  <li>• 財務影響量化與策略建議</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-purple-600" />
+                  <h4 className="font-semibold text-purple-800">法規合規</h4>
+                </div>
+                <ul className="text-sm text-purple-700 space-y-1">
+                  <li>• 符合金管會 ESG 資訊揭露要求</li>
+                  <li>• 對接國際 TCFD 框架標準</li>
+                  <li>• 協助企業提升永續競爭力</li>
                 </ul>
               </div>
             </div>
