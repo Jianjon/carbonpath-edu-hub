@@ -161,7 +161,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  // 生成綜合分析
+  // 生成綜合分析 - 包含所有使用者輸入
   const generateAnalysis = async (scenarioIndex: number) => {
     const scenario = scenarios[scenarioIndex];
     if (!scenario || !scenario.scenarioDescription) {
@@ -195,7 +195,16 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }));
 
     try {
-      console.log('使用LLM生成新的分析');
+      console.log('使用LLM生成新的分析，包含所有使用者輸入');
+      
+      // 收集所有使用者自訂輸入
+      const userCustomInputs = {
+        user_notes: userNotes[scenario.id],
+        user_score: score,
+        scenario_modifications: description !== scenario.scenarioDescription ? description : null,
+        business_context: assessment.business_description
+      };
+
       const response = await generateComprehensiveScenarioAnalysis(
         scenario.categoryType,
         scenario.categoryName,
@@ -203,7 +212,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         description,
         score,
         assessment.industry,
-        assessment.company_size
+        assessment.company_size,
+        assessment.business_description,
+        userCustomInputs
       );
 
       setScenarioAnalysis(prev => ({
@@ -279,18 +290,29 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   const handleComplete = () => {
-    // 儲存階段結果到 sessionStorage
+    // 儲存階段結果到 sessionStorage，包含所有使用者輸入
     const stage3Results = {
       assessment,
       scenarios,
       userScores,
       userNotes,
       scenarioAnalysis,
+      userCustomInputs: {
+        scores: userScores,
+        notes: userNotes,
+        scenarioModifications: Object.keys(userNotes).reduce((acc, key) => {
+          const scenario = scenarios.find(s => s.id === key);
+          if (scenario && userNotes[key] !== scenario.scenarioDescription) {
+            acc[key] = userNotes[key];
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      },
       completedAt: new Date().toISOString()
     };
     
     sessionStorage.setItem('tcfd-stage3-results', JSON.stringify(stage3Results));
-    console.log('第三階段結果已儲存:', stage3Results);
+    console.log('第三階段結果已儲存，包含所有使用者輸入:', stage3Results);
     
     onComplete();
   };

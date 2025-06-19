@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -16,10 +15,31 @@ serve(async (req) => {
   }
 
   try {
-    const { type, categoryType, categoryName, subcategoryName, industry, scenarioDescription, userScore, companySize } = await req.json();
+    const { 
+      type, 
+      categoryType, 
+      categoryName, 
+      subcategoryName, 
+      industry, 
+      scenarioDescription, 
+      userScore, 
+      companySize,
+      businessDescription,
+      userCustomInputs
+    } = await req.json();
 
     console.log('Request type:', type);
-    console.log('Request data:', { categoryType, categoryName, subcategoryName, industry, scenarioDescription, userScore, companySize });
+    console.log('Request data:', { 
+      categoryType, 
+      categoryName, 
+      subcategoryName, 
+      industry, 
+      scenarioDescription, 
+      userScore, 
+      companySize,
+      businessDescription,
+      userCustomInputs
+    });
 
     let prompt = '';
     let systemPrompt = '';
@@ -45,9 +65,26 @@ serve(async (req) => {
 請直接提供情境描述內容，不需要額外說明：`;
 
     } else if (type === 'comprehensive_scenario_analysis') {
-      // 全新的綜合情境分析生成
-      systemPrompt = `你是一位專精於氣候風險管理、財務分析和策略規劃的 TCFD 專業顧問。請根據具體的風險/機會情境、企業規模和產業特性，提供量身定制的財務影響分析和管理策略建議。每個策略都必須針對該特定情境設計，而非通用模板。`;
+      // 全新的綜合情境分析生成，包含使用者自訂內容
+      systemPrompt = `你是一位專精於氣候風險管理、財務分析和策略規劃的 TCFD 專業顧問。請根據具體的風險/機會情境、企業規模、產業特性以及使用者提供的自訂資訊，提供量身定制的財務影響分析和管理策略建議。每個策略都必須針對該特定情境和使用者輸入設計，而非通用模板。`;
       
+      // 構建包含使用者自訂內容的詳細描述
+      let contextualInfo = '';
+      if (businessDescription) {
+        contextualInfo += `\n企業描述: ${businessDescription}`;
+      }
+      if (userCustomInputs) {
+        if (userCustomInputs.user_notes) {
+          contextualInfo += `\n使用者補充說明: ${userCustomInputs.user_notes}`;
+        }
+        if (userCustomInputs.scenario_modifications) {
+          contextualInfo += `\n情境描述修改: ${userCustomInputs.scenario_modifications}`;
+        }
+        if (userCustomInputs.business_context) {
+          contextualInfo += `\n商業背景資訊: ${userCustomInputs.business_context}`;
+        }
+      }
+
       // 根據風險或機會類型提供不同的策略選項
       const strategiesSection = categoryType === 'risk' ? 
         `"risk_strategies": {
@@ -158,19 +195,19 @@ serve(async (req) => {
 
 情境分類: ${categoryName} - ${subcategoryName}
 情境描述: ${scenarioDescription}
-影響評分: ${userScore}/3 分（${userScore === 3 ? '高度影響' : userScore === 2 ? '中度影響' : '輕度影響'}）
+影響評分: ${userScore}/10 分
 產業: ${industry}
-企業規模: ${companySize}
+企業規模: ${companySize}${contextualInfo}
 
-請按照以下 JSON 格式提供詳細回應，所有策略內容都必須針對「${subcategoryName}」這個特定情境量身定制：
+請按照以下 JSON 格式提供詳細回應，所有策略內容都必須針對「${subcategoryName}」這個特定情境以及使用者提供的背景資訊量身定制：
 
 {
-  "scenario_summary": "一句話概括「${subcategoryName}」情境的背景與${categoryType === 'risk' ? '風險' : '機會'}重點（80字內）",
+  "scenario_summary": "一句話概括「${subcategoryName}」情境的背景與${categoryType === 'risk' ? '風險' : '機會'}重點，結合使用者提供的具體資訊（80字內）",
   "financial_impact": {
     "profit_loss": {
       "description": "「${subcategoryName}」對${industry}企業損益表的具體影響分析，包含營收、毛利、營業成本變化（150-180字）",
       "impact_direction": "正面/負面/中性",
-      "amount_estimate": "根據${companySize}企業規模的具體金額區間估計",
+      "amount_estimate": "根據${companySize}企業規模和使用者背景的具體金額區間估計",
       "timeframe": "短期（1-3年）/中期（3-7年）/長期（7年以上）",
       "key_items": ["主要影響項目1", "主要影響項目2", "主要影響項目3", "主要影響項目4"]
     },
@@ -188,18 +225,15 @@ serve(async (req) => {
       "timeframe": "短期/中期/長期",
       "key_items": ["資產負債表影響項目1", "資產負債表影響項目2", "資產負債表影響項目3", "資產負債表影響項目4"]
     }
-  },
-  ${strategiesSection}
+  }
 }
 
 重要要求：
-1. 所有策略建議必須針對「${subcategoryName}」這個具體情境，不可使用通用模板
-2. 考慮${companySize}企業的實際執行能力和資源限制
-3. 策略描述要包含具體的執行步驟和實施細節
+1. 所有策略建議必須針對「${subcategoryName}」這個具體情境和使用者提供的背景資訊
+2. 充分考慮使用者的自訂輸入和企業特殊情況
+3. 考慮${companySize}企業的實際執行能力和資源限制
 4. 財務影響分析要具體量化，提供實用的金額區間估計
-5. 可行性評分要有合理依據和針對性說明
-6. 所有內容專業且實用，符合 TCFD 報告標準
-7. 成功關鍵因素要針對該特定情境和產業特性
+5. 所有內容專業且實用，符合 TCFD 報告標準並反映使用者的具體需求
 
 請直接提供 JSON 格式的回應：`;
 
@@ -378,7 +412,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }

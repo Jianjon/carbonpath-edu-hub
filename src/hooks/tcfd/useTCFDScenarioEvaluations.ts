@@ -96,7 +96,9 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
     scenarioDescription: string,
     userScore: number,
     industry: string,
-    companySize: string
+    companySize: string,
+    businessDescription?: string,
+    userCustomInputs?: any
   ) => {
     try {
       return await comprehensiveScenarioService.generateComprehensiveScenarioAnalysis(
@@ -106,7 +108,9 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
         scenarioDescription,
         userScore,
         industry,
-        companySize
+        companySize,
+        businessDescription,
+        userCustomInputs
       );
     } catch (err) {
       console.error('Error in generateComprehensiveScenarioAnalysis:', err);
