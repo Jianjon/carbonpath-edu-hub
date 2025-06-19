@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -91,81 +90,66 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
   const placeholderText = getBusinessDescriptionPlaceholder(industry, companySize);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* 標題區 */}
-      <div className="text-center space-y-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex justify-center items-center gap-2">
-          <Building2 className="h-8 w-8" />
-          第一階段：基本條件輸入
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* 標題區 - 統一風格 */}
+      <div className="text-center space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900 flex justify-center items-center gap-3">
+          <Building2 className="h-8 w-8 text-blue-600" />
+          TCFD 氣候風險財務揭露
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          請提供您的企業基本資訊，這些資料將作為後續風險與機會分析的基礎。
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          依據 TCFD 官方框架，協助企業完成風險與機會評估，並自動生成報告草稿
         </p>
       </div>
 
-      {/* TCFD 流程圖 */}
+      {/* 流程圖 - 統一風格 */}
       <TCFDProcessFlow />
 
-      {/* TCFD 介紹卡片 */}
-      <InfoCard
-        icon={FileText}
-        title="什麼是 TCFD 氣候風險財務揭露？"
-        description={
-          <div className="space-y-4">
-            <p className="text-gray-700 leading-relaxed">
-              <span className="font-semibold text-gray-800">TCFD（氣候相關財務揭露工作小組）</span>
-              是由國際金融穩定委員會成立的專業組織，建議企業在年度財務申報中揭露氣候相關的財務資訊，
-              協助投資者和利害關係人了解氣候變化對企業的潛在影響。
-            </p>
-            
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-blue-600" />
-                  <h4 className="font-semibold text-blue-800">智能化評估</h4>
-                </div>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• 根據產業特性客製化風險識別</li>
-                  <li>• AI 驅動的情境分析與評估</li>
-                  <li>• 自動化報告產出符合國際標準</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-green-600" />
-                  <h4 className="font-semibold text-green-800">專業級輸出</h4>
-                </div>
-                <ul className="text-sm text-green-700 space-y-1">
-                  <li>• 涵蓋 TCFD 四大核心要素</li>
-                  <li>• 可直接參考的揭露內容草稿</li>
-                  <li>• 財務影響量化與策略建議</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-purple-600" />
-                  <h4 className="font-semibold text-purple-800">法規合規</h4>
-                </div>
-                <ul className="text-sm text-purple-700 space-y-1">
-                  <li>• 符合金管會 ESG 資訊揭露要求</li>
-                  <li>• 對接國際 TCFD 框架標準</li>
-                  <li>• 協助企業提升永續競爭力</li>
-                </ul>
-              </div>
+      {/* 簡介說明 - 統一風格 */}
+      <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 border border-blue-200">
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Target className="h-6 w-6 text-blue-600" />
             </div>
+            <h3 className="font-semibold text-gray-900 mb-2">智能化評估</h3>
+            <p className="text-sm text-gray-600">
+              根據產業特性客製化風險識別，AI 驅動的情境分析與評估
+            </p>
           </div>
-        }
-        themeColor="blue"
-        className="mb-8"
-      />
+          <div className="text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Lightbulb className="h-6 w-6 text-green-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">專業級輸出</h3>
+            <p className="text-sm text-gray-600">
+              涵蓋 TCFD 四大核心要素，可直接參考的揭露內容草稿
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <ShieldCheck className="h-6 w-6 text-purple-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">法規合規</h3>
+            <p className="text-sm text-gray-600">
+              符合金管會 ESG 資訊揭露要求，對接國際 TCFD 框架標準
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* 主要表單 */}
-      <TCFDContentCard title="企業基本資訊" icon={Building2}>
-        <form onSubmit={handleSubmit} className="space-y-8">
+      {/* 主要表單 - 統一風格 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            企業基本資訊
+          </h2>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* 基本資訊區塊 */}
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             <TCFDFormSection
               title="產業別"
               description="請選擇最符合您企業的主要產業分類"
@@ -206,9 +190,9 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
           </div>
 
           {/* 專業評估資訊 */}
-          <div className="border-t border-slate-200 pt-8">
-            <h3 className="text-lg font-semibold text-slate-800 mb-6">專業評估資訊</h3>
-            <div className="grid md:grid-cols-2 gap-8">
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">專業評估資訊</h3>
+            <div className="grid md:grid-cols-2 gap-6">
               <TCFDFormSection title="國際營運狀況" description="是否有跨地區或國際營運據點">
                 <Select value={hasInternationalOperations?.toString() || ''} onValueChange={(value) => setHasInternationalOperations(value === 'true')}>
                   <SelectTrigger className="w-full">
@@ -267,7 +251,7 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
               </TCFDFormSection>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-6">
               <TCFDFormSection title="主要溫室氣體來源" description="預估企業營運中最主要的溫室氣體排放來源">
                 <Select value={mainEmissionSource} onValueChange={setMainEmissionSource}>
                   <SelectTrigger className="w-full">
@@ -286,15 +270,15 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
           </div>
 
           {/* 碳盤查完成狀態 */}
-          <div className="border-t border-slate-200 pt-8">
+          <div className="border-t border-gray-200 pt-6">
             <TCFDFormSection title="碳盤查完成狀態" description="是否已完成溫室氣體盤查作業">
-              <div className="flex items-center space-x-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                 <Checkbox 
                   id="carbon_inventory" 
                   checked={hasCarbonInventory} 
                   onCheckedChange={(checked) => setHasCarbonInventory(!!checked)} 
                 />
-                <label htmlFor="carbon_inventory" className="text-sm text-slate-700 cursor-pointer">
+                <label htmlFor="carbon_inventory" className="text-sm text-gray-700 cursor-pointer">
                   我們已完成溫室氣體盤查（GHG Inventory）
                 </label>
               </div>
@@ -302,7 +286,7 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
           </div>
 
           {/* 組織營運簡述 */}
-          <div className="border-t border-slate-200 pt-8">
+          <div className="border-t border-gray-200 pt-6">
             <TCFDFormSection 
               title="組織營運簡述" 
               description="請簡述企業主要營運型態、產品服務等（選填，200字內）"
@@ -315,11 +299,11 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
                 rows={4}
                 className="resize-none" 
               />
-              <div className="flex justify-between items-center text-sm">
-                <p className="text-slate-500">
+              <div className="flex justify-between items-center text-sm mt-2">
+                <p className="text-gray-500">
                   {businessDescription.length}/200 字
                 </p>
-                <p className="text-slate-500 text-xs">
+                <p className="text-gray-500 text-xs">
                   💡 請避免透露具體數據、客戶名稱等機密資訊
                 </p>
               </div>
@@ -327,17 +311,17 @@ const TCFDStage1 = ({ onComplete }: TCFDStage1Props) => {
           </div>
 
           {/* 提交按鈕 */}
-          <div className="flex justify-center pt-8">
+          <div className="flex justify-center pt-6">
             <Button 
               type="submit" 
               disabled={!isValid || isSubmitting} 
-              className="px-12 py-3 text-base bg-slate-700 hover:bg-slate-800"
+              className="px-8 py-3 text-base"
             >
               {isSubmitting ? '建立評估中...' : '開始 TCFD 評估'}
             </Button>
           </div>
         </form>
-      </TCFDContentCard>
+      </div>
     </div>
   );
 };
