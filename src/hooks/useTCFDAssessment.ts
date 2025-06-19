@@ -239,7 +239,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
     ]);
   };
 
-  // 生成 LLM 情境內容
+  // 生成 LLM 情境內容 - 呼叫真實的 OpenAI API
   const generateScenarioWithLLM = async (
     categoryType: 'risk' | 'opportunity',
     categoryName: string,
@@ -247,83 +247,69 @@ export const useTCFDAssessment = (assessmentId?: string) => {
     industry: string
   ) => {
     try {
-      const prompt = `你是一位熟悉氣候相關財務揭露（TCFD）的專業顧問。
+      console.log('Calling TCFD LLM generator for scenario:', { categoryType, categoryName, subcategoryName, industry });
+      
+      const { data, error } = await supabase.functions.invoke('tcfd-llm-generator', {
+        body: {
+          type: 'scenario',
+          categoryType,
+          categoryName,
+          subcategoryName,
+          industry
+        }
+      });
 
-請為以下條件生成一個具體的氣候${categoryType === 'risk' ? '風險' : '機會'}情境描述：
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`API 呼叫失敗: ${error.message}`);
+      }
 
-類型: ${categoryType === 'risk' ? '風險' : '機會'}
-分類: ${categoryName}
-子分類: ${subcategoryName}
-產業: ${industry}
+      if (!data || !data.success) {
+        console.error('API response error:', data);
+        throw new Error(`API 回應錯誤: ${data?.error || '未知錯誤'}`);
+      }
 
-請生成一段 100-150 字的具體情境描述，需要：
-1. 符合 TCFD 框架
-2. 針對該產業的實際營運情況
-3. 描述具體的氣候變化如何影響業務
-4. 語氣專業中立
-
-情境描述：`;
-
-      // 這裡會調用 LLM API，目前返回模擬內容
-      const mockResponse = `針對${industry}在${categoryName}的${subcategoryName}方面，${
-        categoryType === 'risk' 
-          ? '面臨的主要風險在於政策變化可能導致營運成本增加，同時需要投入額外資源進行合規管理，對短期獲利能力造成壓力。'
-          : '具備轉型機會，能夠透過採用新技術或商業模式，在降低環境影響的同時創造新的收入來源，並提升市場競爭力。'
-      }企業需要評估相關財務影響並制定適當的應對策略。`;
-
-      return mockResponse;
+      console.log('Generated scenario:', data.content);
+      return data.content;
     } catch (err) {
-      throw new Error('LLM 生成失敗');
+      console.error('Error in generateScenarioWithLLM:', err);
+      throw new Error(err instanceof Error ? err.message : 'LLM 情境生成失敗');
     }
   };
 
-  // 生成策略與財務分析
+  // 生成策略與財務分析 - 呼叫真實的 OpenAI API
   const generateStrategyAnalysisWithLLM = async (
     scenarioDescription: string,
     userScore: number,
     industry: string
   ) => {
     try {
-      const prompt = `針對以下風險/機會情境，請生成詳細的策略與財務分析：
+      console.log('Calling TCFD LLM generator for strategy analysis:', { scenarioDescription, userScore, industry });
+      
+      const { data, error } = await supabase.functions.invoke('tcfd-llm-generator', {
+        body: {
+          type: 'strategy',
+          scenarioDescription,
+          userScore,
+          industry
+        }
+      });
 
-情境描述: ${scenarioDescription}
-影響評分: ${userScore}/3 分
-產業: ${industry}
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`API 呼叫失敗: ${error.message}`);
+      }
 
-請按照以下格式輸出：
+      if (!data || !data.success) {
+        console.error('API response error:', data);
+        throw new Error(`API 回應錯誤: ${data?.error || '未知錯誤'}`);
+      }
 
-詳細說明:
-[對該情境的深入分析]
-
-財務影響:
-- 損益表: [具體影響說明]
-- 現金流: [現金流影響分析]
-- 資產負債表: [資產負債影響說明]
-
-應對策略:
-- 避免策略: [具體作法與效益]
-- 減緩策略: [具體作法與效益]
-- 轉移策略: [具體作法與效益]
-- 承擔策略: [具體作法與效益]
-
-建議追蹤指標:
-[關鍵績效指標建議]`;
-
-      // 模擬 LLM 回應
-      const mockAnalysis = {
-        detailed_description: `此情境對${industry}具有${userScore === 3 ? '高度' : userScore === 2 ? '中度' : '低度'}影響。企業需要制定完整的應對計畫以降低潛在風險並把握轉型機會。`,
-        financial_impact_pnl: `預估對年度損益的影響約為營收的 ${userScore * 2}%，主要來自於營運成本變化與新投資需求。`,
-        financial_impact_cashflow: `短期現金流可能受到 ${userScore * 1.5}% 的影響，需要預留充足的營運資金。`,
-        financial_impact_balance_sheet: `可能需要增加 ${userScore * 3}% 的資本支出用於設備升級或風險管理措施。`,
-        strategy_avoid: '透過技術升級和流程改善，降低暴露風險，預估投資回收期 2-3 年。',
-        strategy_accept: '接受當前風險水準，但建立監控機制並準備應急計畫。',
-        strategy_transfer: '透過保險或外包等方式轉移部分風險，年度成本約為潛在損失的 10-15%。',
-        strategy_mitigate: '實施漸進式改善措施，在 3-5 年內逐步降低風險暴露程度。'
-      };
-
-      return mockAnalysis;
+      console.log('Generated strategy analysis:', data.content);
+      return data.content;
     } catch (err) {
-      throw new Error('策略分析生成失敗');
+      console.error('Error in generateStrategyAnalysisWithLLM:', err);
+      throw new Error(err instanceof Error ? err.message : '策略分析生成失敗');
     }
   };
 
