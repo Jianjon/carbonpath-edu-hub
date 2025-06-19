@@ -11,9 +11,6 @@ import { useTCFDRiskOpportunitySelections } from '@/hooks/tcfd/useTCFDRiskOpport
 import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
 import { Loader2, Lightbulb, AlertTriangle, TrendingUp, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import TCFDLayout from './shared/TCFDLayout';
-import TCFDContentCard from './shared/TCFDContentCard';
-import TCFDFormSection from './shared/TCFDFormSection';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
@@ -106,7 +103,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const scenario = scenarios[scenarioIndex];
     if (!scenario) return;
 
-    // 檢查是否已有相同參數的情境描述
     const existingEvaluation = scenarioEvaluations.find(e => 
       e.risk_opportunity_id === scenario.id &&
       e.scenario_description &&
@@ -162,7 +158,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  // 生成綜合分析 - 包含所有使用者輸入
+  // 生成綜合分析
   const generateAnalysis = async (scenarioIndex: number) => {
     const scenario = scenarios[scenarioIndex];
     if (!scenario || !scenario.scenarioDescription) {
@@ -173,7 +169,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const score = userScores[scenario.id] || 5;
     const description = userNotes[scenario.id] || scenario.scenarioDescription;
 
-    // 檢查是否已有相同參數的分析
     const existingEvaluation = scenarioEvaluations.find(e => 
       e.risk_opportunity_id === scenario.id &&
       e.user_score === score &&
@@ -196,9 +191,8 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }));
 
     try {
-      console.log('使用LLM生成新的分析，包含所有使用者輸入');
+      console.log('使用LLM生成新的分析');
       
-      // 收集所有使用者自訂輸入
       const userCustomInputs = {
         user_notes: userNotes[scenario.id],
         user_score: score,
@@ -231,7 +225,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         subcategory_name: scenario.subcategoryName || '',
         scenario_description: description,
         user_score: score,
-        likelihood_score: score, // Use the same score for likelihood
+        likelihood_score: score,
         llm_response: JSON.stringify(response),
         scenario_generated_by_llm: true
       });
@@ -264,7 +258,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         subcategory_name: scenario.subcategoryName || '',
         scenario_description: description,
         user_score: score,
-        likelihood_score: score, // Use the same score for likelihood
+        likelihood_score: score,
         llm_response: scenarioAnalysis[scenario.id] ? JSON.stringify(scenarioAnalysis[scenario.id]) : null,
         scenario_generated_by_llm: true
       });
@@ -291,7 +285,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   const handleComplete = () => {
-    // 儲存階段結果到 sessionStorage，包含所有使用者輸入
     const stage3Results = {
       assessment,
       scenarios,
@@ -313,7 +306,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     };
     
     sessionStorage.setItem('tcfd-stage3-results', JSON.stringify(stage3Results));
-    console.log('第三階段結果已儲存，包含所有使用者輸入:', stage3Results);
+    console.log('第三階段結果已儲存:', stage3Results);
     
     onComplete();
   };
@@ -323,7 +316,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   if (scenarios.length === 0) {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* 標題區 - 統一風格 */}
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-bold text-gray-900">第三階段：LLM 情境評估</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -331,19 +323,18 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           </p>
         </div>
 
-        <TCFDContentCard title="載入中" className="text-center">
-          <div className="py-12">
+        <Card>
+          <CardContent className="text-center py-12">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-600" />
             <p className="text-slate-600">正在載入選擇的風險機會項目...</p>
-          </div>
-        </TCFDContentCard>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* 標題區 - 統一風格 */}
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold text-gray-900">第三階段：LLM 情境評估</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -379,30 +370,27 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
       {/* 當前情境評估 */}
       {currentScenario && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="border-b border-gray-200 px-6 py-4">
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2">
                 {currentScenario.categoryType === 'risk' ? (
                   <AlertTriangle className="h-5 w-5 text-red-500" />
                 ) : (
                   <TrendingUp className="h-5 w-5 text-green-500" />
                 )}
                 {currentScenario.categoryType === 'risk' ? '風險' : '機會'} - {currentScenario.categoryName}
-              </h2>
+              </CardTitle>
               {currentScenario.subcategoryName && (
                 <Badge variant="outline">{currentScenario.subcategoryName}</Badge>
               )}
             </div>
-          </div>
+          </CardHeader>
           
-          <div className="p-6 space-y-6">
+          <CardContent className="space-y-6">
             {/* 情境描述生成 */}
-            <TCFDFormSection
-              title="情境描述"
-              description="AI 將為此項目生成具體的情境描述"
-              required
-            >
+            <div>
+              <h3 className="font-medium text-gray-900 mb-3">情境描述</h3>
               <div className="space-y-4">
                 <Button
                   onClick={() => generateScenario(currentScenarioIndex)}
@@ -438,14 +426,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   </div>
                 )}
               </div>
-            </TCFDFormSection>
+            </div>
 
             {/* 影響程度評分 */}
-            <TCFDFormSection
-              title="影響程度評分"
-              description="請為此情境的影響程度評分 (1-10 分)"
-              required
-            >
+            <div>
+              <h3 className="font-medium text-gray-900 mb-3">影響程度評分</h3>
               <div className="space-y-4">
                 <div className="px-4 py-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
@@ -469,13 +454,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   </div>
                 </div>
               </div>
-            </TCFDFormSection>
+            </div>
 
             {/* 綜合分析 */}
-            <TCFDFormSection
-              title="綜合分析"
-              description="基於情境描述和影響程度，生成詳細的影響分析"
-            >
+            <div>
+              <h3 className="font-medium text-gray-900 mb-3">綜合分析</h3>
               <div className="space-y-4">
                 <Button
                   onClick={() => generateAnalysis(currentScenarioIndex)}
@@ -520,7 +503,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   </div>
                 )}
               </div>
-            </TCFDFormSection>
+            </div>
 
             {/* 操作按鈕 */}
             <div className="flex justify-between pt-4">
@@ -555,8 +538,8 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                 </Button>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
