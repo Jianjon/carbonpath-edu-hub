@@ -36,13 +36,13 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       const selectedItems = riskOpportunitySelections.filter(item => item.selected);
       
       // 檢查是否已有足夠的情境評估資料
-      const existingEvaluations = scenarioEvaluations.filter(eval => 
-        selectedItems.some(item => item.id === eval.risk_opportunity_id)
+      const existingEvaluations = scenarioEvaluations.filter(evaluation => 
+        selectedItems.some(item => item.id === evaluation.risk_opportunity_id)
       );
 
       // 只對沒有資料的項目進行 LLM 生成（通常是用戶自訂情境）
       const itemsNeedingGeneration = selectedItems.filter(item => 
-        !existingEvaluations.some(eval => eval.risk_opportunity_id === item.id)
+        !existingEvaluations.some(evaluation => evaluation.risk_opportunity_id === item.id)
       );
 
       if (itemsNeedingGeneration.length > 0) {
@@ -79,14 +79,14 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       const stage3Results = {
         assessment: assessment,
         scenarios: selectedItems.map(item => {
-          const existingEval = scenarioEvaluations.find(eval => eval.risk_opportunity_id === item.id);
+          const existingEvaluation = scenarioEvaluations.find(evaluation => evaluation.risk_opportunity_id === item.id);
           return {
             categoryName: item.category_name,
             categoryType: item.category_type,
             subcategoryName: item.subcategory_name || '',
-            scenarioDescription: existingEval?.scenario_description || `${item.subcategory_name}的情境分析`,
-            userScore: existingEval?.user_score || 5,
-            llmResponse: existingEval?.llm_response || '{}',
+            scenarioDescription: existingEvaluation?.scenario_description || `${item.subcategory_name}的情境分析`,
+            userScore: existingEvaluation?.user_score || 5,
+            llmResponse: existingEvaluation?.llm_response || '{}',
             userNotes: ''
           };
         })
