@@ -1,3 +1,4 @@
+
 export interface TCFDAssessment {
   id: string;
   user_id: string;
@@ -32,9 +33,12 @@ export interface ScenarioEvaluation {
   id: string;
   assessment_id: string;
   risk_opportunity_id: string;
+  category_name: string;
+  subcategory_name: string;
   scenario_description: string;
   scenario_generated_by_llm: boolean;
   user_score?: number;
+  likelihood_score: number;
   llm_response?: string;
   selected_strategy?: string;
   created_at: string;

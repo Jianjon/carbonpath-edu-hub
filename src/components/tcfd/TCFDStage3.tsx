@@ -68,8 +68,8 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     
     if (!scenario) return;
 
-    const scenarioEvaluation = scenarioEvaluations.find(eval => 
-      eval.category_name === categoryName && eval.subcategory_name === subcategoryName
+    const scenarioEvaluation = scenarioEvaluations.find(evaluation => 
+      evaluation.category_name === categoryName && evaluation.subcategory_name === subcategoryName
     );
 
     if (!scenarioEvaluation) {
@@ -142,9 +142,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const analysis = strategyAnalyses[scenarioKey];
     const isLoading = loadingAnalyses[scenarioKey];
     
-    const scenarioEvaluation = scenarioEvaluations.find(eval => 
-      eval.category_name === scenario.category_name && 
-      eval.subcategory_name === scenario.subcategory_name
+    const scenarioEvaluation = scenarioEvaluations.find(evaluation => 
+      evaluation.category_name === scenario.category_name && 
+      evaluation.subcategory_name === scenario.subcategory_name
     );
 
     const isRisk = scenario.category_type === 'risk';
