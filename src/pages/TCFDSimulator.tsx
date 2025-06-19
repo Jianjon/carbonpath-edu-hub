@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -10,15 +11,7 @@ import TCFDStage5 from '@/components/tcfd/TCFDStage5';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-
-// 生成真正的UUID格式
-const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
+import { supabase } from '@/integrations/supabase/client';
 
 const TCFDSimulator = () => {
   const navigate = useNavigate();
@@ -34,6 +27,18 @@ const TCFDSimulator = () => {
   } = useTCFDAssessment(assessmentId || undefined);
 
   const [currentStage, setCurrentStage] = useState(1);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // 檢查用戶身份驗證狀態
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
+      setAuthChecked(true);
+    };
+    
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     if (assessment) {
@@ -64,13 +69,11 @@ const TCFDSimulator = () => {
     business_description?: string;
   }) => {
     try {
-      // 生成一個臨時用戶ID，實際應用中應該使用真實的用戶認證
-      const tempUserId = generateUUID();
-      console.log('Generated temp user ID:', tempUserId);
+      console.log('Creating new assessment with data:', data);
       
       const newAssessment = await createAssessment({
         ...data,
-        user_id: tempUserId
+        user_id: '' // 這個值會在 service 中被覆蓋
       });
       
       console.log('Assessment created, navigating to next stage:', newAssessment.id);
@@ -110,6 +113,17 @@ const TCFDSimulator = () => {
     '策略與財務分析',
     '報告生成'
   ];
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">初始化中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -197,7 +211,7 @@ const TCFDSimulator = () => {
                 <div className="mt-2 text-sm text-red-700">
                   <p>{error}</p>
                   <p className="mt-2 text-xs text-red-600">
-                    請檢查網路連線或重新整理頁面重試。如果問題持續發生，請聯繫技術支援。
+                    如果問題持續發生，請嘗試重新整理頁面。系統已自動處理身份驗證。
                   </p>
                 </div>
               </div>
