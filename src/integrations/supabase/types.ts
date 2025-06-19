@@ -101,35 +101,53 @@ export type Database = {
       }
       tcfd_assessments: {
         Row: {
+          annual_revenue_range: string | null
+          business_description: string | null
           company_size: string
           created_at: string
           current_stage: number
           has_carbon_inventory: boolean
+          has_international_operations: boolean | null
+          has_sustainability_team: string | null
           id: string
           industry: string
+          main_emission_source: string | null
           status: string
+          supply_chain_carbon_disclosure: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          annual_revenue_range?: string | null
+          business_description?: string | null
           company_size: string
           created_at?: string
           current_stage?: number
           has_carbon_inventory?: boolean
+          has_international_operations?: boolean | null
+          has_sustainability_team?: string | null
           id?: string
           industry: string
+          main_emission_source?: string | null
           status?: string
+          supply_chain_carbon_disclosure?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          annual_revenue_range?: string | null
+          business_description?: string | null
           company_size?: string
           created_at?: string
           current_stage?: number
           has_carbon_inventory?: boolean
+          has_international_operations?: boolean | null
+          has_sustainability_team?: string | null
           id?: string
           industry?: string
+          main_emission_source?: string | null
           status?: string
+          supply_chain_carbon_disclosure?: string | null
           updated_at?: string
           user_id?: string
         }
