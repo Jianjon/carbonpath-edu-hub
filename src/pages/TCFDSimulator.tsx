@@ -43,8 +43,12 @@ const TCFDSimulator = () => {
 
   const handleStageComplete = async (nextStage: number) => {
     if (assessment) {
-      await updateAssessmentStage(nextStage);
-      setCurrentStage(nextStage);
+      try {
+        await updateAssessmentStage(nextStage);
+        setCurrentStage(nextStage);
+      } catch (err) {
+        console.error('Error updating stage:', err);
+      }
     }
   };
 
@@ -60,18 +64,21 @@ const TCFDSimulator = () => {
     business_description?: string;
   }) => {
     try {
-      // 使用真正的UUID格式而不是字符串
-      const mockUserId = generateUUID();
-      console.log('Generated UUID:', mockUserId);
+      // 生成一個臨時用戶ID，實際應用中應該使用真實的用戶認證
+      const tempUserId = generateUUID();
+      console.log('Generated temp user ID:', tempUserId);
       
       const newAssessment = await createAssessment({
         ...data,
-        user_id: mockUserId
+        user_id: tempUserId
       });
+      
+      console.log('Assessment created, navigating to next stage:', newAssessment.id);
       setSearchParams({ assessment: newAssessment.id });
       setCurrentStage(2);
     } catch (err) {
       console.error('Error creating assessment:', err);
+      // Error will be displayed through the error state
     }
   };
 
@@ -184,7 +191,17 @@ const TCFDSimulator = () => {
         
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-700">錯誤：{error}</p>
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">發生錯誤</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                  <p className="mt-2 text-xs text-red-600">
+                    請檢查網路連線或重新整理頁面重試。如果問題持續發生，請聯繫技術支援。
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         

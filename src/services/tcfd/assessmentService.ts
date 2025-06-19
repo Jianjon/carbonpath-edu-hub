@@ -14,6 +14,8 @@ export const createAssessment = async (data: {
   business_description?: string;
   user_id: string;
 }): Promise<TCFDAssessment> => {
+  console.log('Creating assessment with data:', data);
+  
   const { data: newAssessment, error } = await supabase
     .from('tcfd_assessments')
     .insert({
@@ -27,15 +29,18 @@ export const createAssessment = async (data: {
       has_sustainability_team: data.has_sustainability_team,
       main_emission_source: data.main_emission_source,
       business_description: data.business_description,
+      current_stage: 1,
+      status: 'in_progress'
     })
     .select()
     .single();
 
   if (error) {
-    console.error('Supabase error:', error);
-    throw error;
+    console.error('Supabase error details:', error);
+    throw new Error(`無法創建評估：${error.message}`);
   }
   
+  console.log('Assessment created successfully:', newAssessment);
   return newAssessment as TCFDAssessment;
 };
 
@@ -46,7 +51,10 @@ export const loadAssessment = async (id: string): Promise<TCFDAssessment> => {
     .eq('id', id)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Load assessment error:', error);
+    throw new Error(`無法載入評估：${error.message}`);
+  }
   return data as TCFDAssessment;
 };
 
@@ -56,5 +64,8 @@ export const updateAssessmentStage = async (id: string, stage: number): Promise<
     .update({ current_stage: stage, updated_at: new Date().toISOString() })
     .eq('id', id);
 
-  if (error) throw error;
+  if (error) {
+    console.error('Update stage error:', error);
+    throw new Error(`無法更新階段：${error.message}`);
+  }
 };

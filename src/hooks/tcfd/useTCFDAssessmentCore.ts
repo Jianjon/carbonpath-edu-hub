@@ -21,13 +21,18 @@ export const useTCFDAssessmentCore = (assessmentId?: string) => {
     user_id: string;
   }) => {
     setLoading(true);
+    setError(null);
+    
     try {
+      console.log('Hook: Creating assessment with data:', data);
       const newAssessment = await assessmentService.createAssessment(data);
+      console.log('Hook: Assessment created successfully:', newAssessment);
       setAssessment(newAssessment);
       return newAssessment;
     } catch (err) {
-      console.error('Create assessment error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Hook: Create assessment error:', err);
+      const errorMessage = err instanceof Error ? err.message : '創建評估時發生未知錯誤';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -36,11 +41,15 @@ export const useTCFDAssessmentCore = (assessmentId?: string) => {
 
   const loadAssessment = async (id: string) => {
     setLoading(true);
+    setError(null);
+    
     try {
       const data = await assessmentService.loadAssessment(id);
       setAssessment(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Hook: Load assessment error:', err);
+      const errorMessage = err instanceof Error ? err.message : '載入評估時發生未知錯誤';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -53,7 +62,9 @@ export const useTCFDAssessmentCore = (assessmentId?: string) => {
       await assessmentService.updateAssessmentStage(assessment.id, stage);
       setAssessment(prev => prev ? { ...prev, current_stage: stage } : null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Hook: Update stage error:', err);
+      const errorMessage = err instanceof Error ? err.message : '更新階段時發生未知錯誤';
+      setError(errorMessage);
     }
   };
 
