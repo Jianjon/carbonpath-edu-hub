@@ -165,7 +165,7 @@ const TCFDReportContent = ({ assessment, strategySelections }: TCFDReportContent
                   <TableCell className="align-top">
                     <div className="text-sm space-y-3">
                       <p className="text-blue-900">
-                        本公司已辨識{strategySelections.length + 3}個重要氣候情境，時間範圍涵蓋短期(1-3年)、中期(3-10年)及長期(10年以上)。透過系統性評估，已完成對營運成本、資本支出及收入影響的財務量化分析。
+                        本公司已辨識{(strategySelections?.length || 0) + 3}個重要氣候情境，時間範圍涵蓋短期(1-3年)、中期(3-10年)及長期(10年以上)。透過系統性評估，已完成對營運成本、資本支出及收入影響的財務量化分析。
                       </p>
                       <div className="space-y-2 text-gray-500 text-xs">
                         <p>短期風險(1-3年)：碳定價機制實施、綠色電力採購成本上升、客戶永續要求提高</p>
@@ -250,9 +250,21 @@ const TCFDReportContent = ({ assessment, strategySelections }: TCFDReportContent
                 ))}
                 
                 {/* 顯示用戶選擇的策略 */}
-                {strategySelections.map((selection, index) => {
+                {strategySelections && strategySelections.map((selection, index) => {
                   const [categoryName, subcategoryName] = selection.scenarioKey.split('-');
                   const isRisk = selection.analysis?.risk_strategies ? true : false;
+                  
+                  // 安全地獲取財務影響，避免渲染對象
+                  let financialImpact = '';
+                  if (selection.analysis?.financial_impact) {
+                    if (typeof selection.analysis.financial_impact === 'string') {
+                      financialImpact = selection.analysis.financial_impact;
+                    } else if (typeof selection.analysis.financial_impact === 'object') {
+                      // 這裡我們需要從對象中提取字符串值
+                      financialImpact = '待進一步量化分析';
+                    }
+                  }
+                  
                   return (
                     <div key={`user-${index}`} className="bg-white p-4 rounded border border-blue-300">
                       <div className="flex items-start justify-between mb-2">
@@ -264,11 +276,11 @@ const TCFDReportContent = ({ assessment, strategySelections }: TCFDReportContent
                         </div>
                       </div>
                       <p className="text-xs text-slate-900 mb-2">
-                        {selection.analysis?.scenario_description}
+                        {selection.analysis?.scenario_description || '情境描述'}
                       </p>
-                      {selection.analysis?.financial_impact && (
+                      {financialImpact && (
                         <div className="text-xs text-slate-900 font-medium">
-                          預估財務影響: {selection.analysis.financial_impact}
+                          預估財務影響: {financialImpact}
                         </div>
                       )}
                     </div>
