@@ -27,35 +27,33 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const [scenarioAnalyses, setScenarioAnalyses] = useState<Record<string, any>>({});
   const [isGeneratingAnalyses, setIsGeneratingAnalyses] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expandedScenarios, setExpadesscenarios] = useState<Record<string, boolean>>({});
+  const [expandedScenarios, setExpandedScenarios] = useState<Record<string, boolean>>({});
+  const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState<number>(-1);
 
   useEffect(() => {
     if (riskOpportunitySelections.length > 0 && generatedScenarios.length === 0) {
-      generateScenarios();
+      generateScenariosInBatches();
     }
   }, [riskOpportunitySelections]);
 
-  const generateScenarios = async () => {
+  const generateScenariosInBatches = async () => {
     setIsGeneratingScenarios(true);
     try {
       const selectedItems = riskOpportunitySelections.filter(sel => sel.selected && sel.subcategory_name);
       const scenarios = [];
 
-      for (const selection of selectedItems) {
+      // 分批生成，每次生成一個情境並立即顯示
+      for (let i = 0; i < selectedItems.length; i++) {
+        const selection = selectedItems[i];
+        setCurrentGeneratingIndex(i);
+        
         try {
-          console.log('正在生成情境：', selection.category_name, selection.subcategory_name);
+          console.log(`正在生成情境 ${i + 1}/${selectedItems.length}:`, selection.category_name, selection.subcategory_name);
           
           const scenarioDescription = await generateScenarioWithLLM(
             selection.category_type as 'risk' | 'opportunity',
             selection.category_name,
             selection.subcategory_name!,
-            assessment.industry
-          );
-
-          // 自動生成分析
-          const analysis = await generateScenarioAnalysisWithLLM(
-            scenarioDescription,
-            3, // 預設高相關性
             assessment.industry
           );
 
@@ -67,36 +65,65 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             category_type: selection.category_type,
             scenario_description: scenarioDescription,
             scenario_generated_by_llm: true,
-            analysis: analysis
           };
 
           scenarios.push(scenario);
           
-          // 儲存到分析狀態中
-          setScenarioAnalyses(prev => ({
-            ...prev,
-            [scenario.id]: analysis
-          }));
+          // 立即更新顯示，讓用戶看到進度
+          setGeneratedScenarios([...scenarios]);
+
+          // 開始生成詳細分析（異步進行，不阻塞下一個情境生成）
+          generateAnalysisAsync(scenario);
 
         } catch (error) {
           console.error('生成情境失敗：', selection.subcategory_name, error);
-          scenarios.push({
+          const fallbackScenario = {
             id: `scenario-${selection.id}`,
             risk_opportunity_id: selection.id,
             category_name: selection.category_name,
             subcategory_name: selection.subcategory_name,
             category_type: selection.category_type,
-            scenario_description: `針對「${selection.subcategory_name}」在${assessment.industry}的具體情境正在生成中，請稍後重新整理頁面查看完整內容。`,
+            scenario_description: `針對「${selection.subcategory_name}」的具體情境正在生成中，請稍後重新整理頁面查看完整內容。`,
             scenario_generated_by_llm: true,
-          });
+          };
+          scenarios.push(fallbackScenario);
+          setGeneratedScenarios([...scenarios]);
         }
       }
       
-      setGeneratedScenarios(scenarios);
     } catch (error) {
       console.error('Error generating scenarios:', error);
     } finally {
       setIsGeneratingScenarios(false);
+      setCurrentGeneratingIndex(-1);
+    }
+  };
+
+  const generateAnalysisAsync = async (scenario: any) => {
+    setIsGeneratingAnalyses(prev => ({
+      ...prev,
+      [scenario.id]: true
+    }));
+
+    try {
+      const analysis = await generateScenarioAnalysisWithLLM(
+        scenario.scenario_description,
+        3, // 預設高相關性
+        assessment.industry
+      );
+
+      setScenarioAnalyses(prev => ({
+        ...prev,
+        [scenario.id]: analysis
+      }));
+
+    } catch (error) {
+      console.error('生成分析失敗：', scenario.subcategory_name, error);
+    } finally {
+      setIsGeneratingAnalyses(prev => ({
+        ...prev,
+        [scenario.id]: false
+      }));
     }
   };
 
@@ -307,7 +334,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   );
 
   const completedScenarios = generatedScenarios.length;
-  const totalScenarios = generatedScenarios.length;
   const canProceed = completedScenarios > 0;
 
   return (
@@ -332,10 +358,15 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
             </div>
             <h3 className="text-lg font-medium mb-2">AI 正在生成情境...</h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               根據您的產業別（{assessment.industry}）和企業規模，
               為您量身定制氣候相關情境描述與策略分析
             </p>
+            {currentGeneratingIndex >= 0 && (
+              <div className="text-sm text-blue-600">
+                正在處理第 {currentGeneratingIndex + 1} 個情境...
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -353,7 +384,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-600">100%</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {Math.round((completedScenarios / Math.max(riskOpportunitySelections.filter(sel => sel.selected).length, 1)) * 100)}%
+                  </div>
                   <div className="text-xs text-blue-600">完成度</div>
                 </div>
               </div>
@@ -365,6 +398,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             {generatedScenarios.map((scenario, index) => {
               const analysis = scenarioAnalyses[scenario.id];
               const isExpanded = expandedScenarios[scenario.id];
+              const isAnalysisLoading = isGeneratingAnalyses[scenario.id];
               
               return (
                 <Card key={scenario.id} className="border-l-4 border-purple-500">
@@ -387,6 +421,12 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                             <Sparkles className="h-3 w-3 mr-1" />
                             AI 生成
                           </Badge>
+                          {isAnalysisLoading && (
+                            <Badge className="bg-yellow-100 text-yellow-800">
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              分析中
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <Button
@@ -406,7 +446,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   
                   {isExpanded && (
                     <CardContent className="space-y-6">
-                      {/* 概要說明 */}
+                      {/* 情境概要 */}
                       {analysis?.scenario_summary && (
                         <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
                           <h4 className="font-medium text-blue-900 mb-2">🔍 情境概要</h4>
@@ -423,6 +463,14 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                           {analysis.risk_strategies && renderManagementStrategies(analysis.risk_strategies, 'risk')}
                           {analysis.opportunity_strategies && renderManagementStrategies(analysis.opportunity_strategies, 'opportunity')}
                         </>
+                      )}
+
+                      {/* 載入中狀態 */}
+                      {isAnalysisLoading && (
+                        <div className="text-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600 mb-2" />
+                          <p className="text-gray-600">正在生成詳細分析...</p>
+                        </div>
                       )}
                     </CardContent>
                   )}
