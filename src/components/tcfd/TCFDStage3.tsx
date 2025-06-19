@@ -2,14 +2,10 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDRiskOpportunitySelections } from '@/hooks/tcfd/useTCFDRiskOpportunitySelections';
 import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
-import { Loader2, Lightbulb, AlertTriangle, TrendingUp, ChevronRight } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TCFDStage3Props {
@@ -20,527 +16,104 @@ interface TCFDStage3Props {
 const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const { riskOpportunitySelections, loadRiskOpportunitySelections } = useTCFDRiskOpportunitySelections(assessment.id);
   const { 
-    scenarioEvaluations, 
-    saveScenarioEvaluation, 
-    loadScenarioEvaluations,
-    generateScenarioWithLLM,
-    generateComprehensiveScenarioAnalysis
+    scenarioEvaluations,
+    generateComprehensiveScenarioAnalysis,
+    saveScenarioEvaluation,
+    loadScenarioEvaluations
   } = useTCFDScenarioEvaluations(assessment.id);
   
-  const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
-  const [scenarios, setScenarios] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [userScores, setUserScores] = useState<Record<string, number>>({});
-  const [userNotes, setUserNotes] = useState<Record<string, string>>({});
-  const [scenarioAnalysis, setScenarioAnalysis] = useState<Record<string, any>>({});
-  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState<Record<string, boolean>>({});
 
-  // 載入選擇的風險機會項目
   useEffect(() => {
     loadRiskOpportunitySelections();
     loadScenarioEvaluations();
   }, []);
 
-  // 初始化情境數據
-  useEffect(() => {
-    if (riskOpportunitySelections.length > 0) {
-      const selectedItems = riskOpportunitySelections.filter(item => item.selected);
-      console.log('Selected risk/opportunity items:', selectedItems);
-      
-      const scenarioData = selectedItems.map(item => ({
-        id: item.id,
-        categoryType: item.category_type,
-        categoryName: item.category_name,
-        subcategoryName: item.subcategory_name,
-        scenarioDescription: '',
-        userScore: 5,
-        userNotes: '',
-        llmResponse: null,
-        isGenerated: false
-      }));
-      
-      setScenarios(scenarioData);
-      
-      // 檢查是否已有儲存的評估資料
-      if (scenarioEvaluations.length > 0) {
-        const savedData: Record<string, any> = {};
-        const savedScores: Record<string, number> = {};
-        const savedNotes: Record<string, string> = {};
-        
-        scenarioEvaluations.forEach(evaluation => {
-          const key = evaluation.risk_opportunity_id;
-          savedData[key] = evaluation.llm_response;
-          savedScores[key] = evaluation.user_score || 5;
-          savedNotes[key] = evaluation.scenario_description || '';
-        });
-        
-        setScenarioAnalysis(savedData);
-        setUserScores(savedScores);
-        setUserNotes(savedNotes);
-        
-        // 更新scenario資料
-        const updatedScenarios = scenarioData.map(scenario => {
-          const savedEvaluation = scenarioEvaluations.find(e => e.risk_opportunity_id === scenario.id);
-          if (savedEvaluation) {
-            return {
-              ...scenario,
-              scenarioDescription: savedEvaluation.scenario_description || '',
-              userScore: savedEvaluation.user_score || 5,
-              userNotes: savedEvaluation.scenario_description || '',
-              llmResponse: savedEvaluation.llm_response,
-              isGenerated: !!savedEvaluation.llm_response
-            };
-          }
-          return scenario;
-        });
-        setScenarios(updatedScenarios);
-      }
-    }
-  }, [riskOpportunitySelections, scenarioEvaluations]);
-
-  // 生成情境描述
-  const generateScenario = async (scenarioIndex: number) => {
-    const scenario = scenarios[scenarioIndex];
-    if (!scenario) return;
-
-    const existingEvaluation = scenarioEvaluations.find(e => 
-      e.risk_opportunity_id === scenario.id &&
-      e.scenario_description &&
-      e.scenario_description.length > 0
-    );
-
-    if (existingEvaluation) {
-      console.log('使用資料庫中的情境描述');
-      setUserNotes(prev => ({
-        ...prev,
-        [scenario.id]: existingEvaluation.scenario_description
-      }));
-      
-      const updatedScenarios = [...scenarios];
-      updatedScenarios[scenarioIndex] = {
-        ...scenario,
-        scenarioDescription: existingEvaluation.scenario_description,
-        isGenerated: true
-      };
-      setScenarios(updatedScenarios);
-      return;
-    }
-
+  const handleRunSimulation = async () => {
     setIsGenerating(true);
+    
     try {
-      console.log('使用LLM生成新的情境描述');
-      const response = await generateScenarioWithLLM(
-        scenario.categoryType,
-        scenario.categoryName,
-        scenario.subcategoryName,
-        assessment.industry
-      );
-
-      const updatedScenarios = [...scenarios];
-      updatedScenarios[scenarioIndex] = {
-        ...scenario,
-        scenarioDescription: response.scenario_description,
-        isGenerated: true
-      };
-      setScenarios(updatedScenarios);
+      const selectedItems = riskOpportunitySelections.filter(item => item.selected);
       
-      setUserNotes(prev => ({
-        ...prev,
-        [scenario.id]: response.scenario_description
-      }));
+      for (const item of selectedItems) {
+        console.log('Processing item:', item);
+        
+        const response = await generateComprehensiveScenarioAnalysis(
+          item.category_type,
+          item.category_name,
+          item.subcategory_name || '',
+          `Generated scenario for ${item.category_name}`,
+          5,
+          assessment.industry,
+          assessment.company_size,
+          assessment.business_description || '',
+          {}
+        );
 
-      toast.success('情境描述已生成');
+        await saveScenarioEvaluation({
+          assessment_id: assessment.id,
+          risk_opportunity_id: item.id,
+          category_name: item.category_name,
+          subcategory_name: item.subcategory_name || '',
+          scenario_description: `Generated scenario for ${item.category_name}`,
+          user_score: 5,
+          likelihood_score: 5,
+          llm_response: JSON.stringify(response),
+          scenario_generated_by_llm: true
+        });
+      }
+      
+      toast.success('LLM 模擬完成');
     } catch (error) {
-      console.error('生成情境描述失敗:', error);
-      toast.error('生成情境描述失敗');
+      console.error('LLM 模擬失敗:', error);
+      toast.error('模擬失敗');
     } finally {
       setIsGenerating(false);
     }
   };
-
-  // 生成綜合分析
-  const generateAnalysis = async (scenarioIndex: number) => {
-    const scenario = scenarios[scenarioIndex];
-    if (!scenario || !scenario.scenarioDescription) {
-      toast.error('請先生成情境描述');
-      return;
-    }
-
-    const score = userScores[scenario.id] || 5;
-    const description = userNotes[scenario.id] || scenario.scenarioDescription;
-
-    const existingEvaluation = scenarioEvaluations.find(e => 
-      e.risk_opportunity_id === scenario.id &&
-      e.user_score === score &&
-      e.scenario_description === description &&
-      e.llm_response
-    );
-
-    if (existingEvaluation) {
-      console.log('使用資料庫中的分析結果');
-      setScenarioAnalysis(prev => ({
-        ...prev,
-        [scenario.id]: JSON.parse(existingEvaluation.llm_response)
-      }));
-      return;
-    }
-
-    setIsGeneratingAnalysis(prev => ({
-      ...prev,
-      [scenario.id]: true
-    }));
-
-    try {
-      console.log('使用LLM生成新的分析');
-      
-      const userCustomInputs = {
-        user_notes: userNotes[scenario.id],
-        user_score: score,
-        scenario_modifications: description !== scenario.scenarioDescription ? description : null,
-        business_context: assessment.business_description
-      };
-
-      const response = await generateComprehensiveScenarioAnalysis(
-        scenario.categoryType,
-        scenario.categoryName,
-        scenario.subcategoryName,
-        description,
-        score,
-        assessment.industry,
-        assessment.company_size,
-        assessment.business_description,
-        userCustomInputs
-      );
-
-      setScenarioAnalysis(prev => ({
-        ...prev,
-        [scenario.id]: response
-      }));
-
-      // 儲存到資料庫
-      await saveScenarioEvaluation({
-        assessment_id: assessment.id,
-        risk_opportunity_id: scenario.id,
-        category_name: scenario.categoryName,
-        subcategory_name: scenario.subcategoryName || '',
-        scenario_description: description,
-        user_score: score,
-        likelihood_score: score,
-        llm_response: JSON.stringify(response),
-        scenario_generated_by_llm: true
-      });
-
-      toast.success('分析已完成並儲存');
-    } catch (error) {
-      console.error('生成分析失敗:', error);
-      toast.error('生成分析失敗');
-    } finally {
-      setIsGeneratingAnalysis(prev => ({
-        ...prev,
-        [scenario.id]: false
-      }));
-    }
-  };
-
-  // 儲存評估資料
-  const saveEvaluation = async (scenarioIndex: number) => {
-    const scenario = scenarios[scenarioIndex];
-    if (!scenario) return;
-
-    const score = userScores[scenario.id] || 5;
-    const description = userNotes[scenario.id] || scenario.scenarioDescription;
-
-    try {
-      await saveScenarioEvaluation({
-        assessment_id: assessment.id,
-        risk_opportunity_id: scenario.id,
-        category_name: scenario.categoryName,
-        subcategory_name: scenario.subcategoryName || '',
-        scenario_description: description,
-        user_score: score,
-        likelihood_score: score,
-        llm_response: scenarioAnalysis[scenario.id] ? JSON.stringify(scenarioAnalysis[scenario.id]) : null,
-        scenario_generated_by_llm: true
-      });
-      
-      toast.success('評估已儲存');
-    } catch (error) {
-      console.error('儲存評估失敗:', error);
-      toast.error('儲存評估失敗');
-    }
-  };
-
-  const handleScoreChange = (scenarioId: string, value: number[]) => {
-    setUserScores(prev => ({
-      ...prev,
-      [scenarioId]: value[0]
-    }));
-  };
-
-  const handleNotesChange = (scenarioId: string, value: string) => {
-    setUserNotes(prev => ({
-      ...prev,
-      [scenarioId]: value
-    }));
-  };
-
-  const handleComplete = () => {
-    const stage3Results = {
-      assessment,
-      scenarios,
-      userScores,
-      userNotes,
-      scenarioAnalysis,
-      userCustomInputs: {
-        scores: userScores,
-        notes: userNotes,
-        scenarioModifications: Object.keys(userNotes).reduce((acc, key) => {
-          const scenario = scenarios.find(s => s.id === key);
-          if (scenario && userNotes[key] !== scenario.scenarioDescription) {
-            acc[key] = userNotes[key];
-          }
-          return acc;
-        }, {} as Record<string, string>)
-      },
-      completedAt: new Date().toISOString()
-    };
-    
-    sessionStorage.setItem('tcfd-stage3-results', JSON.stringify(stage3Results));
-    console.log('第三階段結果已儲存:', stage3Results);
-    
-    onComplete();
-  };
-
-  const currentScenario = scenarios[currentScenarioIndex];
-
-  if (scenarios.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900">第三階段：LLM 情境評估</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            使用 AI 技術生成具體的風險與機會情境，並進行詳細的影響評估
-          </p>
-        </div>
-
-        <Card>
-          <CardContent className="text-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-600" />
-            <p className="text-slate-600">正在載入選擇的風險機會項目...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold text-gray-900">第三階段：LLM 情境評估</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          針對您選擇的風險與機會項目，使用 AI 技術生成具體情境並進行影響評估
+          使用 AI 技術對選擇的風險與機會項目進行數據模擬
         </p>
       </div>
 
-      {/* 進度指示器 */}
-      <Card className="bg-slate-50 border-slate-200">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-medium text-slate-800">評估進度</h3>
-              <p className="text-sm text-slate-600">
-                第 {currentScenarioIndex + 1} 項，共 {scenarios.length} 項
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-slate-700">
-                {Math.round(((currentScenarioIndex + 1) / scenarios.length) * 100)}%
-              </div>
-              <div className="text-xs text-slate-500">完成率</div>
-            </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>LLM 數據模擬</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-sm text-gray-600">
+            已選擇 {riskOpportunitySelections.filter(item => item.selected).length} 個風險/機會項目進行模擬
           </div>
-          <div className="w-full bg-slate-200 rounded-full h-2">
-            <div 
-              className="bg-slate-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentScenarioIndex + 1) / scenarios.length) * 100}%` }}
-            ></div>
-          </div>
+          
+          <Button
+            onClick={handleRunSimulation}
+            disabled={isGenerating}
+            className="w-full"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                模擬中...
+              </>
+            ) : (
+              '開始 LLM 模擬'
+            )}
+          </Button>
+
+          <Button
+            onClick={onComplete}
+            variant="outline"
+            className="w-full"
+          >
+            完成階段
+          </Button>
         </CardContent>
       </Card>
-
-      {/* 當前情境評估 */}
-      {currentScenario && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                {currentScenario.categoryType === 'risk' ? (
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                ) : (
-                  <TrendingUp className="h-5 w-5 text-green-500" />
-                )}
-                {currentScenario.categoryType === 'risk' ? '風險' : '機會'} - {currentScenario.categoryName}
-              </CardTitle>
-              {currentScenario.subcategoryName && (
-                <Badge variant="outline">{currentScenario.subcategoryName}</Badge>
-              )}
-            </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            {/* 情境描述生成 */}
-            <div>
-              <h3 className="font-medium text-gray-900 mb-3">情境描述</h3>
-              <div className="space-y-4">
-                <Button
-                  onClick={() => generateScenario(currentScenarioIndex)}
-                  disabled={isGenerating || currentScenario.isGenerated}
-                  className="w-full"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      生成中...
-                    </>
-                  ) : currentScenario.isGenerated ? (
-                    '情境已生成'
-                  ) : (
-                    <>
-                      <Lightbulb className="h-4 w-4 mr-2" />
-                      生成情境描述
-                    </>
-                  )}
-                </Button>
-
-                {(currentScenario.scenarioDescription || userNotes[currentScenario.id]) && (
-                  <div className="space-y-2">
-                    <Label htmlFor="scenario-notes">情境描述 (可編輯)</Label>
-                    <Textarea
-                      id="scenario-notes"
-                      value={userNotes[currentScenario.id] || currentScenario.scenarioDescription}
-                      onChange={(e) => handleNotesChange(currentScenario.id, e.target.value)}
-                      placeholder="編輯或補充情境描述..."
-                      rows={4}
-                      className="resize-none"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 影響程度評分 */}
-            <div>
-              <h3 className="font-medium text-gray-900 mb-3">影響程度評分</h3>
-              <div className="space-y-4">
-                <div className="px-4 py-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate-700">影響程度</span>
-                    <span className="text-lg font-semibold text-slate-800">
-                      {userScores[currentScenario.id] || 5} 分
-                    </span>
-                  </div>
-                  <Slider
-                    value={[userScores[currentScenario.id] || 5]}
-                    onValueChange={(value) => handleScoreChange(currentScenario.id, value)}
-                    max={10}
-                    min={1}
-                    step={1}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>1 (輕微)</span>
-                    <span>5 (中等)</span>
-                    <span>10 (嚴重)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 綜合分析 */}
-            <div>
-              <h3 className="font-medium text-gray-900 mb-3">綜合分析</h3>
-              <div className="space-y-4">
-                <Button
-                  onClick={() => generateAnalysis(currentScenarioIndex)}
-                  disabled={isGeneratingAnalysis[currentScenario.id] || !currentScenario.scenarioDescription}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {isGeneratingAnalysis[currentScenario.id] ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      分析中...
-                    </>
-                  ) : (
-                    '生成綜合分析'
-                  )}
-                </Button>
-
-                {scenarioAnalysis[currentScenario.id] && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
-                    <h4 className="font-medium text-slate-800">AI 分析結果</h4>
-                    <div className="text-sm text-slate-600 space-y-2">
-                      {scenarioAnalysis[currentScenario.id].scenario_summary && (
-                        <div>
-                          <span className="font-medium">情境摘要：</span>
-                          <p className="mt-1">{scenarioAnalysis[currentScenario.id].scenario_summary}</p>
-                        </div>
-                      )}
-                      {scenarioAnalysis[currentScenario.id].financial_impact && (
-                        <div>
-                          <span className="font-medium">財務影響：</span>
-                          <div className="mt-1 space-y-1">
-                            {scenarioAnalysis[currentScenario.id].financial_impact.profit_loss && (
-                              <p><strong>損益影響：</strong>{scenarioAnalysis[currentScenario.id].financial_impact.profit_loss.description}</p>
-                            )}
-                            {scenarioAnalysis[currentScenario.id].financial_impact.cash_flow && (
-                              <p><strong>現金流影響：</strong>{scenarioAnalysis[currentScenario.id].financial_impact.cash_flow.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 操作按鈕 */}
-            <div className="flex justify-between pt-4">
-              <Button
-                onClick={() => setCurrentScenarioIndex(Math.max(0, currentScenarioIndex - 1))}
-                disabled={currentScenarioIndex === 0}
-                variant="outline"
-              >
-                上一項
-              </Button>
-              
-              <Button
-                onClick={() => saveEvaluation(currentScenarioIndex)}
-                variant="outline"
-              >
-                儲存評估
-              </Button>
-
-              {currentScenarioIndex < scenarios.length - 1 ? (
-                <Button
-                  onClick={() => setCurrentScenarioIndex(currentScenarioIndex + 1)}
-                >
-                  下一項
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleComplete}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  完成評估
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
