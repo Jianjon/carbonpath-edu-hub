@@ -48,6 +48,23 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
     }
   };
 
+  const generateScenarioAnalysisWithLLM = async (
+    scenarioDescription: string,
+    userScore: number,
+    industry: string
+  ) => {
+    try {
+      return await scenarioService.generateScenarioAnalysisWithLLM(
+        scenarioDescription,
+        userScore,
+        industry
+      );
+    } catch (err) {
+      console.error('Error in generateScenarioAnalysisWithLLM:', err);
+      throw new Error(err instanceof Error ? err.message : 'LLM 情境分析生成失敗');
+    }
+  };
+
   useEffect(() => {
     if (assessmentId) {
       loadScenarioEvaluations();
@@ -60,5 +77,6 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
     saveScenarioEvaluation,
     loadScenarioEvaluations,
     generateScenarioWithLLM,
+    generateScenarioAnalysisWithLLM,
   };
 };

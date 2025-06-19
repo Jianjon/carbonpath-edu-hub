@@ -28,6 +28,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
     saveScenarioEvaluation,
     loadScenarioEvaluations,
     generateScenarioWithLLM,
+    generateScenarioAnalysisWithLLM,
   } = useTCFDScenarioEvaluations(assessmentId);
 
   const {
@@ -81,6 +82,7 @@ export const useTCFDAssessment = (assessmentId?: string) => {
     loadReport,
     loadAllData,
     generateScenarioWithLLM,
+    generateScenarioAnalysisWithLLM,
     generateStrategyAnalysisWithLLM,
   };
 };

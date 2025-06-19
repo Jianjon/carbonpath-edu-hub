@@ -56,3 +56,33 @@ export const generateScenarioWithLLM = async (
   console.log('Generated scenario:', data.content);
   return data.content;
 };
+
+export const generateScenarioAnalysisWithLLM = async (
+  scenarioDescription: string,
+  userScore: number,
+  industry: string
+): Promise<any> => {
+  console.log('Calling TCFD LLM generator for scenario analysis:', { scenarioDescription, userScore, industry });
+  
+  const { data, error } = await supabase.functions.invoke('tcfd-llm-generator', {
+    body: {
+      type: 'scenario_analysis',
+      scenarioDescription,
+      userScore,
+      industry
+    }
+  });
+
+  if (error) {
+    console.error('Supabase function error:', error);
+    throw new Error(`API 呼叫失敗: ${error.message}`);
+  }
+
+  if (!data || !data.success) {
+    console.error('API response error:', data);
+    throw new Error(`API 回應錯誤: ${data?.error || '未知錯誤'}`);
+  }
+
+  console.log('Generated scenario analysis:', data.content);
+  return data.content;
+};
