@@ -16,28 +16,14 @@ export const createAssessment = async (data: {
 }): Promise<TCFDAssessment> => {
   console.log('Creating assessment with data:', data);
   
-  // 檢查用戶是否已登入，如果沒有則建立匿名用戶
-  const { data: { user } } = await supabase.auth.getUser();
-  let userId = user?.id;
-  
-  if (!userId) {
-    // 建立匿名用戶會話
-    const { data: anonUser, error: authError } = await supabase.auth.signInAnonymously();
-    if (authError) {
-      console.error('Anonymous auth error:', authError);
-      throw new Error(`身份驗證失敗：${authError.message}`);
-    }
-    userId = anonUser.user?.id;
-  }
-  
-  if (!userId) {
-    throw new Error('無法獲取用戶身份');
-  }
+  // 生成一個臨時 UUID 作為 user_id，用於暫時儲存資料
+  const tempUserId = crypto.randomUUID();
+  console.log('Generated temp user ID for storage:', tempUserId);
   
   const { data: newAssessment, error } = await supabase
     .from('tcfd_assessments')
     .insert({
-      user_id: userId,
+      user_id: tempUserId,
       industry: data.industry,
       company_size: data.company_size,
       has_carbon_inventory: data.has_carbon_inventory,

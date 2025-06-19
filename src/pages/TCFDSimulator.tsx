@@ -11,7 +11,6 @@ import TCFDStage5 from '@/components/tcfd/TCFDStage5';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 const TCFDSimulator = () => {
   const navigate = useNavigate();
@@ -27,18 +26,6 @@ const TCFDSimulator = () => {
   } = useTCFDAssessment(assessmentId || undefined);
 
   const [currentStage, setCurrentStage] = useState(1);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  // 檢查用戶身份驗證狀態
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current user:', user);
-      setAuthChecked(true);
-    };
-    
-    checkAuth();
-  }, []);
 
   useEffect(() => {
     if (assessment) {
@@ -113,17 +100,6 @@ const TCFDSimulator = () => {
     '策略與財務分析',
     '報告生成'
   ];
-
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">初始化中...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -211,7 +187,7 @@ const TCFDSimulator = () => {
                 <div className="mt-2 text-sm text-red-700">
                   <p>{error}</p>
                   <p className="mt-2 text-xs text-red-600">
-                    如果問題持續發生，請嘗試重新整理頁面。系統已自動處理身份驗證。
+                    資料已暫時儲存供系統使用，如果問題持續發生，請嘗試重新整理頁面。
                   </p>
                 </div>
               </div>
