@@ -69,9 +69,25 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     const storedResults = sessionStorage.getItem('tcfd-stage3-results');
     if (storedResults) {
       try {
-        const results: Stage3Results = JSON.parse(storedResults);
-        setStage3Results(results);
+        const results = JSON.parse(storedResults);
         console.log('第四階段載入第三階段結果:', results);
+        
+        // 轉換資料格式以符合 Stage4 的預期結構
+        const transformedResults: Stage3Results = {
+          assessment: results.assessment,
+          strategySelections: results.scenarios?.map((scenario: any) => ({
+            scenarioKey: `${scenario.categoryName}-${scenario.subcategoryName}`,
+            strategy: 'mitigate', // 預設策略，因為原始資料沒有策略選擇
+            analysis: {
+              scenario_description: scenario.scenarioDescription || `${scenario.subcategoryName}的情境分析`,
+              risk_strategies: scenario.categoryType === 'risk' ? ['mitigate'] : undefined,
+              opportunity_strategies: scenario.categoryType === 'opportunity' ? ['evaluate_explore'] : undefined
+            },
+            notes: scenario.userNotes || ''
+          })) || []
+        };
+        
+        setStage3Results(transformedResults);
       } catch (error) {
         console.error('解析第三階段結果失敗:', error);
       }
@@ -247,7 +263,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     );
   };
 
-  if (!stage3Results) {
+  if (!stage3Results || !stage3Results.strategySelections) {
     return (
       <div className="max-w-6xl mx-auto space-y-8">
         <Card>
