@@ -1,11 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
-import { Brain, Loader2, Sparkles, DollarSign, Target, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, Minus, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { Brain, Loader2, Sparkles, DollarSign, Target, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, Minus, Star, ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
@@ -29,6 +30,25 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedScenarios, setExpandedScenarios] = useState<Record<string, boolean>>({});
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState<number>(-1);
+  const [customScenarios, setCustomScenarios] = useState<Record<string, string>>({});
+  const [showCustomInput, setShowCustomInput] = useState<Record<string, boolean>>({});
+
+  // 情境描述對應表
+  const scenarioDescriptions: Record<string, string> = {
+    // 風險情境描述
+    '急性實體風險': '極端天氣事件加劇，對營運造成直接衝擊與損失',
+    '慢性實體風險': '長期氣候變化影響，逐步改變營運環境與成本',
+    '碳定價機制': '碳稅與碳權制度實施，增加營運成本與合規壓力',
+    '法規政策變化': '氣候相關法規趨嚴，提升合規成本與營運限制',
+    '技術發展風險': '低碳技術演進，現有技術面臨淘汰與競爭壓力',
+    '市場偏好轉變': '消費者偏好綠色產品，傳統產品需求下降',
+    
+    // 機會情境描述
+    '能源效率提升': '導入節能技術與設備，降低營運成本提升競爭力',
+    '再生能源應用': '採用太陽能風能等綠電，減少能源成本與碳排',
+    '低碳產品開發': '開發環保產品搶攻綠色市場，創造新營收來源',
+    '綠色金融商品': '推出氣候相關金融產品，開拓新業務與客群'
+  };
 
   useEffect(() => {
     if (riskOpportunitySelections.length > 0 && generatedScenarios.length === 0) {
@@ -83,7 +103,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             category_name: selection.category_name,
             subcategory_name: selection.subcategory_name,
             category_type: selection.category_type,
-            scenario_description: `針對「${selection.subcategory_name}」的具體情境正在生成中，請稍後重新整理頁面查看完整內容。`,
+            scenario_description: scenarioDescriptions[selection.subcategory_name] || `針對「${selection.subcategory_name}」的具體情境正在生成中，請稍後重新整理頁面查看完整內容。`,
             scenario_generated_by_llm: true,
           };
           scenarios.push(fallbackScenario);
@@ -134,9 +154,66 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }));
   };
 
+  const addCustomScenario = (categoryType: 'risk' | 'opportunity') => {
+    setShowCustomInput(prev => ({
+      ...prev,
+      [categoryType]: true
+    }));
+  };
+
+  const saveCustomScenario = (categoryType: 'risk' | 'opportunity') => {
+    const customText = customScenarios[categoryType];
+    if (!customText || customText.trim().length < 20) {
+      alert('請輸入至少20字的情境描述');
+      return;
+    }
+
+    const customScenario = {
+      id: `custom-${categoryType}-${Date.now()}`,
+      risk_opportunity_id: `custom-${categoryType}`,
+      category_name: categoryType === 'risk' ? '自訂風險' : '自訂機會',
+      subcategory_name: '用戶自填情境',
+      category_type: categoryType,
+      scenario_description: customText,
+      scenario_generated_by_llm: false,
+      is_custom: true,
+    };
+
+    setGeneratedScenarios(prev => [...prev, customScenario]);
+    setCustomScenarios(prev => ({ ...prev, [categoryType]: '' }));
+    setShowCustomInput(prev => ({ ...prev, [categoryType]: false }));
+
+    // 為自訂情境生成分析
+    generateAnalysisAsync(customScenario);
+  };
+
+  const removeCustomScenario = (scenarioId: string) => {
+    setGeneratedScenarios(prev => prev.filter(s => s.id !== scenarioId));
+    setScenarioAnalyses(prev => {
+      const newAnalyses = { ...prev };
+      delete newAnalyses[scenarioId];
+      return newAnalyses;
+    });
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // 檢查自訂情境是否符合對應的風險/機會類型
+      const customScenariosToValidate = generatedScenarios.filter(s => s.is_custom);
+      
+      for (const customScenario of customScenariosToValidate) {
+        const analysis = scenarioAnalyses[customScenario.id];
+        if (!analysis) {
+          alert(`自訂情境「${customScenario.scenario_description.substring(0, 30)}...」尚未完成分析，請稍候再試。`);
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // 這裡可以添加更多驗證邏輯，檢查自訂內容是否符合情境類型
+        // 暫時允許通過，但在下一階段會有更嚴格的驗證
+      }
+
       // 儲存所有評估結果
       for (const scenario of generatedScenarios) {
         const analysis = scenarioAnalyses[scenario.id];
@@ -145,7 +222,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           assessment_id: assessment.id,
           risk_opportunity_id: scenario.risk_opportunity_id,
           scenario_description: scenario.scenario_description,
-          scenario_generated_by_llm: true,
+          scenario_generated_by_llm: scenario.scenario_generated_by_llm,
           user_score: 3, // 預設高相關性
           llm_response: analysis ? JSON.stringify(analysis) : undefined,
         });
@@ -173,6 +250,116 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       default: return 'border-gray-300 bg-gray-50';
     }
   };
+
+  const renderRiskStrategies = (strategies: any) => (
+    <div className="space-y-4">
+      <h4 className="font-medium text-lg flex items-center space-x-2">
+        <Target className="h-5 w-5 text-red-600" />
+        <span>🛡️ 風險應對策略</span>
+      </h4>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Object.entries(strategies).map(([key, strategy]: [string, any]) => (
+          <div key={key} className="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="font-medium text-red-900">{strategy.title}</h5>
+              <div className="flex items-center space-x-1">
+                {[...Array(strategy.feasibility_score)].map((_, i) => (
+                  <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                ))}
+                {[...Array(5 - strategy.feasibility_score)].map((_, i) => (
+                  <Star key={i} className="h-3 w-3 text-gray-300" />
+                ))}
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-700 mb-3 leading-relaxed">
+              {strategy.description}
+            </p>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">成本估算:</span>
+                <Badge variant="outline" className="text-xs">
+                  {strategy.cost_estimate}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">實施時間:</span>
+                <Badge variant="outline" className="text-xs">
+                  {strategy.implementation_timeline}
+                </Badge>
+              </div>
+              
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">可行性:</span> {strategy.feasibility_reason}
+              </div>
+              
+              <div className="text-xs text-blue-600 mt-2">
+                <span className="font-medium">預期效果:</span> {strategy.expected_effect}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderOpportunityStrategies = (strategies: any) => (
+    <div className="space-y-4">
+      <h4 className="font-medium text-lg flex items-center space-x-2">
+        <Target className="h-5 w-5 text-green-600" />
+        <span>🎯 機會應對策略</span>
+      </h4>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Object.entries(strategies).map(([key, strategy]: [string, any]) => (
+          <div key={key} className="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="font-medium text-green-900">{strategy.title}</h5>
+              <div className="flex items-center space-x-1">
+                {[...Array(strategy.feasibility_score)].map((_, i) => (
+                  <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                ))}
+                {[...Array(5 - strategy.feasibility_score)].map((_, i) => (
+                  <Star key={i} className="h-3 w-3 text-gray-300" />
+                ))}
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-700 mb-3 leading-relaxed">
+              {strategy.description}
+            </p>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">投資估算:</span>
+                <Badge variant="outline" className="text-xs">
+                  {strategy.cost_estimate}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">實施時間:</span>
+                <Badge variant="outline" className="text-xs">
+                  {strategy.implementation_timeline}
+                </Badge>
+              </div>
+              
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">可行性:</span> {strategy.feasibility_reason}
+              </div>
+              
+              <div className="text-xs text-green-600 mt-2">
+                <span className="font-medium">預期效果:</span> {strategy.expected_effect}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const renderFinancialImpact = (impact: any) => (
     <div className="space-y-4">
@@ -278,63 +465,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     </div>
   );
 
-  const renderManagementStrategies = (strategies: any, categoryType: string) => (
-    <div className="space-y-4">
-      <h4 className="font-medium text-lg flex items-center space-x-2">
-        <Target className="h-5 w-5 text-purple-600" />
-        <span>📈 應對策略建議</span>
-      </h4>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.entries(strategies).map(([key, strategy]: [string, any]) => (
-          <div key={key} className="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <h5 className="font-medium text-blue-900">{strategy.title}</h5>
-              <div className="flex items-center space-x-1">
-                {[...Array(strategy.feasibility_score)].map((_, i) => (
-                  <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                ))}
-                {[...Array(5 - strategy.feasibility_score)].map((_, i) => (
-                  <Star key={i} className="h-3 w-3 text-gray-300" />
-                ))}
-              </div>
-            </div>
-            
-            <p className="text-sm text-gray-700 mb-3 leading-relaxed">
-              {strategy.description}
-            </p>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-600">成本估算:</span>
-                <Badge variant="outline" className="text-xs">
-                  {strategy.cost_estimate}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-600">實施時間:</span>
-                <Badge variant="outline" className="text-xs">
-                  {strategy.implementation_timeline}
-                </Badge>
-              </div>
-              
-              <div className="text-xs text-gray-600">
-                <span className="font-medium">可行性:</span> {strategy.feasibility_reason}
-              </div>
-              
-              <div className="text-xs text-blue-600 mt-2">
-                <span className="font-medium">預期效果:</span> {strategy.expected_effect}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   const completedScenarios = generatedScenarios.length;
   const canProceed = completedScenarios > 0;
+
+  const riskScenarios = generatedScenarios.filter(s => s.category_type === 'risk');
+  const opportunityScenarios = generatedScenarios.filter(s => s.category_type === 'opportunity');
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -371,7 +506,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         </Card>
       )}
 
-      {generatedScenarios.length > 0 && (
+      {(riskScenarios.length > 0 || opportunityScenarios.length > 0) && (
         <>
           {/* 進度指示 */}
           <Card className="bg-blue-50 border-blue-200">
@@ -393,91 +528,321 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             </CardContent>
           </Card>
 
-          {/* 情境分析卡片 */}
-          <div className="grid gap-6">
-            {generatedScenarios.map((scenario, index) => {
-              const analysis = scenarioAnalyses[scenario.id];
-              const isExpanded = expandedScenarios[scenario.id];
-              const isAnalysisLoading = isGeneratingAnalyses[scenario.id];
-              
-              return (
-                <Card key={scenario.id} className="border-l-4 border-purple-500">
+          {/* 風險情境 */}
+          {riskScenarios.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-red-700 flex items-center space-x-2">
+                  <AlertTriangle className="h-6 w-6" />
+                  <span>風險情境分析</span>
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCustomScenario('risk')}
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  添加自訂風險情境
+                </Button>
+              </div>
+
+              {showCustomInput.risk && (
+                <Card className="border-red-200">
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">
-                          🟪 情境 {index + 1}: {scenario.subcategory_name}
-                        </CardTitle>
-                        <div className="flex space-x-2 mt-2">
-                          <Badge variant="outline">{scenario.category_name}</Badge>
-                          <Badge className={scenario.category_type === 'risk' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}>
-                            {scenario.category_type === 'risk' ? (
-                              <><AlertTriangle className="h-3 w-3 mr-1" />風險</>
-                            ) : (
-                              <><TrendingUp className="h-3 w-3 mr-1" />機會</>
-                            )}
-                          </Badge>
-                          <Badge className="bg-purple-100 text-purple-800">
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            AI 生成
-                          </Badge>
-                          {isAnalysisLoading && (
-                            <Badge className="bg-yellow-100 text-yellow-800">
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                              分析中
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                    <CardTitle className="text-lg text-red-700">自訂風險情境</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="custom-risk">請描述您企業面臨的特殊風險情境（至少20字）</Label>
+                      <Textarea
+                        id="custom-risk"
+                        placeholder="例如：因應新興市場的氣候法規變化，我們的海外子公司可能面臨額外的碳排放申報要求..."
+                        value={customScenarios.risk || ''}
+                        onChange={(e) => setCustomScenarios(prev => ({ ...prev, risk: e.target.value }))}
+                        className="mt-2"
+                        rows={4}
+                      />
+                    </div>
+                    <div className="flex space-x-2">
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleScenarioExpansion(scenario.id)}
-                        className="ml-4"
+                        onClick={() => saveCustomScenario('risk')}
+                        className="bg-red-600 hover:bg-red-700"
                       >
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
+                        確認添加
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowCustomInput(prev => ({ ...prev, risk: false }))}
+                      >
+                        取消
                       </Button>
                     </div>
-                  </CardHeader>
-                  
-                  {isExpanded && (
-                    <CardContent className="space-y-6">
-                      {/* 情境概要 */}
-                      {analysis?.scenario_summary && (
-                        <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-                          <h4 className="font-medium text-blue-900 mb-2">🔍 情境概要</h4>
-                          <p className="text-blue-800">{analysis.scenario_summary}</p>
-                        </div>
-                      )}
-
-                      {/* 財務影響分析 */}
-                      {analysis?.financial_impact && renderFinancialImpact(analysis.financial_impact)}
-
-                      {/* 管理策略建議 */}
-                      {analysis && (
-                        <>
-                          {analysis.risk_strategies && renderManagementStrategies(analysis.risk_strategies, 'risk')}
-                          {analysis.opportunity_strategies && renderManagementStrategies(analysis.opportunity_strategies, 'opportunity')}
-                        </>
-                      )}
-
-                      {/* 載入中狀態 */}
-                      {isAnalysisLoading && (
-                        <div className="text-center py-8">
-                          <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600 mb-2" />
-                          <p className="text-gray-600">正在生成詳細分析...</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  )}
+                  </CardContent>
                 </Card>
-              );
-            })}
-          </div>
+              )}
+
+              <div className="grid gap-6">
+                {riskScenarios.map((scenario, index) => {
+                  const analysis = scenarioAnalyses[scenario.id];
+                  const isExpanded = expandedScenarios[scenario.id];
+                  const isAnalysisLoading = isGeneratingAnalyses[scenario.id];
+                  
+                  return (
+                    <Card key={scenario.id} className="border-l-4 border-red-500">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <CardTitle className="text-lg">
+                                🔴 風險情境 {index + 1}: {scenario.subcategory_name}
+                              </CardTitle>
+                              {scenario.is_custom && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeCustomScenario(scenario.id)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {/* 情境描述 */}
+                            <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                              {scenarioDescriptions[scenario.subcategory_name] || 
+                               scenario.scenario_description.substring(0, 100) + '...'}
+                            </p>
+                            
+                            <div className="flex space-x-2">
+                              <Badge variant="outline">{scenario.category_name}</Badge>
+                              <Badge className="bg-red-100 text-red-800">
+                                <AlertTriangle className="h-3 w-3 mr-1" />風險
+                              </Badge>
+                              {scenario.scenario_generated_by_llm && (
+                                <Badge className="bg-purple-100 text-purple-800">
+                                  <Sparkles className="h-3 w-3 mr-1" />
+                                  AI 生成
+                                </Badge>
+                              )}
+                              {scenario.is_custom && (
+                                <Badge className="bg-orange-100 text-orange-800">
+                                  用戶自填
+                                </Badge>
+                              )}
+                              {isAnalysisLoading && (
+                                <Badge className="bg-yellow-100 text-yellow-800">
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  分析中
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleScenarioExpansion(scenario.id)}
+                            className="ml-4"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      
+                      {isExpanded && (
+                        <CardContent className="space-y-6">
+                          {/* 情境概要 */}
+                          {analysis?.scenario_summary && (
+                            <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
+                              <h4 className="font-medium text-red-900 mb-2">🔍 情境概要</h4>
+                              <p className="text-red-800">{analysis.scenario_summary}</p>
+                            </div>
+                          )}
+
+                          {/* 財務影響分析 */}
+                          {analysis?.financial_impact && renderFinancialImpact(analysis.financial_impact)}
+
+                          {/* 風險應對策略 */}
+                          {analysis?.risk_strategies && renderRiskStrategies(analysis.risk_strategies)}
+
+                          {/* 載入中狀態 */}
+                          {isAnalysisLoading && (
+                            <div className="text-center py-8">
+                              <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600 mb-2" />
+                              <p className="text-gray-600">正在生成詳細分析...</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 機會情境 */}
+          {opportunityScenarios.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-green-700 flex items-center space-x-2">
+                  <TrendingUp className="h-6 w-6" />
+                  <span>機會情境分析</span>
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCustomScenario('opportunity')}
+                  className="text-green-600 border-green-300 hover:bg-green-50"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  添加自訂機會情境
+                </Button>
+              </div>
+
+              {showCustomInput.opportunity && (
+                <Card className="border-green-200">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-green-700">自訂機會情境</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="custom-opportunity">請描述您企業面臨的特殊機會情境（至少20字）</Label>
+                      <Textarea
+                        id="custom-opportunity"
+                        placeholder="例如：政府推出的綠色轉型補助計畫，可協助我們導入新的節能設備和技術..."
+                        value={customScenarios.opportunity || ''}
+                        onChange={(e) => setCustomScenarios(prev => ({ ...prev, opportunity: e.target.value }))}
+                        className="mt-2"
+                        rows={4}
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => saveCustomScenario('opportunity')}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        確認添加
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowCustomInput(prev => ({ ...prev, opportunity: false }))}
+                      >
+                        取消
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="grid gap-6">
+                {opportunityScenarios.map((scenario, index) => {
+                  const analysis = scenarioAnalyses[scenario.id];
+                  const isExpanded = expandedScenarios[scenario.id];
+                  const isAnalysisLoading = isGeneratingAnalyses[scenario.id];
+                  
+                  return (
+                    <Card key={scenario.id} className="border-l-4 border-green-500">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <CardTitle className="text-lg">
+                                🟢 機會情境 {index + 1}: {scenario.subcategory_name}
+                              </CardTitle>
+                              {scenario.is_custom && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeCustomScenario(scenario.id)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {/* 情境描述 */}
+                            <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                              {scenarioDescriptions[scenario.subcategory_name] || 
+                               scenario.scenario_description.substring(0, 100) + '...'}
+                            </p>
+                            
+                            <div className="flex space-x-2">
+                              <Badge variant="outline">{scenario.category_name}</Badge>
+                              <Badge className="bg-green-100 text-green-800">
+                                <TrendingUp className="h-3 w-3 mr-1" />機會
+                              </Badge>
+                              {scenario.scenario_generated_by_llm && (
+                                <Badge className="bg-purple-100 text-purple-800">
+                                  <Sparkles className="h-3 w-3 mr-1" />
+                                  AI 生成
+                                </Badge>
+                              )}
+                              {scenario.is_custom && (
+                                <Badge className="bg-orange-100 text-orange-800">
+                                  用戶自填
+                                </Badge>
+                              )}
+                              {isAnalysisLoading && (
+                                <Badge className="bg-yellow-100 text-yellow-800">
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  分析中
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleScenarioExpansion(scenario.id)}
+                            className="ml-4"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      
+                      {isExpanded && (
+                        <CardContent className="space-y-6">
+                          {/* 情境概要 */}
+                          {analysis?.scenario_summary && (
+                            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                              <h4 className="font-medium text-green-900 mb-2">🔍 情境概要</h4>
+                              <p className="text-green-800">{analysis.scenario_summary}</p>
+                            </div>
+                          )}
+
+                          {/* 財務影響分析 */}
+                          {analysis?.financial_impact && renderFinancialImpact(analysis.financial_impact)}
+
+                          {/* 機會應對策略 */}
+                          {analysis?.opportunity_strategies && renderOpportunityStrategies(analysis.opportunity_strategies)}
+
+                          {/* 載入中狀態 */}
+                          {isAnalysisLoading && (
+                            <div className="text-center py-8">
+                              <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600 mb-2" />
+                              <p className="text-gray-600">正在生成詳細分析...</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* 提交按鈕 */}
           <div className="flex justify-center pt-6">
