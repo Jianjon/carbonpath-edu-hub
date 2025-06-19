@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ScenarioEvaluation } from '@/types/tcfd';
 import * as scenarioService from '@/services/tcfd/scenarioService';
@@ -61,7 +60,7 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
         return { scenario_description: existingScenario.scenario_description };
       }
 
-      return await scenario Service.generateScenarioWithLLM(
+      return await scenarioService.generateScenarioWithLLM(
         categoryType,
         categoryName,
         subcategoryName,
