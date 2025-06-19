@@ -9,9 +9,8 @@ import TCFDStage4 from '@/components/tcfd/TCFDStage4';
 import TCFDStage5 from '@/components/tcfd/TCFDStage5';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, ChevronLeft, ChevronRight, Building2, Search, Brain, TrendingUp } from 'lucide-react';
 import TCFDStepper, { TCFDStepConfig } from '@/components/tcfd/shared/TCFDStepper';
-import { Building2, Search, Brain, TrendingUp, FileText } from 'lucide-react';
 
 const TCFDSimulator = () => {
   const navigate = useNavigate();
