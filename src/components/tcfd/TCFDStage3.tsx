@@ -10,8 +10,6 @@ import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
 import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
 import { AlertTriangle, TrendingUp, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import FinancialAnalysisReport from './FinancialAnalysisReport';
-import { generateFinancialAnalysis, FinancialAnalysisInput } from '@/services/tcfd/financialAnalysisService';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
@@ -41,6 +39,26 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
   // 從評估結果中獲取選擇的情境
   const selectedScenarios = riskOpportunitySelections.filter(selection => selection.selected);
+
+  // 參數中文對映
+  const getChineseText = (text: string): string => {
+    const translations: Record<string, string> = {
+      'medium': '中型',
+      'large': '大型',
+      'small': '小型',
+      'hospitality': '旅宿業',
+      'manufacturing': '製造業',
+      'technology': '科技業',
+      'finance': '金融業',
+      'retail': '零售業',
+      'healthcare': '醫療業',
+      'education': '教育業',
+      'construction': '建築業',
+      'transportation': '運輸業',
+      'restaurant': '餐飲業'
+    };
+    return translations[text] || text;
+  };
 
   // 優化：並行生成所有策略分析
   const generateAllStrategiesAnalysis = useCallback(async () => {
@@ -207,44 +225,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  // 生成切身相關的情境描述
-  const generateScenarioDescription = (scenario: any, analysis: any) => {
-    const isRisk = scenario.category_type === 'risk';
-    const companyContext = `${assessment.company_size}規模的${assessment.industry}企業`;
-    
-    // 從分析中提取情境描述，如果沒有就用針對性描述
-    if (analysis?.scenario_description) {
-      return analysis.scenario_description;
-    }
-    
-    // 根據不同類別的核心主題生成具體描述
-    const scenarioDescriptions: Record<string, string> = {
-      // 實體風險 - 聚焦氣候物理影響
-      '急性實體風險-極端天氣事件': `台灣位處西太平洋颱風路徑，近年來氣候變遷導致極端降雨事件頻率增加。當颱風或豪雨發生時，${companyContext}的營運據點可能面臨淹水、停電、道路中斷等直接衝擊。特別是位於低窪地區或沿海的設施，在強降雨或風暴潮影響下，設備損壞風險顯著提升。企業需要建立完善的災害預警系統、緊急應變程序，以及設施防護措施，確保在極端天氣事件發生時能迅速啟動備援計畫，降低營運中斷的衝擊。`,
-      
-      '慢性實體風險-氣溫上升': `根據中央氣象署觀測資料，台灣年平均氣溫呈現上升趨勢，夏季高溫日數持續增加。對${companyContext}而言，持續的氣溫上升將直接影響工作環境舒適度與設備運作效率。高溫環境不僅增加空調用電負荷，也可能導致精密設備過熱當機、員工工作效率下降等問題。此外，戶外作業或運輸活動也須因應職業安全衛生法規要求，調整作業時間與防護措施，避免熱傷害事件發生。`,
-      
-      // 轉型風險 - 聚焦政策法規與市場技術變化
-      '政策和法規-主管機關要求申報完整溫室氣體盤查': `依據《氣候變遷因應法》第25條規定，中央主管機關公告之事業應定期進行溫室氣體排放量盤查，並申報盤查報告。${companyContext}若被納入管制對象，需建立符合國際標準的溫室氣體盤查制度，包含直接排放、間接排放以及其他間接排放的量化與報告。企業須指派具備相關專業能力的人員負責盤查作業，並委託經認證的查驗機構進行查證。未依規定申報或申報不實者，將面臨新台幣10萬元以上100萬元以下罰鍰，嚴重者得限制或停止其營業。`,
-      
-      '技術-競爭對手推出低碳替代產品，市場佔有率受威脅': `隨著低碳技術快速發展，市場上陸續出現採用再生能源、循環材料或節能技術的創新產品。競爭對手透過技術升級，推出碳足跡更低的替代方案，並取得環保標章、碳標籤等認證，在政府綠色採購及企業永續採購政策推動下獲得競爭優勢。${companyContext}若未能及時跟進技術創新，既有產品可能在環保要求日趨嚴格的市場中失去競爭力，特別是在公部門標案或大企業採購案中面臨劣勢。技術落差將直接影響市場定位與長期發展前景。`,
-      
-      '市場-消費者偏好轉向環保產品，傳統產品需求下滑': `消費者環保意識抬頭，永續消費成為新趨勢。年輕世代更加重視產品的環境友善性，願意為具有環保認證、低碳足跡的產品支付溢價。通路商也開始設立綠色商品專區，要求供應商提供產品碳足跡資訊或環保認證。${companyContext}若持續提供傳統產品而未能滿足消費者的環保期待，將面臨市場需求下滑、品牌形象受損的風險。消費行為的轉變不僅影響銷售表現，也會影響與通路夥伴的合作關係。`,
-      
-      '市場-public_sector_opportunities': `政府積極推動淨零轉型政策，各部會陸續提高綠色採購比例，優先採購具環保標章、節能標章或碳足跡標籤的產品。公部門標案評選標準中，廠商的環境績效、減碳承諾或永續認證已成為重要評分項目。${companyContext}若能配合政府政策方向，取得相關環保認證並展現具體的環境改善成果，有機會在公部門採購案中獲得加分優勢，拓展新的市場機會。掌握政策動向並提前布局，將是抓住公部門綠色商機的關鍵。`,
-      
-      // 機會 - 聚焦具體的改善與發展機會
-      '資源效率-能源使用效率': `面對電價上漲與用電大戶條款要求，${companyContext}可透過導入節能技術、智慧能源管理系統提升能源使用效率。政府提供多項節能獎勵措施，包括設備汰換補助、節能績效保證專案（ESCO）融資優惠等。透過系統性的能源管理，不僅能降低營運成本，也可取得ISO 50001能源管理系統認證，提升企業永續形象。有效的能源管理將成為企業降低成本、符合法規要求、增強競爭力的重要策略。`,
-      
-      '產品和服務-低碳產品開發': `隨著歐盟碳邊境調整機制（CBAM）實施及國際供應鏈對碳足跡要求日趨嚴格，低碳產品開發成為企業維持競爭力的必要投資。${companyContext}可運用政府「產業創新條例」研發投資抵減、「A+企業創新研發淬鍊計畫」等資源，投入綠色技術研發。取得產品碳足跡標籤認證，有助於產品在國際市場的差異化定位。配合政府5+2產業創新政策，也可獲得相關輔導資源與補助機會。`,
-      
-      '韌性-建立多元化資源供應體系': `COVID-19疫情及國際情勢變化凸顯供應鏈韌性的重要性。政府推動供應鏈在地化、多元化政策，鼓勵企業參與「台商回台投資方案」建立本土供應鏈。${companyContext}可配合新南向政策，在東南亞建立備援供應來源，同時發掘具有環保認證的在地供應商，降低供應鏈碳足跡。多元化的資源供應體系不僅增強風險抗性，也符合國際品牌商對供應鏈永續性的要求，創造新的合作機會。`,
-    };
-    
-    const key = `${scenario.category_name}-${scenario.subcategory_name}`;
-    return scenarioDescriptions[key] || `${scenario.subcategory_name}對${companyContext}而言，需要根據其${scenario.category_name}特性進行深入評估。建議企業密切關注相關領域的發展趨勢，評估對現有營運模式的影響，並制定相應的因應策略，確保能夠適應變化並掌握發展機會。`;
-  };
-
   const renderScenarioCard = (scenario: any) => {
     const scenarioKey = `${scenario.category_name}-${scenario.subcategory_name}`;
     const selectedStrategy = selectedStrategies[scenarioKey];
@@ -269,38 +249,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       { value: 'aggressive_investment', label: '積極投入', description: '大規模投資快速搶占市場' }
     ];
 
-    // 生成財務分析報告
-    const generateFinancialAnalysisReport = () => {
-      if (!selectedStrategy) return null;
-
-      const financialAnalysisInput: FinancialAnalysisInput = {
-        riskOrOpportunityType: scenario.category_type,
-        categoryName: scenario.category_name,
-        subcategoryName: scenario.subcategory_name,
-        scenarioDescription: generateScenarioDescription(scenario, analysis),
-        selectedStrategy: selectedStrategy,
-        companyProfile: {
-          industry: assessment.industry,
-          size: assessment.company_size,
-          hasInternationalOperations: assessment.has_international_operations,
-          hasCarbonInventory: assessment.has_carbon_inventory,
-          mainEmissionSource: assessment.main_emission_source
-        }
-      };
-
-      const financialAnalysis = generateFinancialAnalysis(financialAnalysisInput);
-      const selectedStrategyOption = strategyOptions.find(opt => opt.value === selectedStrategy);
-
-      return (
-        <FinancialAnalysisReport
-          analysis={financialAnalysis}
-          scenarioTitle={scenario.subcategory_name}
-          strategyType={selectedStrategyOption?.label || selectedStrategy}
-          isRisk={isRisk}
-        />
-      );
-    };
-
     return (
       <Card key={scenarioKey} className={`${colorClass} border-2 mb-6`}>
         <CardHeader>
@@ -318,14 +266,14 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             </div>
           </div>
           
-          {/* 情境描述 */}
+          {/* 情境描述 - 使用生成的描述 */}
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-2 flex items-center">
               <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
               情境描述
             </h4>
             <p className="text-gray-700 leading-relaxed text-sm">
-              {generateScenarioDescription(scenario, analysis)}
+              {analysis?.scenario_summary || analysis?.scenario_description || '正在生成情境描述...'}
             </p>
           </div>
         </CardHeader>
@@ -383,9 +331,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               </div>
             </div>
           )}
-
-          {/* 財務分析報告 */}
-          {selectedStrategy && generateFinancialAnalysisReport()}
 
           {/* 備註欄位 */}
           <div>
@@ -452,7 +397,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               )}
             </div>
             <Badge variant="outline" className="">
-              {assessment.company_size} · {assessment.industry}
+              {getChineseText(assessment.company_size)} · {getChineseText(assessment.industry)}
             </Badge>
           </div>
         </CardContent>

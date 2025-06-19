@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
 import { Target, DollarSign, Loader2, Sparkles } from 'lucide-react';
+import FinancialAnalysisReport from './FinancialAnalysisReport';
+import { generateFinancialAnalysis, FinancialAnalysisInput } from '@/services/tcfd/financialAnalysisService';
 
 interface TCFDStage4Props {
   assessment: TCFDAssessment;
@@ -27,6 +29,26 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Record<string, string>>({});
   const [userModifications, setUserModifications] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 參數中文對映
+  const getChineseText = (text: string): string => {
+    const translations: Record<string, string> = {
+      'medium': '中型',
+      'large': '大型', 
+      'small': '小型',
+      'hospitality': '旅宿業',
+      'manufacturing': '製造業',
+      'technology': '科技業',
+      'finance': '金融業',
+      'retail': '零售業',
+      'healthcare': '醫療業',
+      'education': '教育業',
+      'construction': '建築業',
+      'transportation': '運輸業',
+      'restaurant': '餐飲業'
+    };
+    return translations[text] || text;
+  };
 
   useEffect(() => {
     if (scenarioEvaluations.length > 0 && analysisData.length === 0) {
@@ -128,6 +150,38 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
   const totalAnalysis = analysisData.length;
   const canProceed = completedAnalysis === totalAnalysis && totalAnalysis > 0;
 
+  // 生成財務分析報告
+  const generateFinancialAnalysisForScenario = (analysis: any, selectedStrategy: string) => {
+    if (!selectedStrategy) return null;
+
+    const financialAnalysisInput: FinancialAnalysisInput = {
+      riskOrOpportunityType: 'risk', // 這裡可以根據情境類型動態調整
+      categoryName: '政策和法規', // 這裡可以從analysis中獲取
+      subcategoryName: '情境分析',
+      scenarioDescription: analysis.scenario_description,
+      selectedStrategy: selectedStrategy,
+      companyProfile: {
+        industry: assessment.industry,
+        size: assessment.company_size,
+        hasInternationalOperations: assessment.has_international_operations,
+        hasCarbonInventory: assessment.has_carbon_inventory,
+        mainEmissionSource: assessment.main_emission_source
+      }
+    };
+
+    const financialAnalysis = generateFinancialAnalysis(financialAnalysisInput);
+    const selectedStrategyOption = strategies.find(opt => opt.key === selectedStrategy);
+
+    return (
+      <FinancialAnalysisReport
+        analysis={financialAnalysis}
+        scenarioTitle="情境財務分析"
+        strategyType={selectedStrategyOption?.label || selectedStrategy}
+        isRisk={true}
+      />
+    );
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <Card>
@@ -139,6 +193,11 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
           <p className="text-gray-600 text-center">
             AI 將根據您的評估結果，生成詳細的策略建議與財務影響分析
           </p>
+          <div className="flex justify-center mt-2">
+            <Badge variant="outline">
+              {getChineseText(assessment.company_size)} · {getChineseText(assessment.industry)}
+            </Badge>
+          </div>
         </CardHeader>
       </Card>
 
@@ -261,6 +320,9 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* 財務影響分析報告 */}
+                  {selectedStrategies[analysis.id] && generateFinancialAnalysisForScenario(analysis, selectedStrategies[analysis.id])}
 
                   {/* 用戶修改意見 */}
                   <div>
