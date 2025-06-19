@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { INDUSTRIES, COMPANY_SIZES, REVENUE_RANGES, SUPPLY_CHAIN_OPTIONS, SUSTAINABILITY_TEAM_OPTIONS, EMISSION_SOURCES } from '@/types/tcfd';
-import { Building2, FileText, Target, Lightbulb, ShieldCheck } from 'lucide-react';
+import { Building2, FileText, Target, Lightbulb, ShieldCheck, Brain } from 'lucide-react';
 import TCFDContentCard from './shared/TCFDContentCard';
 import TCFDFormSection from './shared/TCFDFormSection';
 import TCFDProcessFlow from './shared/TCFDProcessFlow';
