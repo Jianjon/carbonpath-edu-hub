@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -11,6 +10,15 @@ import TCFDStage5 from '@/components/tcfd/TCFDStage5';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+
+// 生成真正的UUID格式
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 const TCFDSimulator = () => {
   const navigate = useNavigate();
@@ -52,8 +60,10 @@ const TCFDSimulator = () => {
     business_description?: string;
   }) => {
     try {
-      // 使用一個固定的模擬用戶 ID，因為已取消登入功能
-      const mockUserId = 'demo-user-' + Date.now();
+      // 使用真正的UUID格式而不是字符串
+      const mockUserId = generateUUID();
+      console.log('Generated UUID:', mockUserId);
+      
       const newAssessment = await createAssessment({
         ...data,
         user_id: mockUserId
@@ -107,7 +117,7 @@ const TCFDSimulator = () => {
               <h1 className="text-4xl md:text-5xl font-bold">TCFD 模擬器</h1>
             </div>
             <p className="text-xl text-blue-100 mb-8">
-              氣候相關財務揭露架構評估工具
+              气候相關財務揭露架構評估工具
             </p>
             <p className="text-lg text-blue-200 max-w-3xl mx-auto">
               依據 TCFD 官方框架，協助企業完成風險與機會評估，並自動生成報告草稿
