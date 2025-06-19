@@ -10,6 +10,8 @@ import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
 import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
 import { AlertTriangle, TrendingUp, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import FinancialAnalysisReport from './FinancialAnalysisReport';
+import { generateFinancialAnalysis, FinancialAnalysisInput } from '@/services/tcfd/financialAnalysisService';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
@@ -267,6 +269,38 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       { value: 'aggressive_investment', label: '積極投入', description: '大規模投資快速搶占市場' }
     ];
 
+    // 生成財務分析報告
+    const generateFinancialAnalysisReport = () => {
+      if (!selectedStrategy) return null;
+
+      const financialAnalysisInput: FinancialAnalysisInput = {
+        riskOrOpportunityType: scenario.category_type,
+        categoryName: scenario.category_name,
+        subcategoryName: scenario.subcategory_name,
+        scenarioDescription: generateScenarioDescription(scenario, analysis),
+        selectedStrategy: selectedStrategy,
+        companyProfile: {
+          industry: assessment.industry,
+          size: assessment.company_size,
+          hasInternationalOperations: assessment.has_international_operations,
+          hasCarbonInventory: assessment.has_carbon_inventory,
+          mainEmissionSource: assessment.main_emission_source
+        }
+      };
+
+      const financialAnalysis = generateFinancialAnalysis(financialAnalysisInput);
+      const selectedStrategyOption = strategyOptions.find(opt => opt.value === selectedStrategy);
+
+      return (
+        <FinancialAnalysisReport
+          analysis={financialAnalysis}
+          scenarioTitle={scenario.subcategory_name}
+          strategyType={selectedStrategyOption?.label || selectedStrategy}
+          isRisk={isRisk}
+        />
+      );
+    };
+
     return (
       <Card key={scenarioKey} className={`${colorClass} border-2 mb-6`}>
         <CardHeader>
@@ -349,6 +383,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
               </div>
             </div>
           )}
+
+          {/* 財務分析報告 */}
+          {selectedStrategy && generateFinancialAnalysisReport()}
 
           {/* 備註欄位 */}
           <div>
