@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
@@ -27,7 +27,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const [scenarioAnalyses, setScenarioAnalyses] = useState<Record<string, any>>({});
   const [isGeneratingAnalyses, setIsGeneratingAnalyses] = useState<Record<string, boolean>>({});
   const [expandedScenarios, setExpandedScenarios] = useState<Record<string, boolean>>({});
-  const [selectedStrategies, setSelectedStrategies] = useState<Record<string, string[]>>({});
+  const [selectedStrategies, setSelectedStrategies] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState<number>(-1);
 
@@ -335,32 +335,20 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   const handleStrategySelection = (scenarioId: string, strategyId: string) => {
-    setSelectedStrategies(prev => {
-      const currentSelections = prev[scenarioId] || [];
-      const isSelected = currentSelections.includes(strategyId);
-      
-      if (isSelected) {
-        return {
-          ...prev,
-          [scenarioId]: currentSelections.filter(id => id !== strategyId)
-        };
-      } else {
-        return {
-          ...prev,
-          [scenarioId]: [...currentSelections, strategyId]
-        };
-      }
-    });
+    setSelectedStrategies(prev => ({
+      ...prev,
+      [scenarioId]: strategyId
+    }));
   };
 
   const handleSubmit = async () => {
-    // 檢查是否所有情境都已選擇至少一個策略
+    // 檢查是否所有情境都已選擇策略
     const missingStrategies = generatedScenarios.filter(scenario => 
-      !selectedStrategies[scenario.id] || selectedStrategies[scenario.id].length === 0
+      !selectedStrategies[scenario.id]
     );
     
     if (missingStrategies.length > 0) {
-      alert(`請為所有情境選擇至少一個應對策略。尚未選擇策略的情境：${missingStrategies.map(s => s.subcategory_name).join('、')}`);
+      alert(`請為所有情境選擇應對策略。尚未選擇策略的情境：${missingStrategies.map(s => s.subcategory_name).join('、')}`);
       return;
     }
 
@@ -368,7 +356,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     try {
       for (const scenario of generatedScenarios) {
         const analysis = scenarioAnalyses[scenario.id];
-        const selectedStrategiesForScenario = selectedStrategies[scenario.id] || [];
+        const selectedStrategy = selectedStrategies[scenario.id];
         
         await saveScenarioEvaluation({
           assessment_id: assessment.id,
@@ -377,7 +365,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           scenario_generated_by_llm: scenario.scenario_generated_by_llm,
           user_score: 3,
           llm_response: analysis ? JSON.stringify(analysis) : undefined,
-          selected_strategy: selectedStrategiesForScenario.join(','),
+          selected_strategy: selectedStrategy,
         });
       }
       onComplete();
@@ -390,7 +378,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
   const completedScenarios = generatedScenarios.length;
   const canProceed = completedScenarios > 0 && generatedScenarios.every(scenario => 
-    selectedStrategies[scenario.id] && selectedStrategies[scenario.id].length > 0
+    selectedStrategies[scenario.id]
   );
 
   const riskScenarios = generatedScenarios.filter(s => s.category_type === 'risk');
@@ -441,12 +429,12 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   <h3 className="font-medium text-blue-900">策略選擇進度</h3>
                   <p className="text-sm text-blue-700">
                     已完成 {completedScenarios} 個情境分析，
-                    已選擇策略 {Object.values(selectedStrategies).filter(strategies => strategies.length > 0).length} 個情境
+                    已選擇策略 {Object.values(selectedStrategies).filter(strategy => strategy).length} 個情境
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-600">
-                    {Math.round((Object.values(selectedStrategies).filter(strategies => strategies.length > 0).length / Math.max(completedScenarios, 1)) * 100)}%
+                    {Math.round((Object.values(selectedStrategies).filter(strategy => strategy).length / Math.max(completedScenarios, 1)) * 100)}%
                   </div>
                   <div className="text-xs text-blue-600">策略選擇完成度</div>
                 </div>
@@ -467,7 +455,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   const analysis = scenarioAnalyses[scenario.id];
                   const isExpanded = expandedScenarios[scenario.id];
                   const isAnalysisLoading = isGeneratingAnalyses[scenario.id];
-                  const selectedStrategiesForScenario = selectedStrategies[scenario.id] || [];
+                  const selectedStrategy = selectedStrategies[scenario.id];
                   
                   return (
                     <Card key={scenario.id} className="border-l-4 border-red-500">
@@ -514,47 +502,49 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                               <div className="space-y-4">
                                 <Label className="text-sm font-bold text-red-700 flex items-center">
                                   <CheckCircle className="h-4 w-4 mr-2" />
-                                  請選擇適合的應對策略（可多選）<span className="text-red-500 ml-1">*</span>
+                                  請選擇適合的應對策略<span className="text-red-500 ml-1">*</span>
                                 </Label>
-                                <div className="grid grid-cols-1 gap-4">
-                                  {riskStrategies.map((strategy) => (
-                                    <div key={strategy.id} className={`border rounded-lg p-4 transition-colors ${
-                                      selectedStrategiesForScenario.includes(strategy.id) 
-                                        ?  'border-red-500 bg-red-50' 
-                                        : 'border-gray-200 hover:border-red-300'
-                                    }`}>
-                                      <div className="flex items-start space-x-3">
-                                        <Checkbox
-                                          id={`${scenario.id}-${strategy.id}`}
-                                          checked={selectedStrategiesForScenario.includes(strategy.id)}
-                                          onCheckedChange={(checked) => {
-                                            handleStrategySelection(scenario.id, strategy.id);
-                                          }}
-                                          className="mt-1"
-                                        />
-                                        <div className="flex-1">
-                                          <label 
-                                            htmlFor={`${scenario.id}-${strategy.id}`}
-                                            className="text-sm font-medium text-gray-900 cursor-pointer block mb-2 flex items-center"
-                                          >
-                                            <span className="mr-2">{strategy.icon}</span>
-                                            {strategy.name}
-                                          </label>
-                                          <p className="text-xs text-gray-600 mb-2">
-                                            {strategy.description}
-                                          </p>
-                                          {analysis.strategy_recommendations[strategy.id] && (
-                                            <div className="bg-white p-3 rounded border-l-4 border-red-300">
-                                              <p className="text-sm text-gray-700 leading-relaxed">
-                                                {analysis.strategy_recommendations[strategy.id]}
-                                              </p>
-                                            </div>
-                                          )}
+                                <RadioGroup
+                                  value={selectedStrategy || ''}
+                                  onValueChange={(value) => handleStrategySelection(scenario.id, value)}
+                                >
+                                  <div className="grid grid-cols-1 gap-4">
+                                    {riskStrategies.map((strategy) => (
+                                      <div key={strategy.id} className={`border rounded-lg p-4 transition-colors ${
+                                        selectedStrategy === strategy.id 
+                                          ?  'border-red-500 bg-red-50' 
+                                          : 'border-gray-200 hover:border-red-300'
+                                      }`}>
+                                        <div className="flex items-start space-x-3">
+                                          <RadioGroupItem
+                                            value={strategy.id}
+                                            id={`${scenario.id}-${strategy.id}`}
+                                            className="mt-1"
+                                          />
+                                          <div className="flex-1">
+                                            <label 
+                                              htmlFor={`${scenario.id}-${strategy.id}`}
+                                              className="text-sm font-medium text-gray-900 cursor-pointer block mb-2 flex items-center"
+                                            >
+                                              <span className="mr-2">{strategy.icon}</span>
+                                              {strategy.name}
+                                            </label>
+                                            <p className="text-xs text-gray-600 mb-2">
+                                              {strategy.description}
+                                            </p>
+                                            {analysis.strategy_recommendations[strategy.id] && (
+                                              <div className="bg-white p-3 rounded border-l-4 border-red-300">
+                                                <p className="text-sm text-gray-700 leading-relaxed">
+                                                  {analysis.strategy_recommendations[strategy.id]}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
+                                    ))}
+                                  </div>
+                                </RadioGroup>
                               </div>
                             )}
                           </div>
@@ -604,7 +594,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   const analysis = scenarioAnalyses[scenario.id];
                   const isExpanded = expandedScenarios[scenario.id];
                   const isAnalysisLoading = isGeneratingAnalyses[scenario.id];
-                  const selectedStrategiesForScenario = selectedStrategies[scenario.id] || [];
+                  const selectedStrategy = selectedStrategies[scenario.id];
                   
                   return (
                     <Card key={scenario.id} className="border-l-4 border-green-500">
@@ -651,47 +641,49 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                               <div className="space-y-4">
                                 <Label className="text-sm font-bold text-green-700 flex items-center">
                                   <CheckCircle className="h-4 w-4 mr-2" />
-                                  請選擇適合的把握策略（可多選）<span className="text-red-500 ml-1">*</span>
+                                  請選擇適合的把握策略<span className="text-red-500 ml-1">*</span>
                                 </Label>
-                                <div className="grid grid-cols-1 gap-4">
-                                  {opportunityStrategies.map((strategy) => (
-                                    <div key={strategy.id} className={`border rounded-lg p-4 transition-colors ${
-                                      selectedStrategiesForScenario.includes(strategy.id) 
-                                        ? 'border-green-500 bg-green-50' 
-                                        : 'border-gray-200 hover:border-green-300'
-                                    }`}>
-                                      <div className="flex items-start space-x-3">
-                                        <Checkbox
-                                          id={`${scenario.id}-${strategy.id}`}
-                                          checked={selectedStrategiesForScenario.includes(strategy.id)}
-                                          onCheckedChange={(checked) => {
-                                            handleStrategySelection(scenario.id, strategy.id);
-                                          }}
-                                          className="mt-1"
-                                        />
-                                        <div className="flex-1">
-                                          <label 
-                                            htmlFor={`${scenario.id}-${strategy.id}`}
-                                            className="text-sm font-medium text-gray-900 cursor-pointer block mb-2 flex items-center"
-                                          >
-                                            <span className="mr-2">{strategy.icon}</span>
-                                            {strategy.name}
-                                          </label>
-                                          <p className="text-xs text-gray-600 mb-2">
-                                            {strategy.description}
-                                          </p>
-                                          {analysis.strategy_recommendations[strategy.id] && (
-                                            <div className="bg-white p-3 rounded border-l-4 border-green-300">
-                                              <p className="text-sm text-gray-700 leading-relaxed">
-                                                {analysis.strategy_recommendations[strategy.id]}
-                                              </p>
-                                            </div>
-                                          )}
+                                <RadioGroup
+                                  value={selectedStrategy || ''}
+                                  onValueChange={(value) => handleStrategySelection(scenario.id, value)}
+                                >
+                                  <div className="grid grid-cols-1 gap-4">
+                                    {opportunityStrategies.map((strategy) => (
+                                      <div key={strategy.id} className={`border rounded-lg p-4 transition-colors ${
+                                        selectedStrategy === strategy.id 
+                                          ? 'border-green-500 bg-green-50' 
+                                          : 'border-gray-200 hover:border-green-300'
+                                      }`}>
+                                        <div className="flex items-start space-x-3">
+                                          <RadioGroupItem
+                                            value={strategy.id}
+                                            id={`${scenario.id}-${strategy.id}`}
+                                            className="mt-1"
+                                          />
+                                          <div className="flex-1">
+                                            <label 
+                                              htmlFor={`${scenario.id}-${strategy.id}`}
+                                              className="text-sm font-medium text-gray-900 cursor-pointer block mb-2 flex items-center"
+                                            >
+                                              <span className="mr-2">{strategy.icon}</span>
+                                              {strategy.name}
+                                            </label>
+                                            <p className="text-xs text-gray-600 mb-2">
+                                              {strategy.description}
+                                            </p>
+                                            {analysis.strategy_recommendations[strategy.id] && (
+                                              <div className="bg-white p-3 rounded border-l-4 border-green-300">
+                                                <p className="text-sm text-gray-700 leading-relaxed">
+                                                  {analysis.strategy_recommendations[strategy.id]}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
+                                    ))}
+                                  </div>
+                                </RadioGroup>
                               </div>
                             )}
                           </div>
@@ -742,7 +734,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
                   儲存評估中...
                 </>
               ) : (
-                `進入策略分析階段（${Object.values(selectedStrategies).filter(strategies => strategies.length > 0).length}/${completedScenarios} 已選擇策略）`
+                `進入策略分析階段（${Object.values(selectedStrategies).filter(strategy => strategy).length}/${completedScenarios} 已選擇策略）`
               )}
             </Button>
           </div>
