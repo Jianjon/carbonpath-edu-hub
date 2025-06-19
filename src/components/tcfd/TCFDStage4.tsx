@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -174,10 +173,10 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
           <CardHeader>
             <CardTitle className="text-2xl text-center flex items-center justify-center space-x-2">
               <Target className="h-8 w-8 text-orange-600" />
-              <span>第四階段：策略與財務分析</span>
+              <span>第四階段：財務影響分析與計算建議</span>
             </CardTitle>
             <p className="text-gray-600 text-center">
-              正在載入第三階段的策略選擇結果...
+              針對每個氣候風險／機會情境與選定策略，進行結構化的財務影響分析與計算方法建議
             </p>
           </CardHeader>
         </Card>
@@ -187,7 +186,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
-            <h3 className="text-lg font-medium mb-2">載入策略分析資料...</h3>
+            <h3 className="text-lg font-medium mb-2">載入策略選擇資料...</h3>
             <p className="text-gray-600">
               請確保已完成第三階段的策略選擇
             </p>
@@ -198,7 +197,6 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
   }
 
   const totalAnalysis = stage3Results.strategySelections.length;
-  const completedAnalysis = Object.keys(userModifications).length;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -206,10 +204,10 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
         <CardHeader>
           <CardTitle className="text-2xl text-center flex items-center justify-center space-x-2">
             <Target className="h-8 w-8 text-orange-600" />
-            <span>第四階段：策略與財務分析</span>
+            <span>第四階段：財務影響分析與計算建議</span>
           </CardTitle>
           <p className="text-gray-600 text-center">
-            根據您的策略選擇，生成詳細的財務影響分析報告
+            針對每個氣候風險／機會情境與選定策略，提供結構化的財務分析與計算方法建議
           </p>
           <div className="flex justify-center mt-2">
             <Badge variant="outline">
@@ -226,14 +224,14 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
             <div>
               <h3 className="font-medium text-orange-900">財務分析進度</h3>
               <p className="text-sm text-orange-700">
-                已處理 {totalAnalysis} 個策略選擇的財務分析
+                完成 {totalAnalysis} 個「風險／機會 × 策略」組合的財務分析與計算建議
               </p>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-orange-600">
                 {totalAnalysis}
               </div>
-              <div className="text-xs text-orange-600">個分析</div>
+              <div className="text-xs text-orange-600">個組合分析</div>
             </div>
           </div>
         </CardContent>
@@ -250,7 +248,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
             <Card key={selection.scenarioKey} className="border-l-4 border-orange-500">
               <CardHeader>
                 <CardTitle className="text-lg">
-                  分析 {index + 1}: {subcategoryName} - {strategyName}
+                  組合分析 {index + 1}: {subcategoryName} × {strategyName}
                 </CardTitle>
                 <div className="flex space-x-2">
                   <Badge className="bg-orange-100 text-orange-800">
@@ -271,11 +269,11 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
 
                 {/* 選擇的策略 */}
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2 text-blue-900">選擇的管理策略</h4>
+                  <h4 className="font-medium mb-2 text-blue-900">選定管理策略</h4>
                   <p className="text-sm text-blue-800">{strategyName}</p>
                   {selection.notes && (
                     <div className="mt-2">
-                      <span className="text-xs text-blue-600 font-medium">執行備註：</span>
+                      <span className="text-xs text-blue-600 font-medium">策略備註：</span>
                       <p className="text-xs text-blue-700">{selection.notes}</p>
                     </div>
                   )}
@@ -288,7 +286,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
                 <div>
                   <h4 className="font-medium mb-2">補充意見或修改建議</h4>
                   <Textarea
-                    placeholder="您可以在此補充對財務分析的修改意見或額外考量因素..."
+                    placeholder="您可以在此補充對財務分析的修改意見、內部實際狀況或額外考量因素..."
                     value={userModifications[selection.scenarioKey] || ''}
                     onChange={(e) => handleModificationChange(selection.scenarioKey, e.target.value)}
                     rows={3}
@@ -308,7 +306,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
           size="lg"
           className="px-8"
         >
-          {isSubmitting ? '儲存分析中...' : '進入報告生成階段'}
+          {isSubmitting ? '儲存分析中...' : '完成財務分析，進入報告生成'}
         </Button>
       </div>
     </div>

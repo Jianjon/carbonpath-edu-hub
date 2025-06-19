@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, DollarSign, BarChart3, Target, Lightbulb } from 'lucide-react';
+import { TrendingUp, DollarSign, BarChart3, Target, Lightbulb, Calculator } from 'lucide-react';
 import { FinancialAnalysisOutput } from '@/services/tcfd/financialAnalysisService';
 
 interface FinancialAnalysisReportProps {
@@ -20,39 +20,46 @@ const FinancialAnalysisReport = ({
 }: FinancialAnalysisReportProps) => {
   const sections = [
     {
-      title: '損益表影響分析',
+      title: '1. 損益表影響分析',
       content: analysis.profitLossAnalysis,
       icon: TrendingUp,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
-      title: '現金流分析',
+      title: '2. 現金流影響分析',
       content: analysis.cashFlowAnalysis,
       icon: DollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-50'
     },
     {
-      title: '資產負債表影響分析',
+      title: '3. 資產負債表影響分析',
       content: analysis.balanceSheetAnalysis,
       icon: BarChart3,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
-      title: '建議分析方式',
-      content: analysis.analysisMethodology,
+      title: '4. 策略可行性與補充說明',
+      content: analysis.strategyFeasibilityAnalysis,
       icon: Target,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
     },
     {
-      title: '策略配合說明',
-      content: analysis.strategyRationale,
+      title: '5. 分析建議方法',
+      content: analysis.analysisMethodology,
       icon: Lightbulb,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50'
+    },
+    {
+      title: '6. 財務連結的計算方法建議',
+      content: analysis.calculationMethodSuggestions,
+      icon: Calculator,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50'
     }
   ];
 
@@ -61,7 +68,7 @@ const FinancialAnalysisReport = ({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <BarChart3 className="h-5 w-5 text-indigo-600" />
-          <span>財務影響分析報告</span>
+          <span>財務影響分析與計算建議</span>
         </CardTitle>
         <div className="flex items-center space-x-2 mt-2">
           <Badge variant={isRisk ? "destructive" : "default"}>
@@ -83,7 +90,7 @@ const FinancialAnalysisReport = ({
                   <h4 className={`font-medium ${section.color} mb-2`}>
                     {section.title}
                   </h4>
-                  <p className="text-gray-700 text-sm leading-relaxed">
+                  <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                     {section.content}
                   </p>
                 </div>
@@ -98,8 +105,8 @@ const FinancialAnalysisReport = ({
             <div>
               <h4 className="font-medium text-gray-900 mb-1">分析說明</h4>
               <p className="text-xs text-gray-600">
-                本分析基於 TCFD 財務影響分類邏輯，提供結構化的財務評估框架。
-                建議結合企業實際營運資料，進行更深入的量化分析與情境模擬。
+                本分析基於 TCFD 財務影響分類邏輯，提供結構化的財務評估框架與計算方法建議。
+                請企業結合實際營運資料，進行更深入的量化分析與情境模擬。計算公式僅供參考，實際應用時請依企業狀況調整。
               </p>
             </div>
           </div>
