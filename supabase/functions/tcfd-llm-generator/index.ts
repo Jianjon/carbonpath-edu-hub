@@ -16,10 +16,10 @@ serve(async (req) => {
   }
 
   try {
-    const { type, categoryType, categoryName, subcategoryName, industry, scenarioDescription, userScore } = await req.json();
+    const { type, categoryType, categoryName, subcategoryName, industry, scenarioDescription, userScore, companySize } = await req.json();
 
     console.log('Request type:', type);
-    console.log('Request data:', { categoryType, categoryName, subcategoryName, industry, scenarioDescription, userScore });
+    console.log('Request data:', { categoryType, categoryName, subcategoryName, industry, scenarioDescription, userScore, companySize });
 
     let prompt = '';
     let systemPrompt = '';
@@ -39,13 +39,172 @@ serve(async (req) => {
 1. 符合 TCFD 框架要求
 2. 針對${industry}的實際營運情況
 3. 描述具體的氣候變化如何影響業務運作
-4. 語氣專業中立，避免過度誇大或輕描淡寫
+4. 語氣專業中性，避免過度誇大或輕描淡寫
 5. 包含可能的時間框架和影響範圍
 
 請直接提供情境描述內容，不需要額外說明：`;
 
+    } else if (type === 'comprehensive_scenario_analysis') {
+      // 全新的綜合情境分析生成
+      systemPrompt = `你是一位專精於氣候風險管理、財務分析和策略規劃的 TCFD 專業顧問。請根據具體的風險/機會情境、企業規模和產業特性，提供量身定制的財務影響分析和管理策略建議。每個策略都必須針對該特定情境設計，而非通用模板。`;
+      
+      // 根據風險或機會類型提供不同的策略選項
+      const strategiesSection = categoryType === 'risk' ? 
+        `"risk_strategies": {
+          "mitigate": {
+            "title": "減緩策略",
+            "description": "針對「${subcategoryName}」風險的具體減緩措施，考慮${companySize}企業的實際能力和${industry}產業特性（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "cost_estimate": "實施成本估算（依企業規模調整）",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該情境的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "針對該特定風險的預期效果描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          },
+          "transfer": {
+            "title": "轉移策略",
+            "description": "針對「${subcategoryName}」風險的具體轉移作法，適合${companySize}企業在${industry}產業的應用（150-200字）", 
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "cost_estimate": "實施成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該情境的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "針對該特定風險的預期效果描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          },
+          "accept": {
+            "title": "接受策略",
+            "description": "針對「${subcategoryName}」風險的具體接受作法，考慮${companySize}企業的風險承受能力（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "cost_estimate": "實施成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該情境的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "針對該特定風險的預期效果描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          },
+          "control": {
+            "title": "控制策略",
+            "description": "針對「${subcategoryName}」風險的具體控制作法，適合${industry}產業的監控與管理機制（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "cost_estimate": "實施成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該情境的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_effect": "針對該特定風險的預期效果描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          }
+        }` :
+        `"opportunity_strategies": {
+          "evaluate_explore": {
+            "title": "評估探索策略",
+            "description": "針對「${subcategoryName}」機會的具體評估探索作法，適合${companySize}企業在${industry}產業的應用（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "investment_estimate": "投資成本估算（依企業規模調整）",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該機會的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_benefits": "針對該特定機會的預期效益描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          },
+          "capability_building": {
+            "title": "能力建設策略",
+            "description": "針對「${subcategoryName}」機會的具體能力建設作法，考慮${companySize}企業的資源配置（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "investment_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該機會的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_benefits": "針對該特定機會的預期效益描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          },
+          "business_transformation": {
+            "title": "商業轉換策略",
+            "description": "針對「${subcategoryName}」機會的具體商業轉換作法，適合${industry}產業的轉型路徑（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "investment_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該機會的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_benefits": "針對該特定機會的預期效益描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          },
+          "cooperation_participation": {
+            "title": "合作參與策略",
+            "description": "針對「${subcategoryName}」機會的具體合作參與作法，考慮${companySize}企業的合作能力（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "investment_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該機會的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_benefits": "針對該特定機會的預期效益描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          },
+          "aggressive_investment": {
+            "title": "積極投入策略",
+            "description": "針對「${subcategoryName}」機會的具體積極投入作法，適合有充足資源的${companySize}企業（150-200字）",
+            "specific_actions": ["具體行動1", "具體行動2", "具體行動3", "具體行動4"],
+            "investment_estimate": "投資成本估算",
+            "feasibility_score": 1-5,
+            "feasibility_reason": "針對該機會的可行性評分理由（80字內）",
+            "implementation_timeline": "預估實施時間",
+            "expected_benefits": "針對該特定機會的預期效益描述",
+            "key_success_factors": ["成功關鍵因素1", "成功關鍵因素2", "成功關鍵因素3"]
+          }
+        }`;
+      
+      prompt = `針對以下${categoryType === 'risk' ? '風險' : '機會'}情境，請提供專屬且完整的財務影響分析和管理策略建議：
+
+情境分類: ${categoryName} - ${subcategoryName}
+情境描述: ${scenarioDescription}
+影響評分: ${userScore}/3 分（${userScore === 3 ? '高度影響' : userScore === 2 ? '中度影響' : '輕度影響'}）
+產業: ${industry}
+企業規模: ${companySize}
+
+請按照以下 JSON 格式提供詳細回應，所有策略內容都必須針對「${subcategoryName}」這個特定情境量身定制：
+
+{
+  "scenario_summary": "一句話概括「${subcategoryName}」情境的背景與${categoryType === 'risk' ? '風險' : '機會'}重點（80字內）",
+  "financial_impact": {
+    "profit_loss": {
+      "description": "「${subcategoryName}」對${industry}企業損益表的具體影響分析，包含營收、毛利、營業成本變化（150-180字）",
+      "impact_direction": "正面/負面/中性",
+      "amount_estimate": "根據${companySize}企業規模的具體金額區間估計",
+      "timeframe": "短期（1-3年）/中期（3-7年）/長期（7年以上）",
+      "key_items": ["主要影響項目1", "主要影響項目2", "主要影響項目3", "主要影響項目4"]
+    },
+    "cash_flow": {
+      "description": "「${subcategoryName}」對現金流的影響分析，重點關注資本支出、營運現金流變化（150-180字）",
+      "impact_direction": "正面/負面/中性", 
+      "amount_estimate": "現金流影響金額區間",
+      "timeframe": "短期/中期/長期",
+      "key_items": ["現金流影響項目1", "現金流影響項目2", "現金流影響項目3", "現金流影響項目4"]
+    },
+    "balance_sheet": {
+      "description": "「${subcategoryName}」對資產負債表的影響分析，包含資產重估、存貨、負債變化（150-180字）",
+      "impact_direction": "正面/負面/中性",
+      "amount_estimate": "資產負債表影響金額區間", 
+      "timeframe": "短期/中期/長期",
+      "key_items": ["資產負債表影響項目1", "資產負債表影響項目2", "資產負債表影響項目3", "資產負債表影響項目4"]
+    }
+  },
+  ${strategiesSection}
+}
+
+重要要求：
+1. 所有策略建議必須針對「${subcategoryName}」這個具體情境，不可使用通用模板
+2. 考慮${companySize}企業的實際執行能力和資源限制
+3. 策略描述要包含具體的執行步驟和實施細節
+4. 財務影響分析要具體量化，提供實用的金額區間估計
+5. 可行性評分要有合理依據和針對性說明
+6. 所有內容專業且實用，符合 TCFD 報告標準
+7. 成功關鍵因素要針對該特定情境和產業特性
+
+請直接提供 JSON 格式的回應：`;
+
     } else if (type === 'scenario_analysis') {
-      // 詳細的情境分析生成
+      // 詳細的情境分析生成（保留向後相容）
       systemPrompt = `你是一位專精於氣候風險管理、財務分析和策略規劃的 TCFD 專業顧問。請根據情境描述和影響評分，提供完整且實用的財務影響分析和策略建議，幫助企業做出明智的管理決策。`;
       
       // 根據風險或機會類型提供不同的策略選項
@@ -225,7 +384,7 @@ serve(async (req) => {
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: type === 'scenario_analysis' || type === 'strategy' ? 3000 : 1000
+        max_tokens: type === 'comprehensive_scenario_analysis' ? 4000 : type === 'scenario_analysis' || type === 'strategy' ? 3000 : 1000
       }),
     });
 
@@ -243,7 +402,7 @@ serve(async (req) => {
 
     const generatedContent = data.choices[0].message.content;
 
-    if (type === 'scenario_analysis' || type === 'strategy') {
+    if (type === 'comprehensive_scenario_analysis' || type === 'scenario_analysis' || type === 'strategy') {
       try {
         // 嘗試解析 JSON 回應
         const parsedContent = JSON.parse(generatedContent);

@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { ScenarioEvaluation } from '@/types/tcfd';
 import * as scenarioService from '@/services/tcfd/scenarioService';
+import * as comprehensiveScenarioService from '@/services/tcfd/comprehensiveScenarioService';
 
 export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
   const [scenarioEvaluations, setScenarioEvaluations] = useState<ScenarioEvaluation[]>([]);
@@ -65,6 +65,31 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
     }
   };
 
+  const generateComprehensiveScenarioAnalysis = async (
+    categoryType: 'risk' | 'opportunity',
+    categoryName: string,
+    subcategoryName: string,
+    scenarioDescription: string,
+    userScore: number,
+    industry: string,
+    companySize: string
+  ) => {
+    try {
+      return await comprehensiveScenarioService.generateComprehensiveScenarioAnalysis(
+        categoryType,
+        categoryName,
+        subcategoryName,
+        scenarioDescription,
+        userScore,
+        industry,
+        companySize
+      );
+    } catch (err) {
+      console.error('Error in generateComprehensiveScenarioAnalysis:', err);
+      throw new Error(err instanceof Error ? err.message : '綜合情境分析生成失敗');
+    }
+  };
+
   useEffect(() => {
     if (assessmentId) {
       loadScenarioEvaluations();
@@ -78,5 +103,6 @@ export const useTCFDScenarioEvaluations = (assessmentId?: string) => {
     loadScenarioEvaluations,
     generateScenarioWithLLM,
     generateScenarioAnalysisWithLLM,
+    generateComprehensiveScenarioAnalysis,
   };
 };
