@@ -20,14 +20,16 @@ interface SelectedStrategyData {
   notes: string;
 }
 
-interface Stage3Results {
+interface Stage4Results {
   assessment: TCFDAssessment;
   strategySelections: SelectedStrategyData[];
+  userModifications: Record<string, string>;
+  completedAt: string;
 }
 
 const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
   const { generateReport, loading } = useTCFDAssessment(assessment.id);
-  const [stage3Results, setStage3Results] = useState<Stage3Results | null>(null);
+  const [stage4Results, setStage4Results] = useState<Stage4Results | null>(null);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
@@ -52,13 +54,33 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
   };
 
   useEffect(() => {
-    // 從 sessionStorage 讀取第三階段的結果
-    const storedResults = sessionStorage.getItem('tcfd-stage3-results');
-    if (storedResults) {
+    // 優先從 sessionStorage 讀取第四階段的結果
+    const storedStage4Results = sessionStorage.getItem('tcfd-stage4-results');
+    if (storedStage4Results) {
       try {
-        const results: Stage3Results = JSON.parse(storedResults);
-        setStage3Results(results);
-        console.log('第五階段載入第三階段結果:', results);
+        const results: Stage4Results = JSON.parse(storedStage4Results);
+        setStage4Results(results);
+        console.log('第五階段載入第四階段結果:', results);
+        return;
+      } catch (error) {
+        console.error('解析第四階段結果失敗:', error);
+      }
+    }
+
+    // 如果沒有第四階段結果，嘗試載入第三階段結果作為備用
+    const storedStage3Results = sessionStorage.getItem('tcfd-stage3-results');
+    if (storedStage3Results) {
+      try {
+        const stage3Results = JSON.parse(storedStage3Results);
+        // 轉換為第四階段格式
+        const convertedResults: Stage4Results = {
+          assessment: stage3Results.assessment,
+          strategySelections: stage3Results.strategySelections,
+          userModifications: {},
+          completedAt: new Date().toISOString()
+        };
+        setStage4Results(convertedResults);
+        console.log('第五階段載入第三階段結果（備用）:', convertedResults);
       } catch (error) {
         console.error('解析第三階段結果失敗:', error);
       }
@@ -66,8 +88,8 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
   }, []);
 
   const handleGenerateReport = async () => {
-    if (!stage3Results) {
-      console.error('沒有第三階段的資料');
+    if (!stage4Results) {
+      console.error('沒有前階段的資料');
       return;
     }
 
@@ -76,14 +98,15 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
       const reportData = {
         assessment_id: assessment.id,
         governance_content: '已完成治理架構建立',
-        strategy_content: `已分析${stage3Results.strategySelections.length}個風險機會情境`,
+        strategy_content: `已分析${stage4Results.strategySelections.length}個風險機會情境`,
         risk_management_content: '已建立風險管理流程',
         metrics_targets_content: '已設定相關指標目標',
-        disclosure_matrix: stage3Results.strategySelections,
+        disclosure_matrix: stage4Results.strategySelections,
         report_format_content: 'TCFD完整報告',
         json_output: {
           assessment: assessment,
-          strategies: stage3Results.strategySelections
+          strategies: stage4Results.strategySelections,
+          userModifications: stage4Results.userModifications
         }
       };
 
@@ -96,7 +119,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
     }
   };
 
-  if (!stage3Results) {
+  if (!stage4Results) {
     return (
       <div className="max-w-6xl mx-auto space-y-8">
         <Card>
@@ -152,12 +175,12 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
             <div>
               <h3 className="font-medium text-green-800">TCFD 報告摘要</h3>
               <p className="text-sm text-green-700">
-                完成 {stage3Results.strategySelections.length} 個風險機會情境分析，涵蓋四大揭露面向
+                完成 {stage4Results.strategySelections.length} 個風險機會情境分析，涵蓋四大揭露面向
               </p>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-green-700">
-                {stage3Results.strategySelections.length}
+                {stage4Results.strategySelections.length}
               </div>
               <div className="text-xs text-green-600">情境分析</div>
             </div>
@@ -168,7 +191,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
       {/* TCFD 報告內容 */}
       <TCFDReportContent 
         assessment={assessment}
-        strategySelections={stage3Results.strategySelections}
+        strategySelections={stage4Results.strategySelections}
       />
 
       {/* 報告操作區 */}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,6 +70,15 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     'aggressive_investment': '積極投入'
   };
 
+  // 生成 UUID 的輔助函數
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   useEffect(() => {
     // 從 sessionStorage 讀取第三階段的結果
     const storedResults = sessionStorage.getItem('tcfd-stage3-results');
@@ -98,12 +108,21 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
 
     setIsSubmitting(true);
     try {
+      // 準備要儲存到 sessionStorage 的第四階段結果
+      const stage4Results = {
+        assessment: assessment,
+        strategySelections: stage3Results.strategySelections,
+        userModifications: userModifications,
+        completedAt: new Date().toISOString()
+      };
+
       for (const selection of stage3Results.strategySelections) {
         const modifications = userModifications[selection.scenarioKey];
+        const scenarioEvaluationId = generateUUID(); // 生成真正的 UUID
 
         await saveStrategyAnalysis({
           assessment_id: assessment.id,
-          scenario_evaluation_id: `temp-${selection.scenarioKey}`,
+          scenario_evaluation_id: scenarioEvaluationId,
           detailed_description: selection.analysis?.scenario_description || '',
           financial_impact_pnl: '',
           financial_impact_cashflow: '',
@@ -118,8 +137,10 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
         });
       }
       
-      // 清除 sessionStorage
-      sessionStorage.removeItem('tcfd-stage3-results');
+      // 將第四階段結果儲存到 sessionStorage 供第五階段使用
+      sessionStorage.setItem('tcfd-stage4-results', JSON.stringify(stage4Results));
+      console.log('第四階段結果已儲存:', stage4Results);
+      
       onComplete();
     } catch (error) {
       console.error('Error saving strategy analysis:', error);
