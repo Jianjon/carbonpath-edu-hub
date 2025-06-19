@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +20,7 @@ interface TCFDStage3Props {
 }
 
 const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
-  const { riskOpportunitySelections, loadSelections } = useTCFDRiskOpportunitySelections(assessment.id);
+  const { riskOpportunitySelections, loadRiskOpportunitySelections } = useTCFDRiskOpportunitySelections(assessment.id);
   const { 
     scenarioEvaluations, 
     saveScenarioEvaluation, 
@@ -40,7 +39,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
   // 載入選擇的風險機會項目
   useEffect(() => {
-    loadSelections();
+    loadRiskOpportunitySelections();
     loadScenarioEvaluations();
   }, []);
 
@@ -216,8 +215,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       await saveScenarioEvaluation({
         assessment_id: assessment.id,
         risk_opportunity_id: scenario.id,
+        category_name: scenario.categoryName,
+        subcategory_name: scenario.subcategoryName || '',
         scenario_description: description,
         user_score: score,
+        likelihood_score: score, // Use the same score for likelihood
         llm_response: JSON.stringify(response),
         scenario_generated_by_llm: true
       });
@@ -246,8 +248,11 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       await saveScenarioEvaluation({
         assessment_id: assessment.id,
         risk_opportunity_id: scenario.id,
+        category_name: scenario.categoryName,
+        subcategory_name: scenario.subcategoryName || '',
         scenario_description: description,
         user_score: score,
+        likelihood_score: score, // Use the same score for likelihood
         llm_response: scenarioAnalysis[scenario.id] ? JSON.stringify(scenarioAnalysis[scenario.id]) : null,
         scenario_generated_by_llm: true
       });
