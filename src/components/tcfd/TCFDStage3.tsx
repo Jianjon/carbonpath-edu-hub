@@ -115,7 +115,12 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       'technology': '科技業',
       'finance': '金融業',
       'retail': '零售業',
-      'hospitality': '旅宿業'
+      'hospitality': '旅宿業',
+      'restaurant': '餐飲業',
+      'construction': '營建業',
+      'transportation': '運輸業',
+      'healthcare': '醫療保健',
+      'education': '教育服務'
     };
 
     const sizeMap: Record<string, string> = {
@@ -161,6 +166,12 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         scenarioDescription
       });
 
+      const userCustomInputs = {
+        user_notes: '',
+        scenario_modifications: '',
+        business_context: assessment.business_description || ''
+      };
+
       const response = await generateComprehensiveScenarioAnalysis(
         item.category_type,
         item.category_name,
@@ -169,7 +180,8 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         3, // 假設高影響評分
         assessment.industry,
         assessment.company_size,
-        assessment.business_description
+        assessment.business_description || '',
+        userCustomInputs
       );
 
       console.log('LLM策略生成回應:', response);
