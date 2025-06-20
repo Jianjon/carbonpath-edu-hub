@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { TCFDAssessment } from '@/types/tcfd';
 import { useTCFDRiskOpportunitySelections } from '@/hooks/tcfd/useTCFDRiskOpportunitySelections';
 import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
-import { Loader2, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TCFDStage3Props {
@@ -19,16 +19,44 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const { riskOpportunitySelections, loadRiskOpportunitySelections } = useTCFDRiskOpportunitySelections(assessment.id);
   const { 
     scenarioEvaluations,
-    generateComprehensiveScenarioAnalysis,
     saveScenarioEvaluation,
     loadScenarioEvaluations
   } = useTCFDScenarioEvaluations(assessment.id);
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [scenarioData, setScenarioData] = useState<{[key: string]: any}>({});
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 卡片內容生成規則
+  const getCardContent = (cardType: string, scenario: any) => {
+    const isRisk = scenario?.category_type === 'risk';
+    const categoryName = scenario?.category_name || '';
+    const subcategoryName = scenario?.subcategory_name || '';
+    const industryName = assessment.industry;
+    
+    switch (cardType) {
+      case 'profit_loss':
+        return `描述${subcategoryName}情境對${industryName}企業營收、毛利、成本變化的影響原因與方向。此${isRisk ? '風險' : '機會'}可能導致${isRisk ? '營收下降、成本增加或毛利縮減' : '營收增長、成本優化或毛利提升'}，需要企業評估對核心獲利能力的具體衝擊程度。`;
+      
+      case 'cash_flow':
+        return `描述${subcategoryName}情境下的短期投入、現金週轉、資金壓力或應設預算的區段與影響來源。${isRisk ? '風險應對' : '機會把握'}可能需要額外的現金流出，企業應評估流動性需求並制定相應的資金管理策略。`;
+      
+      case 'balance_sheet':
+        return `評估${subcategoryName}情境是否需汰換資產、提列準備金或面臨跌價、租賃改約、資本性支出調整等資產負債表影響。${categoryName}相關的${isRisk ? '風險管理' : '機會投資'}可能改變企業的資產結構與負債水準。`;
+      
+      case 'strategy_feasibility':
+        return `說明針對${subcategoryName}${isRisk ? '風險' : '機會'}採取相應策略的可行性分析。結合${industryName}產業特性與企業規模，評估不同策略選項的適用性、執行難度與預期效果，並解釋為什麼某些策略較為適合。`;
+      
+      case 'analysis_methodology':
+        return `針對${subcategoryName}情境，建議採用敏感度分析、情境模擬、KPI追蹤等分析技術。參考同業標竿、產業報告、政府政策文件等資料來源，建立完整的評估框架以支援管理決策。`;
+      
+      case 'calculation_logic':
+        return `提出${subcategoryName}情境下可供內部估算的公式或關鍵變數項目。建議建立影響係數 × 基準值的計算結構，如：${isRisk ? '損失機率 × 潛在損失金額' : '市場機會 × 獲利潜力'}等關鍵變數組合，協助量化財務影響。`;
+      
+      default:
+        return '內容生成中...';
+    }
+  };
 
   useEffect(() => {
     loadRiskOpportunitySelections();
@@ -49,14 +77,24 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         if (existingEvaluation) {
           newScenarioData[item.id] = {
             scenarioDescription: existingEvaluation.scenario_description || '',
-            analysisResults: existingEvaluation.llm_response ? JSON.parse(existingEvaluation.llm_response) : null,
             userInput: '',
             scenario: item
           };
         } else if (!newScenarioData[item.id]) {
+          // 自動生成情境描述
+          const autoDescription = `基於${item.category_name}的${item.subcategory_name}情境，${assessment.industry}企業面臨以下具體挑戰：
+
+【背景描述】
+${item.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶來的${item.subcategory_name}影響正逐漸顯現，對${assessment.industry}產業造成結構性衝擊。
+
+【業務影響】
+企業營運模式需要調整以因應新的環境條件，包括供應鏈重組、技術升級投資，以及客戶需求變化的應對。
+
+【${item.category_type === 'risk' ? '風險' : '機會'}評估】
+${item.category_type === 'risk' ? '若未能及時調整策略，可能面臨營收下滑、成本上升，以及競爭力削弱的多重壓力。' : '及時把握此機會，可望創造新的營收來源、提升競爭優勢，並強化長期永續發展能力。'}`;
+
           newScenarioData[item.id] = {
-            scenarioDescription: '',
-            analysisResults: null,
+            scenarioDescription: autoDescription,
             userInput: '',
             scenario: item
           };
@@ -84,64 +122,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }));
   };
 
-  const generateScenarioDescription = async () => {
-    if (!currentScenario) return;
-
-    setIsGenerating(true);
-    try {
-      const generatedDescription = `
-基於${currentScenario.category_name}的${currentScenario.subcategory_name}情境，${assessment.industry}企業面臨以下具體挑戰：
-
-【背景描述】
-${currentScenario.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶來的${currentScenario.subcategory_name}影響正逐漸顯現，對${assessment.industry}產業造成結構性衝擊。
-
-【業務影響】
-企業營運模式需要調整以因應新的環境條件，包括供應鏈重組、技術升級投資，以及客戶需求變化的應對。
-
-【風險壓力】
-若未能及時調整策略，可能面臨營收下滑、成本上升，以及競爭力削弱的多重壓力。
-      `.trim();
-
-      updateCurrentScenarioData({ scenarioDescription: generatedDescription });
-      toast.success('情境描述已生成');
-    } catch (error) {
-      console.error('生成情境描述失敗:', error);
-      toast.error('生成情境描述失敗');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const generateComprehensiveAnalysis = async () => {
-    if (!currentScenario || !currentData.scenarioDescription) {
-      toast.error('請先生成情境描述');
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const response = await generateComprehensiveScenarioAnalysis(
-        currentScenario.category_type as 'risk' | 'opportunity',
-        currentScenario.category_name,
-        currentScenario.subcategory_name || '',
-        currentData.scenarioDescription,
-        5,
-        assessment.industry,
-        assessment.company_size,
-        assessment.business_description || '',
-        { userInput: currentData.userInput || '' }
-      );
-
-      updateCurrentScenarioData({ analysisResults: response });
-      toast.success('綜合分析已完成');
-    } catch (error) {
-      console.error('綜合分析失敗:', error);
-      toast.error('綜合分析失敗');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
   const saveCurrentScenario = async () => {
     if (!currentScenario || !currentData.scenarioDescription) return;
 
@@ -152,8 +132,8 @@ ${currentScenario.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶
         scenario_description: currentData.scenarioDescription,
         user_score: 5,
         likelihood_score: 5,
-        llm_response: JSON.stringify(currentData.analysisResults || {}),
-        scenario_generated_by_llm: true
+        llm_response: JSON.stringify({}),
+        scenario_generated_by_llm: false
       });
 
       toast.success('當前情境已儲存');
@@ -176,8 +156,8 @@ ${currentScenario.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶
             scenario_description: itemData.scenarioDescription,
             user_score: 5,
             likelihood_score: 5,
-            llm_response: JSON.stringify(itemData.analysisResults || {}),
-            scenario_generated_by_llm: true
+            llm_response: JSON.stringify({}),
+            scenario_generated_by_llm: false
           });
         }
         return Promise.resolve();
@@ -195,7 +175,7 @@ ${currentScenario.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶
             categoryType: item.category_type,
             subcategoryName: item.subcategory_name || '',
             scenarioDescription: itemData.scenarioDescription || '',
-            analysisResults: itemData.analysisResults,
+            analysisResults: {},
             userInput: itemData.userInput || '',
             userScore: 5
           };
@@ -221,7 +201,6 @@ ${currentScenario.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶
       return {
         title: `${item.category_name} - ${item.subcategory_name}`,
         scenarioDescription: itemData.scenarioDescription || '',
-        analysisResults: itemData.analysisResults,
         userInput: itemData.userInput || ''
       };
     });
@@ -234,9 +213,6 @@ ${allData.map((data, index) => `
 
 情境描述：
 ${data.scenarioDescription}
-
-量化分析結果：
-${JSON.stringify(data.analysisResults, null, 2)}
 
 企業補充說明：
 ${data.userInput}
@@ -322,24 +298,6 @@ ${data.userInput}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button
-                onClick={generateScenarioDescription}
-                disabled={isGenerating}
-                variant="outline"
-                size="sm"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    生成情境描述
-                  </>
-                )}
-              </Button>
             </div>
           </CardTitle>
         </CardHeader>
@@ -351,83 +309,77 @@ ${data.userInput}
               id="scenario"
               value={currentData.scenarioDescription || ''}
               onChange={(e) => updateCurrentScenarioData({ scenarioDescription: e.target.value })}
-              placeholder="點擊「生成情境描述」按鈕以產生具體的情境內容，或手動輸入..."
+              placeholder="情境描述將自動載入..."
               rows={8}
               className="text-sm border-gray-300"
             />
           </div>
 
-          {/* 量化分析區域 */}
+          {/* 量化分析區域 - 直接顯示內容 */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-lg font-medium">量化分析結果</Label>
-              <Button
-                onClick={generateComprehensiveAnalysis}
-                disabled={isAnalyzing || !currentData.scenarioDescription}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    分析中...
-                  </>
-                ) : (
-                  '開始綜合分析'
-                )}
-              </Button>
-            </div>
-
-            {currentData.analysisResults && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 損益表影響分析 */}
-                <div className="p-4 bg-gray-50 rounded border">
-                  <h4 className="font-medium mb-2 text-gray-800">1. 損益表影響分析</h4>
-                  <p className="text-sm text-gray-700">
-                    {currentData.analysisResults.financial_impact?.profit_loss?.description || '分析內容將在此顯示...'}
-                  </p>
-                </div>
-
-                {/* 現金流影響分析 */}
-                <div className="p-4 bg-gray-50 rounded border">
-                  <h4 className="font-medium mb-2 text-gray-800">2. 現金流影響分析</h4>
-                  <p className="text-sm text-gray-700">
-                    {currentData.analysisResults.financial_impact?.cash_flow?.description || '分析內容將在此顯示...'}
-                  </p>
-                </div>
-
-                {/* 資產負債表影響分析 */}
-                <div className="p-4 bg-gray-50 rounded border">
-                  <h4 className="font-medium mb-2 text-gray-800">3. 資產負債表影響分析</h4>
-                  <p className="text-sm text-gray-700">
-                    {currentData.analysisResults.financial_impact?.balance_sheet?.description || '分析內容將在此顯示...'}
-                  </p>
-                </div>
-
-                {/* 策略可行性說明 */}
-                <div className="p-4 bg-gray-50 rounded border">
-                  <h4 className="font-medium mb-2 text-gray-800">4. 策略可行性說明</h4>
-                  <p className="text-sm text-gray-700">
-                    {currentData.analysisResults.strategy_feasibility || '策略分析內容將在此顯示...'}
-                  </p>
-                </div>
-
-                {/* 分析與估算方法建議 */}
-                <div className="p-4 bg-gray-50 rounded border">
-                  <h4 className="font-medium mb-2 text-gray-800">5. 分析與估算方法建議</h4>
-                  <p className="text-sm text-gray-700">
-                    {currentData.analysisResults.analysis_methodology || '方法建議將在此顯示...'}
-                  </p>
-                </div>
-
-                {/* 財務計算邏輯建議 */}
-                <div className="p-4 bg-gray-50 rounded border">
-                  <h4 className="font-medium mb-2 text-gray-800">6. 財務計算邏輯建議</h4>
-                  <p className="text-sm text-gray-700">
-                    {currentData.analysisResults.calculation_logic || '計算邏輯建議將在此顯示...'}
-                  </p>
-                </div>
+            <Label className="text-lg font-medium">量化分析結果</Label>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 損益表影響分析 */}
+              <div className="p-4 bg-gray-50 rounded border">
+                <h4 className="font-medium mb-2 text-gray-800 flex items-center">
+                  📊 1. 損益表影響分析
+                </h4>
+                <p className="text-sm text-gray-700">
+                  {getCardContent('profit_loss', currentScenario)}
+                </p>
               </div>
-            )}
+
+              {/* 現金流影響分析 */}
+              <div className="p-4 bg-gray-50 rounded border">
+                <h4 className="font-medium mb-2 text-gray-800 flex items-center">
+                  💵 2. 現金流影響分析
+                </h4>
+                <p className="text-sm text-gray-700">
+                  {getCardContent('cash_flow', currentScenario)}
+                </p>
+              </div>
+
+              {/* 資產負債表影響分析 */}
+              <div className="p-4 bg-gray-50 rounded border">
+                <h4 className="font-medium mb-2 text-gray-800 flex items-center">
+                  🏦 3. 資產負債影響分析
+                </h4>
+                <p className="text-sm text-gray-700">
+                  {getCardContent('balance_sheet', currentScenario)}
+                </p>
+              </div>
+
+              {/* 策略可行性說明 */}
+              <div className="p-4 bg-gray-50 rounded border">
+                <h4 className="font-medium mb-2 text-gray-800 flex items-center">
+                  🧠 4. 策略可行性說明
+                </h4>
+                <p className="text-sm text-gray-700">
+                  {getCardContent('strategy_feasibility', currentScenario)}
+                </p>
+              </div>
+
+              {/* 分析與估算方法建議 */}
+              <div className="p-4 bg-gray-50 rounded border">
+                <h4 className="font-medium mb-2 text-gray-800 flex items-center">
+                  📈 5. 分析與估算方法
+                </h4>
+                <p className="text-sm text-gray-700">
+                  {getCardContent('analysis_methodology', currentScenario)}
+                </p>
+              </div>
+
+              {/* 財務計算邏輯建議 */}
+              <div className="p-4 bg-gray-50 rounded border">
+                <h4 className="font-medium mb-2 text-gray-800 flex items-center">
+                  🧮 6. 財務計算邏輯建議
+                </h4>
+                <p className="text-sm text-gray-700">
+                  {getCardContent('calculation_logic', currentScenario)}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* 企業補充區域 */}
