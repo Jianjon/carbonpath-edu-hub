@@ -95,7 +95,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   ];
 
   // 生成策略建議內容
-  const generateStrategyContent = (strategy: string, item: any, assessment: TCFDAssessment) => {
+  const generateStrategyContent = (strategy: string, item: any, assessment: TCFDAssessment): string => {
     const industry = assessment.industry;
     const companySize = assessment.company_size;
     const hasInventory = assessment.has_carbon_inventory;
@@ -109,7 +109,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   // 風險策略內容生成
-  const generateRiskStrategyContent = (strategy: string, item: any, industry: string, companySize: string, hasInventory: boolean) => {
+  const generateRiskStrategyContent = (strategy: string, item: any, industry: string, companySize: string, hasInventory: boolean): string => {
     const subcategory = item.subcategory_name || item.category_name;
     
     switch (strategy) {
@@ -127,7 +127,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   // 機會策略內容生成
-  const generateOpportunityStrategyContent = (strategy: string, item: any, industry: string, companySize: string, hasInventory: boolean) => {
+  const generateOpportunityStrategyContent = (strategy: string, item: any, industry: string, companySize: string, hasInventory: boolean): string => {
     const subcategory = item.subcategory_name || item.category_name;
     
     switch (strategy) {
@@ -147,7 +147,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   };
 
   // 生成情境描述（150-180字）
-  const generateScenarioDescription = (item: any, assessment: TCFDAssessment) => {
+  const generateScenarioDescription = (item: any, assessment: TCFDAssessment): string => {
     const industry = assessment.industry;
     const companySize = assessment.company_size;
     const hasInventory = assessment.has_carbon_inventory;
@@ -271,6 +271,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const isRisk = currentScenario?.category_type === 'risk';
   const strategies = isRisk ? riskStrategies : opportunityStrategies;
   const currentSelection = currentScenario ? strategySelections[currentScenario.id] : null;
+  const scenarioDescription = currentScenario ? generateScenarioDescription(currentScenario, assessment) : '';
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -333,7 +334,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
           <div className="bg-gray-50 p-4 rounded border border-gray-200">
             <h4 className="font-medium mb-2 text-gray-800">情境描述</h4>
             <p className="text-sm text-gray-700">
-              {currentScenario ? generateScenarioDescription(currentScenario, assessment) : ''}
+              {scenarioDescription}
             </p>
           </div>
 
@@ -429,7 +430,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 };
 
 // 策略生成函數實作
-const getIndustrySpecificMitigationStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean) => {
+const getIndustrySpecificMitigationStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean): string => {
   const baseStrategies: Record<string, string> = {
     manufacturing: '導入節能設備如變頻空壓機、LED照明系統，建置太陽能板降低用電成本。考慮製程優化與循環經濟模式。',
     technology: '採用高效能伺服器與雲端架構，導入智慧電網管理系統。建置綠色數據中心，使用再生能源憑證。',
@@ -441,7 +442,7 @@ const getIndustrySpecificMitigationStrategy = (industry: string, subcategory: st
   return baseStrategies[industry] || '根據產業特性導入相應的節能減碳設備與製程改善措施。';
 };
 
-const getIndustrySpecificTransferStrategy = (industry: string, subcategory: string, size: string) => {
+const getIndustrySpecificTransferStrategy = (industry: string, subcategory: string, size: string): string => {
   const baseStrategies: Record<string, string> = {
     manufacturing: '投保氣候風險保險涵蓋設備損失與營運中斷。與供應商簽訂包含碳排放責任的合約條款。',
     technology: '採用雲端服務轉移數據中心營運風險，簽訂綠電購售合約穩定能源成本。',
@@ -453,7 +454,7 @@ const getIndustrySpecificTransferStrategy = (industry: string, subcategory: stri
   return baseStrategies[industry] || '透過保險、合約安排與外包等方式，將氣候風險轉移至第三方承擔。';
 };
 
-const getIndustrySpecificAcceptStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean) => {
+const getIndustrySpecificAcceptStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean): string => {
   if (size === 'small') {
     return '暫時接受現況並設定分階段改善計劃，優先處理成本效益最佳的減碳措施。';
   }
@@ -469,7 +470,7 @@ const getIndustrySpecificAcceptStrategy = (industry: string, subcategory: string
   return baseStrategies[industry] || '暫時承擔風險並建立監測改善機制，設定階段性目標逐步降低風險。';
 };
 
-const getIndustrySpecificControlStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean) => {
+const getIndustrySpecificControlStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean): string => {
   const monitoringBase = hasInventory ? 
     '基於現有碳盤查資料建立動態監測儀表板，' : 
     '建立基礎碳排放監測制度，';
@@ -485,7 +486,7 @@ const getIndustrySpecificControlStrategy = (industry: string, subcategory: strin
   return baseStrategies[industry] || '建立全面性監測預警系統，制定標準作業程序確保風險可控。';
 };
 
-const getOpportunityEvaluateStrategy = (industry: string, subcategory: string, size: string) => {
+const getOpportunityEvaluateStrategy = (industry: string, subcategory: string, size: string): string => {
   const baseStrategies: Record<string, string> = {
     manufacturing: '委託專業顧問進行綠色轉型可行性評估，分析設備投資回收期與政府補助機會。',
     technology: '評估綠色技術商業化潛力，進行市場需求調查與競爭分析。',
@@ -497,7 +498,7 @@ const getOpportunityEvaluateStrategy = (industry: string, subcategory: string, s
   return baseStrategies[industry] || '進行深度市場研究與技術可行性評估，透過小規模測試驗證商業模式。';
 };
 
-const getOpportunityCapabilityStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean) => {
+const getOpportunityCapabilityStrategy = (industry: string, subcategory: string, size: string, hasInventory: boolean): string => {
   const trainingBase = hasInventory ? 
     '基於現有碳管理經驗擴展團隊專業能力，' :
     '建立基礎碳管理團隊與訓練體系，';
@@ -513,7 +514,7 @@ const getOpportunityCapabilityStrategy = (industry: string, subcategory: string,
   return baseStrategies[industry] || '系統性建立內部永續專業能力，培養跨部門協作與創新思維。';
 };
 
-const getOpportunityTransformationStrategy = (industry: string, subcategory: string, size: string) => {
+const getOpportunityTransformationStrategy = (industry: string, subcategory: string, size: string): string => {
   const baseStrategies: Record<string, string> = {
     manufacturing: '開發低碳版本的核心產品，進軍綠色建材或再生能源設備市場。',
     technology: '開發碳管理軟體解決方案，提供企業碳盤查與減碳顧問服務。',
@@ -525,7 +526,7 @@ const getOpportunityTransformationStrategy = (industry: string, subcategory: str
   return baseStrategies[industry] || '開發具永續特色的新產品服務，建立差異化競爭優勢搶占綠色市場。';
 };
 
-const getOpportunityCooperationStrategy = (industry: string, subcategory: string, size: string) => {
+const getOpportunityCooperationStrategy = (industry: string, subcategory: string, size: string): string => {
   const baseStrategies: Record<string, string> = {
     manufacturing: '加入產業淨零聯盟共享減碳技術，申請經濟部綠色工廠轉型補助。',
     technology: '參與科技業RE100倡議集體採購綠電，加入數位發展部淨零技術創新計劃。',
@@ -537,7 +538,7 @@ const getOpportunityCooperationStrategy = (industry: string, subcategory: string
   return baseStrategies[industry] || '積極參與產業聯盟與政府計劃，透過策略合作降低轉型成本。';
 };
 
-const getOpportunityAggressiveStrategy = (industry: string, subcategory: string, size: string) => {
+const getOpportunityAggressiveStrategy = (industry: string, subcategory: string, size: string): string => {
   const baseStrategies: Record<string, string> = {
     manufacturing: '立即簽署綠電購售合約鎖定長期電價，大規模投資自動化減碳設備。',
     technology: '全面導入再生能源供電，投資大型綠色數據中心建設。',
