@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -488,7 +487,7 @@ const getIndustrySpecificControlStrategy = (industry: string, subcategory: strin
 };
 
 const getOpportunityEvaluateStrategy = (industry: string, subcategory: string, size: string): string => {
-  const baseStrategies: Record<string, string> = {
+  const baseStrategies: Record<string, string> {
     manufacturing: '委託專業顧問進行綠色轉型可行性評估，分析設備投資回收期與政府補助機會。',
     technology: '評估綠色技術商業化潛力，進行市場需求調查與競爭分析。',
     finance: '研究永續金融商品市場機會，評估ESG投資策略的風險報酬特性。',
