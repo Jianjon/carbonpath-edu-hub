@@ -373,6 +373,45 @@ export type Database = {
           },
         ]
       }
+      tcfd_strategy_cache: {
+        Row: {
+          cache_key: string
+          category_name: string
+          category_type: string
+          company_size: string
+          created_at: string
+          id: string
+          industry: string
+          strategies: Json
+          subcategory_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          cache_key: string
+          category_name: string
+          category_type: string
+          company_size: string
+          created_at?: string
+          id?: string
+          industry: string
+          strategies: Json
+          subcategory_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cache_key?: string
+          category_name?: string
+          category_type?: string
+          company_size?: string
+          created_at?: string
+          id?: string
+          industry?: string
+          strategies?: Json
+          subcategory_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

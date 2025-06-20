@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { useTCFDRiskOpportunitySelections } from '@/hooks/tcfd/useTCFDRiskOpport
 import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
 import { Loader2, ChevronLeft, ChevronRight, Shield, Target, Lightbulb, Eye, Settings, Coins, Sprout, Rocket } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TCFDStage3Props {
   assessment: TCFDAssessment;
@@ -104,29 +106,22 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const cacheKey = `${item.category_type}_${item.category_name}_${item.subcategory_name}_${assessment.industry}_${assessment.company_size}`;
     
     try {
-      const response = await fetch('/api/tcfd-strategy-cache', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await supabase.functions.invoke('tcfd-strategy-cache', {
+        body: {
           categoryType: item.category_type,
           categoryName: item.category_name,
           subcategoryName: item.subcategory_name,
           industry: assessment.industry,
           companySize: assessment.company_size
-        })
+        }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.strategies) {
-          setPreGeneratedStrategies(prev => ({
-            ...prev,
-            [cacheKey]: data.strategies
-          }));
-          return data.strategies;
-        }
+      if (response.data?.success && response.data?.strategies) {
+        setPreGeneratedStrategies(prev => ({
+          ...prev,
+          [cacheKey]: response.data.strategies
+        }));
+        return response.data.strategies;
       }
     } catch (error) {
       console.error('載入預先生成策略失敗:', error);
@@ -220,13 +215,13 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     try {
       if (isRisk && strategiesData.risk_strategies) {
         const strategyData = strategiesData.risk_strategies[strategy];
-        if (strategyData && typeof strategyData.description === 'string') {
-          return strategyData.description;
+        if (strategyData && strategyData.description) {
+          return String(strategyData.description);
         }
       } else if (!isRisk && strategiesData.opportunity_strategies) {
         const strategyData = strategiesData.opportunity_strategies[strategy];
-        if (strategyData && typeof strategyData.description === 'string') {
-          return strategyData.description;
+        if (strategyData && strategyData.description) {
+          return String(strategyData.description);
         }
       }
     } catch (error) {
