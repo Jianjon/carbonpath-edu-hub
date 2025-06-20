@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -152,8 +153,8 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const companySize = assessment.company_size;
     const hasInventory = assessment.has_carbon_inventory;
     const isRisk = item.category_type === 'risk';
-    const categoryName = item.category_name;
-    const subcategoryName = item.subcategory_name;
+    const categoryName = item.category_name || '';
+    const subcategoryName = item.subcategory_name || '';
 
     // 產業中文對應
     const industryMap: Record<string, string> = {
