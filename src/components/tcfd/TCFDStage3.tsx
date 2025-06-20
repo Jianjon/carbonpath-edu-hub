@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +44,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       
       // 檢查是否已有現有的情境描述
       const existingEvaluation = scenarioEvaluations.find(
-        eval => eval.risk_opportunity_id === selectedItems[0].id
+        evaluation => evaluation.risk_opportunity_id === selectedItems[0].id
       );
       if (existingEvaluation?.scenario_description) {
         setScenarioDescription(existingEvaluation.scenario_description);
