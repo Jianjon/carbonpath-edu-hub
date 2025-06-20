@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -185,7 +184,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
 
     // 通用情境描述
-    return `${sizeText}${industryText}企業在${categoryName}面向遭遇${subcategoryName}挑戰，需要建立系統性應對機制。${inventoryStatus}的現況將影響因應策略的制定與執行效率。此情境將對企業營運模式產生結構性影響，需要跨部門協調與資源重新配置。管理團隊必須在短期成本投入與長期競爭力維持間做出平衡決策。延遲應對將增加後續調整的複雜度與成本，主動因應則有機會轉危為安並建立競爭優勢。企業應制定階段性目標與執行計畫，確保在變動環境中維持營運韌性與持續發展能力。`;
+    return `${sizeText}${industryText}企業在${categoryName}面向遭遇${subcategoryName}挑戰，需要建立系統性應對機制。${inventoryStatus}的現況將影響因應策略的制定與執行效率。此情境將對企業營運模式產生結構性影響，需要跨部門協部門協調與資源重新配置。管理團隊必須在短期成本投入與長期競爭力維持間做出平衡決策。延遲應對將增加後續調整的複雜度與成本，主動因應則有機會轉危為安並建立競爭優勢。企業應制定階段性目標與執行計畫，確保在變動環境中維持營運韌性與持續發展能力。`;
   };
 
   useEffect(() => {
