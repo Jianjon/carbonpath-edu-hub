@@ -174,7 +174,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
       const response = await generateComprehensiveScenarioAnalysis(
         item.category_type,
-        item.category_name,
+        item.categoryName,
         item.subcategory_name,
         scenarioDescription,
         3, // 假設高影響評分
@@ -210,7 +210,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  // 根據選擇的策略取得 LLM 生成的內容
+  // 根據選擇的策略取得 LLM 生成的內容 - 確保回傳字串型別
   const getStrategyContent = (strategy: string, item: any): string => {
     const cacheKey = `${item.id}_${item.category_type}`;
     const llmData = llmStrategies[cacheKey];
@@ -221,16 +221,20 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
     const isRisk = item.category_type === 'risk';
     
-    if (isRisk && llmData.risk_strategies) {
-      const strategyData = llmData.risk_strategies[strategy];
-      if (strategyData && typeof strategyData.description === 'string') {
-        return strategyData.description;
+    try {
+      if (isRisk && llmData.risk_strategies) {
+        const strategyData = llmData.risk_strategies[strategy];
+        if (strategyData && typeof strategyData.description === 'string') {
+          return strategyData.description;
+        }
+      } else if (!isRisk && llmData.opportunity_strategies) {
+        const strategyData = llmData.opportunity_strategies[strategy];
+        if (strategyData && typeof strategyData.description === 'string') {
+          return strategyData.description;
+        }
       }
-    } else if (!isRisk && llmData.opportunity_strategies) {
-      const strategyData = llmData.opportunity_strategies[strategy];
-      if (strategyData && typeof strategyData.description === 'string') {
-        return strategyData.description;
-      }
+    } catch (error) {
+      console.error('取得策略內容失敗:', error);
     }
 
     return '策略內容生成中...';
@@ -278,9 +282,25 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // 準備第三階段結果資料，包含 LLM 生成的策略
+      // 準備第三階段結果資料，包含完整的評估資訊
       const stage3Results = {
-        assessment: assessment,
+        assessment: {
+          id: assessment.id,
+          industry: assessment.industry,
+          company_size: assessment.company_size,
+          has_carbon_inventory: assessment.has_carbon_inventory,
+          has_international_operations: assessment.has_international_operations,
+          annual_revenue_range: assessment.annual_revenue_range,
+          supply_chain_carbon_disclosure: assessment.supply_chain_carbon_disclosure,
+          has_sustainability_team: assessment.has_sustainability_team,
+          main_emission_source: assessment.main_emission_source,
+          business_description: assessment.business_description,
+          current_stage: assessment.current_stage,
+          status: assessment.status,
+          created_at: assessment.created_at,
+          updated_at: assessment.updated_at,
+          user_id: assessment.user_id
+        },
         strategySelections: Object.values(strategySelections).map(selection => {
           const item = selectedItems.find(item => item.id === selection.riskOpportunityId);
           return {
@@ -292,9 +312,20 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             categoryName: item?.category_name,
             subcategoryName: item?.subcategory_name,
             notes: selection.notes,
-            llmGeneratedContent: selection.llmGeneratedContent
+            llmGeneratedContent: selection.llmGeneratedContent,
+            // 保留原始選擇資訊
+            originalSelection: {
+              id: item?.id,
+              assessment_id: item?.assessment_id,
+              category_type: item?.category_type,
+              category_name: item?.category_name,
+              subcategory_name: item?.subcategory_name,
+              selected: item?.selected,
+              created_at: item?.created_at
+            }
           };
-        })
+        }),
+        completedAt: new Date().toISOString()
       };
 
       sessionStorage.setItem('tcfd-stage3-results', JSON.stringify(stage3Results));
