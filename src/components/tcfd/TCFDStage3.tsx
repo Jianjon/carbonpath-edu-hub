@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +30,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const [strategySelections, setStrategySelections] = useState<Record<string, StrategySelection>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
-  const [llmStrategies, setLlmStrategies] = useState<Record<string, any>>({});
+  const [preGeneratedStrategies, setPreGeneratedStrategies] = useState<Record<string, any>>({});
 
   // 風險策略選項
   const riskStrategies = [
@@ -100,7 +99,71 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   ];
 
-  // 生成情境描述（150-180字）
+  // 從預先生成的快取中載入策略內容
+  const loadPreGeneratedStrategies = async (item: any) => {
+    const cacheKey = `${item.category_type}_${item.category_name}_${item.subcategory_name}_${assessment.industry}_${assessment.company_size}`;
+    
+    try {
+      const response = await fetch('/api/tcfd-strategy-cache', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          categoryType: item.category_type,
+          categoryName: item.category_name,
+          subcategoryName: item.subcategory_name,
+          industry: assessment.industry,
+          companySize: assessment.company_size
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.strategies) {
+          setPreGeneratedStrategies(prev => ({
+            ...prev,
+            [cacheKey]: data.strategies
+          }));
+          return data.strategies;
+        }
+      }
+    } catch (error) {
+      console.error('載入預先生成策略失敗:', error);
+    }
+
+    // 如果沒有快取，則即時生成
+    return await generateStrategiesRealTime(item);
+  };
+
+  // 即時生成策略（作為fallback）
+  const generateStrategiesRealTime = async (item: any) => {
+    setIsGeneratingStrategy(true);
+    try {
+      const scenarioDescription = generateScenarioDescription(item, assessment);
+      
+      const response = await generateComprehensiveScenarioAnalysis(
+        item.category_type,
+        item.category_name,
+        item.subcategory_name,
+        scenarioDescription,
+        3,
+        assessment.industry,
+        assessment.company_size,
+        assessment.business_description || '',
+        {}
+      );
+
+      return response;
+    } catch (error) {
+      console.error('即時生成策略失敗:', error);
+      return null;
+    } finally {
+      setIsGeneratingStrategy(false);
+    }
+  };
+
+  // 生成情境描述
   const generateScenarioDescription = (item: any, assessment: TCFDAssessment): string => {
     const industry = assessment.industry;
     const companySize = assessment.company_size;
@@ -109,7 +172,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const categoryName = item.category_name || '';
     const subcategoryName = item.subcategory_name || '';
 
-    // 產業中文對應
     const industryMap: Record<string, string> = {
       'manufacturing': '製造業',
       'technology': '科技業',
@@ -133,7 +195,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     const sizeText = sizeMap[companySize] || companySize;
     const inventoryStatus = hasInventory ? '已建立碳盤查制度' : '尚未建立完整碳盤查制度';
 
-    // 情境描述模板
     if (isRisk && categoryName.includes('政策')) {
       return `${sizeText}${industryText}企業面臨政策法規趨嚴的轉型壓力，特別是${subcategoryName}相關要求將直接影響營運合規成本。監管機構逐步提高環境標準，企業需投入資源進行制度調整與技術升級。${inventoryStatus}的現況將影響合規準備的起始點與所需投入程度。法規遵循失敗將面臨罰款風險，同時可能影響客戶信任度與市場競爭力。合規成本上升將壓縮獲利空間，需要重新評估營運模式的可持續性。此情境要求企業在成本控制與風險管理間找到平衡點，制定前瞻性的應對策略以維持營運穩定性。`;
     }
@@ -142,93 +203,28 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       return `${sizeText}${industryText}企業正面臨市場需求轉向永續產品服務的機會窗口，${subcategoryName}相關需求快速成長為新的營收來源。消費者環保意識提升促使採購決策改變，願意為永續價值支付溢價。${inventoryStatus}的基礎將影響企業把握綠色商機的速度與可信度。競爭對手積極布局永續市場，搶佔先機者將獲得品牌差異化優勢。此機會窗口具有時效性，延遲進入將錯失市場定位良機。企業需要快速建立永續能力與產品組合，才能有效轉換市場機會為實際營收成長動能。`;
     }
 
-    // 通用情境描述
     return `${sizeText}${industryText}企業在${categoryName}面向遭遇${subcategoryName}挑戰，需要建立系統性應對機制。${inventoryStatus}的現況將影響因應策略的制定與執行效率。此情境將對企業營運模式產生結構性影響，需要跨部門協調與資源重新配置。管理團隊必須在短期成本投入與長期競爭力維持間做出平衡決策。延遲應對將增加後續調整的複雜度與成本，主動因應則有機會轉危為安並建立競爭優勢。企業應制定階段性目標與執行計畫，確保在變動環境中維持營運韌性與持續發展能力。`;
   };
 
-  // 使用 LLM 生成客制化策略內容
-  const generateLLMStrategies = async (item: any, scenarioDescription: string) => {
-    const cacheKey = `${item.id}_${item.category_type}`;
-    
-    // 檢查是否已經生成過
-    if (llmStrategies[cacheKey]) {
-      return llmStrategies[cacheKey];
-    }
-
-    setIsGeneratingStrategy(true);
-    try {
-      console.log('生成LLM策略:', {
-        categoryType: item.category_type,
-        categoryName: item.category_name,
-        subcategoryName: item.subcategory_name,
-        industry: assessment.industry,
-        companySize: assessment.company_size,
-        scenarioDescription
-      });
-
-      const userCustomInputs = {
-        user_notes: '',
-        scenario_modifications: '',
-        business_context: assessment.business_description || ''
-      };
-
-      const response = await generateComprehensiveScenarioAnalysis(
-        item.category_type,
-        item.category_name,
-        item.subcategory_name,
-        scenarioDescription,
-        3, // 假設高影響評分
-        assessment.industry,
-        assessment.company_size,
-        assessment.business_description || '',
-        userCustomInputs
-      );
-
-      console.log('LLM策略生成回應:', response);
-
-      const strategies = {
-        categoryType: item.category_type,
-        categoryName: item.category_name,
-        subcategoryName: item.subcategory_name,
-        scenarioDescription,
-        ...response
-      };
-
-      // 快取結果
-      setLlmStrategies(prev => ({
-        ...prev,
-        [cacheKey]: strategies
-      }));
-
-      return strategies;
-    } catch (error) {
-      console.error('LLM策略生成失敗:', error);
-      toast.error('策略生成失敗，將使用預設內容');
-      return null;
-    } finally {
-      setIsGeneratingStrategy(false);
-    }
-  };
-
-  // 根據選擇的策略取得 LLM 生成的內容 - 確保回傳字串型別
+  // 取得策略內容 - 修正返回類型為字串
   const getStrategyContent = (strategy: string, item: any): string => {
-    const cacheKey = `${item.id}_${item.category_type}`;
-    const llmData = llmStrategies[cacheKey];
+    const cacheKey = `${item.category_type}_${item.category_name}_${item.subcategory_name}_${assessment.industry}_${assessment.company_size}`;
+    const strategiesData = preGeneratedStrategies[cacheKey];
     
-    if (!llmData) {
-      return '正在生成客制化策略建議...';
+    if (!strategiesData) {
+      return '正在載入策略內容...';
     }
 
     const isRisk = item.category_type === 'risk';
     
     try {
-      if (isRisk && llmData.risk_strategies) {
-        const strategyData = llmData.risk_strategies[strategy];
+      if (isRisk && strategiesData.risk_strategies) {
+        const strategyData = strategiesData.risk_strategies[strategy];
         if (strategyData && typeof strategyData.description === 'string') {
           return strategyData.description;
         }
-      } else if (!isRisk && llmData.opportunity_strategies) {
-        const strategyData = llmData.opportunity_strategies[strategy];
+      } else if (!isRisk && strategiesData.opportunity_strategies) {
+        const strategyData = strategiesData.opportunity_strategies[strategy];
         if (strategyData && typeof strategyData.description === 'string') {
           return strategyData.description;
         }
@@ -237,7 +233,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
       console.error('取得策略內容失敗:', error);
     }
 
-    return '策略內容生成中...';
+    return '策略內容載入中...';
   };
 
   useEffect(() => {
@@ -250,9 +246,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const updateStrategySelection = async (strategy: string) => {
     if (!currentScenario) return;
     
-    // 如果還沒有 LLM 策略，先生成
-    const scenarioDescription = generateScenarioDescription(currentScenario, assessment);
-    const llmStrategies = await generateLLMStrategies(currentScenario, scenarioDescription);
+    const strategies = await loadPreGeneratedStrategies(currentScenario);
     
     setStrategySelections(prev => ({
       ...prev,
@@ -260,7 +254,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         riskOpportunityId: currentScenario.id,
         selectedStrategy: strategy,
         notes: prev[currentScenario.id]?.notes || '',
-        llmGeneratedContent: llmStrategies
+        llmGeneratedContent: strategies
       }
     }));
   };
@@ -282,7 +276,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // 準備第三階段結果資料，包含完整的評估資訊
       const stage3Results = {
         assessment: {
           id: assessment.id,
@@ -313,7 +306,6 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             subcategoryName: item?.subcategory_name,
             notes: selection.notes,
             llmGeneratedContent: selection.llmGeneratedContent,
-            // 保留原始選擇資訊
             originalSelection: {
               id: item?.id,
               assessment_id: item?.assessment_id,
@@ -341,11 +333,10 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  // 當切換情境時自動生成 LLM 策略
+  // 當切換情境時自動載入預先生成的策略
   useEffect(() => {
     if (currentScenario) {
-      const scenarioDescription = generateScenarioDescription(currentScenario, assessment);
-      generateLLMStrategies(currentScenario, scenarioDescription);
+      loadPreGeneratedStrategies(currentScenario);
     }
   }, [currentIndex, currentScenario]);
 
@@ -441,7 +432,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
             {isGeneratingStrategy && (
               <div className="flex items-center space-x-2 text-blue-600">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">正在生成客制化策略建議...</span>
+                <span className="text-sm">正在載入策略建議...</span>
               </div>
             )}
             
