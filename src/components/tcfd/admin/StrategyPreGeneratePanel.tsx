@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Play, Database, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const StrategyPreGeneratePanel = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -44,19 +45,17 @@ const StrategyPreGeneratePanel = () => {
     try {
       console.log('開始預先生成策略...');
       
-      const response = await fetch('/api/tcfd-pregenerate-strategies', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('tcfd-pregenerate-strategies', {
+        body: {
           batchSize,
           specificIndustry: selectedIndustry || undefined,
           specificSize: selectedSize || undefined
-        })
+        }
       });
 
-      const data = await response.json();
+      if (error) {
+        throw new Error(error.message || '預先生成失敗');
+      }
       
       if (data.success) {
         setLastResult(data.summary);
@@ -65,7 +64,7 @@ const StrategyPreGeneratePanel = () => {
       } else {
         throw new Error(data.error || '預先生成失敗');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('預先生成錯誤:', error);
       toast.error(`預先生成失敗: ${error.message}`);
     } finally {

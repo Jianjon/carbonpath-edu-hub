@@ -1,517 +1,319 @@
-
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { TCFDAssessment } from '@/types/tcfd';
-import { useTCFDRiskOpportunitySelections } from '@/hooks/tcfd/useTCFDRiskOpportunitySelections';
-import { useTCFDScenarioEvaluations } from '@/hooks/tcfd/useTCFDScenarioEvaluations';
-import { Loader2, ChevronLeft, ChevronRight, Shield, Target, Lightbulb, Eye, Settings, Coins, Sprout, Rocket } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { generateStrategyAnalysisWithLLM, loadStrategyAnalysis, saveStrategyAnalysis } from '@/services/tcfd/strategyService';
+import { StrategyAnalysis } from '@/types/tcfd';
+import { Loader2 } from 'lucide-react';
 
 interface TCFDStage3Props {
-  assessment: TCFDAssessment;
-  onComplete: () => void;
+  assessment: any;
+  onNext: () => void;
+  onPrevious: () => void;
 }
 
-interface StrategySelection {
-  riskOpportunityId: string;
-  selectedStrategy: string;
-  notes: string;
-  llmGeneratedContent?: any;
-}
+const TCFDStage3: React.FC<TCFDStage3Props> = ({ 
+  assessment, 
+  onNext, 
+  onPrevious 
+}) => {
+  const [scenarioDescription, setScenarioDescription] = useState('');
+  const [userScore, setUserScore] = useState<number | undefined>(undefined);
+  const [strategyAnalysis, setStrategyAnalysis] = useState<StrategyAnalysis[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedStrategy, setSelectedStrategy] = useState('');
+  const [detailedDescription, setDetailedDescription] = useState('');
+  const [financialImpactPNL, setFinancialImpactPNL] = useState('');
+  const [financialImpactBalanceSheet, setFinancialImpactBalanceSheet] = useState('');
+  const [financialImpactCashflow, setFinancialImpactCashflow] = useState('');
+  const [strategyAccept, setStrategyAccept] = useState('');
+  const [strategyAvoid, setStrategyAvoid] = useState('');
+  const [strategyMitigate, setStrategyMitigate] = useState('');
+  const [strategyTransfer, setStrategyTransfer] = useState('');
+  const [userModifications, setUserModifications] = useState('');
 
-const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
-  const { riskOpportunitySelections, loadRiskOpportunitySelections } = useTCFDRiskOpportunitySelections(assessment.id);
-  const { generateComprehensiveScenarioAnalysis } = useTCFDScenarioEvaluations(assessment.id);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [strategySelections, setStrategySelections] = useState<Record<string, StrategySelection>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
-  const [preGeneratedStrategies, setPreGeneratedStrategies] = useState<Record<string, any>>({});
-
-  // 風險策略選項
-  const riskStrategies = [
-    {
-      id: 'mitigate',
-      icon: Shield,
-      title: '減緩策略',
-      color: 'bg-blue-50 border-blue-200 text-blue-800'
-    },
-    {
-      id: 'transfer',
-      icon: Target,
-      title: '轉移策略', 
-      color: 'bg-green-50 border-green-200 text-green-800'
-    },
-    {
-      id: 'accept',
-      icon: Lightbulb,
-      title: '接受策略',
-      color: 'bg-yellow-50 border-yellow-200 text-yellow-800'
-    },
-    {
-      id: 'control',
-      icon: Settings,
-      title: '控制策略',
-      color: 'bg-purple-50 border-purple-200 text-purple-800'
+  useEffect(() => {
+    if (assessment?.id) {
+      loadExistingStrategyAnalysis(assessment.id);
     }
-  ];
+  }, [assessment?.id]);
 
-  // 機會策略選項
-  const opportunityStrategies = [
-    {
-      id: 'evaluate_explore',
-      icon: Eye,
-      title: '評估探索',
-      color: 'bg-blue-50 border-blue-200 text-blue-800',
-      subtitle: '風險偏好低、謹慎型企業'
-    },
-    {
-      id: 'capability_building',
-      icon: Settings,
-      title: '能力建設',
-      color: 'bg-green-50 border-green-200 text-green-800',
-      subtitle: '預備期、長期策略'
-    },
-    {
-      id: 'business_transformation',
-      icon: Coins,
-      title: '商業轉換',
-      color: 'bg-orange-50 border-orange-200 text-orange-800',
-      subtitle: '把機會轉為營收的具體策略'
-    },
-    {
-      id: 'cooperation_participation',
-      icon: Sprout,
-      title: '合作參與',
-      color: 'bg-teal-50 border-teal-200 text-teal-800',
-      subtitle: '共享資源、降低單點風險'
-    },
-    {
-      id: 'aggressive_investment',
-      icon: Rocket,
-      title: '積極投入',
-      color: 'bg-red-50 border-red-200 text-red-800',
-      subtitle: '對氣候機會有高掌握度或急迫需求'
-    }
-  ];
-
-  // 從預先生成的快取中載入策略內容
-  const loadPreGeneratedStrategies = async (item: any) => {
-    const cacheKey = `${item.category_type}_${item.category_name}_${item.subcategory_name}_${assessment.industry}_${assessment.company_size}`;
-    
+  const loadExistingStrategyAnalysis = async (assessmentId: string) => {
+    setIsLoading(true);
     try {
-      const response = await supabase.functions.invoke('tcfd-strategy-cache', {
-        body: {
-          categoryType: item.category_type,
-          categoryName: item.category_name,
-          subcategoryName: item.subcategory_name,
-          industry: assessment.industry,
-          companySize: assessment.company_size
-        }
-      });
-
-      if (response.data?.success && response.data?.strategies) {
-        setPreGeneratedStrategies(prev => ({
-          ...prev,
-          [cacheKey]: response.data.strategies
-        }));
-        return response.data.strategies;
+      const data = await loadStrategyAnalysis(assessmentId);
+      setStrategyAnalysis(data);
+      if (data.length > 0) {
+        const firstAnalysis = data[0];
+        setScenarioDescription(firstAnalysis.scenario_evaluation_id || '');
+        setUserScore(0);
+        setSelectedStrategy(firstAnalysis.selected_strategy || '');
+        setDetailedDescription(firstAnalysis.detailed_description || '');
+        setFinancialImpactPNL(firstAnalysis.financial_impact_pnl || '');
+        setFinancialImpactBalanceSheet(firstAnalysis.financial_impact_balance_sheet || '');
+        setFinancialImpactCashflow(firstAnalysis.financial_impact_cashflow || '');
+        setStrategyAccept(firstAnalysis.strategy_accept || '');
+        setStrategyAvoid(firstAnalysis.strategy_avoid || '');
+        setStrategyMitigate(firstAnalysis.strategy_mitigate || '');
+        setStrategyTransfer(firstAnalysis.strategy_transfer || '');
+        setUserModifications(firstAnalysis.user_modifications || '');
       }
-    } catch (error) {
-      console.error('載入預先生成策略失敗:', error);
+    } catch (error: any) {
+      toast.error(`Failed to load strategy analysis: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
-
-    // 如果沒有快取，則即時生成
-    return await generateStrategiesRealTime(item);
   };
 
-  // 即時生成策略（作為fallback）
-  const generateStrategiesRealTime = async (item: any) => {
-    setIsGeneratingStrategy(true);
+  const handleGenerateStrategy = async () => {
+    if (!scenarioDescription || !userScore) {
+      toast.error('Please provide both scenario description and user score.');
+      return;
+    }
+
+    setIsGenerating(true);
     try {
-      const scenarioDescription = generateScenarioDescription(item, assessment);
-      
-      const response = await generateComprehensiveScenarioAnalysis(
-        item.category_type,
-        item.category_name,
-        item.subcategory_name,
+      const generatedContent = await generateStrategyAnalysisWithLLM(
         scenarioDescription,
-        3,
-        assessment.industry,
-        assessment.company_size,
-        assessment.business_description || '',
-        {}
+        userScore,
+        assessment.industry
       );
 
-      return response;
-    } catch (error) {
-      console.error('即時生成策略失敗:', error);
-      return null;
+      // Assuming the API returns an array of StrategyAnalysis
+      setStrategyAnalysis([generatedContent]);
+      toast.success('Strategy analysis generated successfully!');
+    } catch (error: any) {
+      console.error('Error generating strategy analysis:', error);
+      toast.error(`Failed to generate strategy analysis: ${error.message}`);
     } finally {
-      setIsGeneratingStrategy(false);
+      setIsGenerating(false);
     }
   };
 
-  // 生成情境描述
-  const generateScenarioDescription = (item: any, assessment: TCFDAssessment): string => {
-    const industry = assessment.industry;
-    const companySize = assessment.company_size;
-    const hasInventory = assessment.has_carbon_inventory;
-    const isRisk = item.category_type === 'risk';
-    const categoryName = item.category_name || '';
-    const subcategoryName = item.subcategory_name || '';
-
-    const industryMap: Record<string, string> = {
-      'manufacturing': '製造業',
-      'technology': '科技業',
-      'finance': '金融業',
-      'retail': '零售業',
-      'hospitality': '旅宿業',
-      'restaurant': '餐飲業',
-      'construction': '營建業',
-      'transportation': '運輸業',
-      'healthcare': '醫療保健',
-      'education': '教育服務'
-    };
-
-    const sizeMap: Record<string, string> = {
-      'small': '小型',
-      'medium': '中型',
-      'large': '大型'
-    };
-
-    const industryText = industryMap[industry] || industry;
-    const sizeText = sizeMap[companySize] || companySize;
-    const inventoryStatus = hasInventory ? '已建立碳盤查制度' : '尚未建立完整碳盤查制度';
-
-    if (isRisk && categoryName.includes('政策')) {
-      return `${sizeText}${industryText}企業面臨政策法規趨嚴的轉型壓力，特別是${subcategoryName}相關要求將直接影響營運合規成本。監管機構逐步提高環境標準，企業需投入資源進行制度調整與技術升級。${inventoryStatus}的現況將影響合規準備的起始點與所需投入程度。法規遵循失敗將面臨罰款風險，同時可能影響客戶信任度與市場競爭力。合規成本上升將壓縮獲利空間，需要重新評估營運模式的可持續性。此情境要求企業在成本控制與風險管理間找到平衡點，制定前瞻性的應對策略以維持營運穩定性。`;
+  const handleSaveStrategy = async () => {
+    if (!assessment?.id) {
+      toast.error('Assessment ID is missing.');
+      return;
     }
 
-    if (!isRisk && categoryName.includes('市場')) {
-      return `${sizeText}${industryText}企業正面臨市場需求轉向永續產品服務的機會窗口，${subcategoryName}相關需求快速成長為新的營收來源。消費者環保意識提升促使採購決策改變，願意為永續價值支付溢價。${inventoryStatus}的基礎將影響企業把握綠色商機的速度與可信度。競爭對手積極布局永續市場，搶佔先機者將獲得品牌差異化優勢。此機會窗口具有時效性，延遲進入將錯失市場定位良機。企業需要快速建立永續能力與產品組合，才能有效轉換市場機會為實際營收成長動能。`;
-    }
-
-    return `${sizeText}${industryText}企業在${categoryName}面向遭遇${subcategoryName}挑戰，需要建立系統性應對機制。${inventoryStatus}的現況將影響因應策略的制定與執行效率。此情境將對企業營運模式產生結構性影響，需要跨部門協調與資源重新配置。管理團隊必須在短期成本投入與長期競爭力維持間做出平衡決策。延遲應對將增加後續調整的複雜度與成本，主動因應則有機會轉危為安並建立競爭優勢。企業應制定階段性目標與執行計畫，確保在變動環境中維持營運韌性與持續發展能力。`;
-  };
-
-  // 取得策略內容 - 修正返回類型為字串
-  const getStrategyContent = (strategy: string, item: any): string => {
-    const cacheKey = `${item.category_type}_${item.category_name}_${item.subcategory_name}_${assessment.industry}_${assessment.company_size}`;
-    const strategiesData = preGeneratedStrategies[cacheKey];
-    
-    if (!strategiesData) {
-      return '正在載入策略內容...';
-    }
-
-    const isRisk = item.category_type === 'risk';
-    
+    setIsLoading(true);
     try {
-      if (isRisk && strategiesData.risk_strategies) {
-        const strategyData = strategiesData.risk_strategies[strategy];
-        if (strategyData && strategyData.description) {
-          return String(strategyData.description);
-        }
-      } else if (!isRisk && strategiesData.opportunity_strategies) {
-        const strategyData = strategiesData.opportunity_strategies[strategy];
-        if (strategyData && strategyData.description) {
-          return String(strategyData.description);
-        }
-      }
-    } catch (error) {
-      console.error('取得策略內容失敗:', error);
-    }
-
-    return '策略內容載入中...';
-  };
-
-  useEffect(() => {
-    loadRiskOpportunitySelections();
-  }, []);
-
-  const selectedItems = riskOpportunitySelections.filter(item => item.selected);
-  const currentScenario = selectedItems[currentIndex];
-
-  const updateStrategySelection = async (strategy: string) => {
-    if (!currentScenario) return;
-    
-    const strategies = await loadPreGeneratedStrategies(currentScenario);
-    
-    setStrategySelections(prev => ({
-      ...prev,
-      [currentScenario.id]: {
-        riskOpportunityId: currentScenario.id,
-        selectedStrategy: strategy,
-        notes: prev[currentScenario.id]?.notes || '',
-        llmGeneratedContent: strategies
-      }
-    }));
-  };
-
-  const updateNotes = (notes: string) => {
-    if (!currentScenario) return;
-    
-    setStrategySelections(prev => ({
-      ...prev,
-      [currentScenario.id]: {
-        ...prev[currentScenario.id],
-        riskOpportunityId: currentScenario.id,
-        selectedStrategy: prev[currentScenario.id]?.selectedStrategy || '',
-        notes: notes
-      }
-    }));
-  };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const stage3Results = {
-        assessment: {
-          id: assessment.id,
-          industry: assessment.industry,
-          company_size: assessment.company_size,
-          has_carbon_inventory: assessment.has_carbon_inventory,
-          has_international_operations: assessment.has_international_operations,
-          annual_revenue_range: assessment.annual_revenue_range,
-          supply_chain_carbon_disclosure: assessment.supply_chain_carbon_disclosure,
-          has_sustainability_team: assessment.has_sustainability_team,
-          main_emission_source: assessment.main_emission_source,
-          business_description: assessment.business_description,
-          current_stage: assessment.current_stage,
-          status: assessment.status,
-          created_at: assessment.created_at,
-          updated_at: assessment.updated_at,
-          user_id: assessment.user_id
-        },
-        strategySelections: Object.values(strategySelections).map(selection => {
-          const item = selectedItems.find(item => item.id === selection.riskOpportunityId);
-          return {
-            scenarioKey: `${item?.category_name}-${item?.subcategory_name}`,
-            riskOpportunityId: selection.riskOpportunityId,
-            strategy: selection.selectedStrategy,
-            scenarioDescription: generateScenarioDescription(item, assessment),
-            categoryType: item?.category_type,
-            categoryName: item?.category_name,
-            subcategoryName: item?.subcategory_name,
-            notes: selection.notes,
-            llmGeneratedContent: selection.llmGeneratedContent,
-            originalSelection: {
-              id: item?.id,
-              assessment_id: item?.assessment_id,
-              category_type: item?.category_type,
-              category_name: item?.category_name,
-              subcategory_name: item?.subcategory_name,
-              selected: item?.selected,
-              created_at: item?.created_at
-            }
-          };
-        }),
-        completedAt: new Date().toISOString()
+      const analysisToSave: Omit<StrategyAnalysis, 'id' | 'created_at'> = {
+        assessment_id: assessment.id,
+        scenario_evaluation_id: scenarioDescription,
+        selected_strategy: selectedStrategy,
+        detailed_description: detailedDescription,
+        financial_impact_pnl: financialImpactPNL,
+        financial_impact_balance_sheet: financialImpactBalanceSheet,
+        financial_impact_cashflow: financialImpactCashflow,
+        strategy_accept: strategyAccept,
+        strategy_avoid: strategyAvoid,
+        strategy_mitigate: strategyMitigate,
+        strategy_transfer: strategyTransfer,
+        user_modifications: userModifications,
+        generated_by_llm: true,
+        is_demo_data: assessment.is_demo_data,
+        created_at: new Date().toISOString(),
       };
 
-      sessionStorage.setItem('tcfd-stage3-results', JSON.stringify(stage3Results));
-      console.log('第三階段完成，策略選擇已儲存:', stage3Results);
-      
-      toast.success('策略選擇已完成');
-      onComplete();
-    } catch (error) {
-      console.error('儲存失敗:', error);
-      toast.error('儲存失敗');
+      await saveStrategyAnalysis(analysisToSave);
+      toast.success('Strategy analysis saved successfully!');
+    } catch (error: any) {
+      console.error('Error saving strategy analysis:', error);
+      toast.error(`Failed to save strategy analysis: ${error.message}`);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  // 當切換情境時自動載入預先生成的策略
-  useEffect(() => {
-    if (currentScenario) {
-      loadPreGeneratedStrategies(currentScenario);
+  const getStrategyContent = (strategy: any): string => {
+    if (!strategy) return '';
+    
+    if (typeof strategy === 'string') {
+      return strategy;
     }
-  }, [currentIndex, currentScenario]);
-
-  if (selectedItems.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-8">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <h3 className="text-lg font-medium mb-2">無選擇項目</h3>
-            <p className="text-gray-600">請先在第二階段選擇風險或機會項目</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const isRisk = currentScenario?.category_type === 'risk';
-  const strategies = isRisk ? riskStrategies : opportunityStrategies;
-  const currentSelection = currentScenario ? strategySelections[currentScenario.id] : null;
-  const scenarioDescription = currentScenario ? generateScenarioDescription(currentScenario, assessment) : '';
+    
+    if (typeof strategy === 'object' && strategy !== null) {
+      return strategy.description || strategy.content || JSON.stringify(strategy);
+    }
+    
+    return String(strategy);
+  };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* 標題區域 */}
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-900">第三階段：策略選擇</h1>
-        <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-          針對第二階段選定的每個風險與機會項目，請選擇最適合的應對策略。
-          系統會依據您的企業背景提供具體的策略建議內容。
-        </p>
-        
-        {/* 進度指示器 */}
-        <div className="flex items-center justify-center space-x-4 mt-6">
-          <span className="text-sm text-gray-500">
-            項目 {currentIndex + 1} / {selectedItems.length}
-          </span>
-          <div className="flex space-x-2">
-            {selectedItems.map((_, index) => (
-              <div
-                key={index}
-                className={`h-2 w-8 rounded-full ${
-                  index === currentIndex ? 'bg-blue-500' : 'bg-gray-200'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 主要內容卡片 */}
-      <Card className="border-2 border-blue-200">
-        <CardHeader className="bg-blue-50">
-          <CardTitle className="flex items-center justify-between">
-            <span className="text-blue-900">
-              {isRisk ? '風險項目' : '機會項目'}：
-              {currentScenario?.category_name} - {currentScenario?.subcategory_name}
-            </span>
-            <div className="flex space-x-2">
-              <Button
-                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-                disabled={currentIndex === 0}
-                variant="outline"
-                size="sm"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => setCurrentIndex(Math.min(selectedItems.length - 1, currentIndex + 1))}
-                disabled={currentIndex === selectedItems.length - 1}
-                variant="outline"
-                size="sm"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardTitle>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>情境分析</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 p-6">
-          {/* 情境描述 */}
-          <div className="bg-gray-50 p-4 rounded border border-gray-200">
-            <h4 className="font-medium mb-2 text-gray-800">情境描述</h4>
-            <p className="text-sm text-gray-700">
-              {scenarioDescription}
-            </p>
-          </div>
-
-          {/* 策略選擇區域 */}
-          <div className="space-y-4">
-            <Label className="text-lg font-medium">
-              請選擇最適合的{isRisk ? '風險應對' : '機會把握'}策略：
-            </Label>
-            
-            {isGeneratingStrategy && (
-              <div className="flex items-center space-x-2 text-blue-600">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">正在載入策略建議...</span>
-              </div>
-            )}
-            
-            <RadioGroup 
-              value={currentSelection?.selectedStrategy || ''} 
-              onValueChange={updateStrategySelection}
-              className="space-y-3"
-            >
-              {strategies.map((strategy) => {
-                const IconComponent = strategy.icon;
-                const isSelected = currentSelection?.selectedStrategy === strategy.id;
-                
-                return (
-                  <div key={strategy.id} className={`border-2 rounded-lg p-4 transition-colors ${
-                    isSelected ? strategy.color : 'border-gray-200 hover:border-gray-300'
-                  }`}>
-                    <div className="flex items-start space-x-3">
-                      <RadioGroupItem value={strategy.id} id={strategy.id} className="mt-1" />
-                      <div className="flex-1">
-                        <label 
-                          htmlFor={strategy.id}
-                          className="flex items-center space-x-2 cursor-pointer mb-2"
-                        >
-                          <IconComponent className="h-5 w-5" />
-                          <span className="font-medium">{strategy.title}</span>
-                          {'subtitle' in strategy && strategy.subtitle && (
-                            <Badge variant="outline" className="text-xs">
-                              {strategy.subtitle}
-                            </Badge>
-                          )}
-                        </label>
-                        
-                        {isSelected && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded border">
-                            <p className="text-sm text-gray-700">
-                              {currentScenario ? getStrategyContent(strategy.id, currentScenario) : ''}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </RadioGroup>
-          </div>
-
-          {/* 補充意見區域 */}
-          <div className="space-y-3">
-            <Label htmlFor="notes" className="text-lg font-medium">補充意見或調整建議</Label>
-            <Textarea
-              id="notes"
-              value={currentSelection?.notes || ''}
-              onChange={(e) => updateNotes(e.target.value)}
-              placeholder="您可以針對選定策略補充具體執行想法或調整建議..."
-              rows={4}
-              className="text-sm border-gray-300"
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="scenario">情境描述</Label>
+            <Input
+              id="scenario"
+              value={scenarioDescription}
+              onChange={(e) => setScenarioDescription(e.target.value)}
             />
           </div>
-
-          {/* 操作按鈕區域 */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <div className="text-sm text-gray-600">
-              已完成 {Object.keys(strategySelections).length} / {selectedItems.length} 項策略選擇
-            </div>
-            
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || Object.keys(strategySelections).length !== selectedItems.length}
-              size="lg"
-              className="px-8"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  儲存中...
-                </>
-              ) : (
-                '完成策略選擇，進入財務分析'
-              )}
-            </Button>
+          <div className="grid gap-2">
+            <Label htmlFor="score">使用者評分 (1-5)</Label>
+            <Input
+              id="score"
+              type="number"
+              min="1"
+              max="5"
+              value={userScore === undefined ? '' : userScore.toString()}
+              onChange={(e) => setUserScore(Number(e.target.value))}
+            />
           </div>
+          <Button onClick={handleGenerateStrategy} disabled={isGenerating}>
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                產生中...
+              </>
+            ) : (
+              "產生策略分析"
+            )}
+          </Button>
         </CardContent>
       </Card>
+
+      {strategyAnalysis.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>策略分析結果</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="selectedStrategy">選擇策略</Label>
+              <Select
+                onValueChange={setSelectedStrategy}
+                defaultValue={selectedStrategy}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="選擇一個策略" />
+                </SelectTrigger>
+                <SelectContent>
+                  {strategyAnalysis.map((analysis, index) => (
+                    <SelectItem key={index} value={`Strategy ${index + 1}`}>
+                      策略 {index + 1}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">詳細描述</Label>
+              <Textarea
+                id="description"
+                value={detailedDescription}
+                onChange={(e) => setDetailedDescription(e.target.value)}
+                placeholder="輸入詳細描述"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="financialImpactPNL">財務影響 (損益表)</Label>
+              <Input
+                id="financialImpactPNL"
+                value={financialImpactPNL}
+                onChange={(e) => setFinancialImpactPNL(e.target.value)}
+                placeholder="輸入財務影響 (損益表)"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="financialImpactBalanceSheet">財務影響 (資產負債表)</Label>
+              <Input
+                id="financialImpactBalanceSheet"
+                value={financialImpactBalanceSheet}
+                onChange={(e) => setFinancialImpactBalanceSheet(e.target.value)}
+                placeholder="輸入財務影響 (資產負債表)"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="financialImpactCashflow">財務影響 (現金流量表)</Label>
+              <Input
+                id="financialImpactCashflow"
+                value={financialImpactCashflow}
+                onChange={(e) => setFinancialImpactCashflow(e.target.value)}
+                placeholder="輸入財務影響 (現金流量表)"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="strategyAccept">接受策略</Label>
+              <Textarea
+                id="strategyAccept"
+                value={strategyAccept}
+                onChange={(e) => setStrategyAccept(e.target.value)}
+                placeholder="輸入接受策略"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="strategyAvoid">避免策略</Label>
+              <Textarea
+                id="strategyAvoid"
+                value={strategyAvoid}
+                onChange={(e) => setStrategyAvoid(e.target.value)}
+                placeholder="輸入避免策略"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="strategyMitigate">減輕策略</Label>
+              <Textarea
+                id="strategyMitigate"
+                value={strategyMitigate}
+                onChange={(e) => setStrategyMitigate(e.target.value)}
+                placeholder="輸入減輕策略"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="strategyTransfer">轉移策略</Label>
+              <Textarea
+                id="strategyTransfer"
+                value={strategyTransfer}
+                onChange={(e) => setStrategyTransfer(e.target.value)}
+                placeholder="輸入轉移策略"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="userModifications">使用者修改</Label>
+              <Textarea
+                id="userModifications"
+                value={userModifications}
+                onChange={(e) => setUserModifications(e.target.value)}
+                placeholder="輸入使用者修改"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onPrevious}>
+          返回
+        </Button>
+        <Button onClick={onNext} disabled={isLoading}>
+          {isLoading ? (
+            <>
+              儲存中...
+              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+            </>
+          ) : (
+            "下一步"
+          )}
+        </Button>
+      </div>
     </div>
   );
 };
