@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -97,7 +98,11 @@ const TCFDSimulator = () => {
       case 2:
         return <TCFDStage2 assessment={assessment!} onComplete={() => handleStageComplete(3)} />;
       case 3:
-        return <TCFDStage3 assessment={assessment!} onComplete={() => handleStageComplete(4)} />;
+        return <TCFDStage3 
+          assessment={assessment!} 
+          onNext={() => handleStageComplete(4)}
+          onPrevious={() => setCurrentStage(Math.max(1, currentStage - 1))}
+        />;
       case 4:
         return <TCFDStage4 assessment={assessment!} onComplete={() => handleStageComplete(5)} />;
       case 5:

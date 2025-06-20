@@ -15,6 +15,7 @@ import {
 import { generateStrategyAnalysisWithLLM, loadStrategyAnalysis, saveStrategyAnalysis } from '@/services/tcfd/strategyService';
 import { StrategyAnalysis } from '@/types/tcfd';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TCFDStage3Props {
   assessment: any;
@@ -84,15 +85,34 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
 
     setIsGenerating(true);
     try {
-      const generatedContent = await generateStrategyAnalysisWithLLM(
-        scenarioDescription,
-        userScore,
-        assessment.industry
-      );
+      // Try to get from cache first
+      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('tcfd-strategy-cache', {
+        body: {
+          industry: assessment.industry,
+          companySize: assessment.company_size,
+          categoryType: 'risk', // This should be determined based on the scenario
+          categoryName: 'transition_policy', // This should be determined based on the scenario
+          subcategoryName: null
+        }
+      });
+
+      let generatedContent;
+      if (cacheData && cacheData.success && cacheData.strategies) {
+        console.log('Using cached strategy content');
+        generatedContent = cacheData.strategies;
+        toast.success('策略分析已從快取載入！');
+      } else {
+        console.log('Cache miss, generating new content');
+        generatedContent = await generateStrategyAnalysisWithLLM(
+          scenarioDescription,
+          userScore,
+          assessment.industry
+        );
+        toast.success('Strategy analysis generated successfully!');
+      }
 
       // Assuming the API returns an array of StrategyAnalysis
       setStrategyAnalysis([generatedContent]);
-      toast.success('Strategy analysis generated successfully!');
     } catch (error: any) {
       console.error('Error generating strategy analysis:', error);
       toast.error(`Failed to generate strategy analysis: ${error.message}`);
@@ -124,7 +144,6 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
         user_modifications: userModifications,
         generated_by_llm: true,
         is_demo_data: assessment.is_demo_data,
-        created_at: new Date().toISOString(),
       };
 
       await saveStrategyAnalysis(analysisToSave);
