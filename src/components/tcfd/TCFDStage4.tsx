@@ -1,12 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { TCFDAssessment } from '@/types/tcfd';
-import { useTCFDAssessment } from '@/hooks/useTCFDAssessment';
 import { Target, DollarSign, Loader2, Sparkles, BarChart3, TrendingUp, Building, CheckCircle, Calculator, LinkIcon } from 'lucide-react';
-import FinancialAnalysisReport from './FinancialAnalysisReport';
 import { generateFinancialAnalysis, FinancialAnalysisInput } from '@/services/tcfd/financialAnalysisService';
 
 interface TCFDStage4Props {
@@ -16,8 +15,12 @@ interface TCFDStage4Props {
 
 interface SelectedStrategyData {
   scenarioKey: string;
+  riskOpportunityId: string;
   strategy: string;
-  analysis: any;
+  scenarioDescription: string;
+  categoryType: 'risk' | 'opportunity';
+  categoryName: string;
+  subcategoryName: string;
   notes: string;
 }
 
@@ -71,23 +74,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
       try {
         const results = JSON.parse(storedResults);
         console.log('第四階段載入第三階段結果:', results);
-        
-        // 轉換資料格式以符合 Stage4 的預期結構
-        const transformedResults: Stage3Results = {
-          assessment: results.assessment,
-          strategySelections: results.scenarios?.map((scenario: any) => ({
-            scenarioKey: `${scenario.categoryName}-${scenario.subcategoryName}`,
-            strategy: 'mitigate', // 預設策略，因為原始資料沒有策略選擇
-            analysis: {
-              scenario_description: scenario.scenarioDescription || `${scenario.subcategoryName}的情境分析`,
-              risk_strategies: scenario.categoryType === 'risk' ? ['mitigate'] : undefined,
-              opportunity_strategies: scenario.categoryType === 'opportunity' ? ['evaluate_explore'] : undefined
-            },
-            notes: scenario.userNotes || ''
-          })) || []
-        };
-        
-        setStage3Results(transformedResults);
+        setStage3Results(results);
       } catch (error) {
         console.error('解析第三階段結果失敗:', error);
       }
@@ -117,11 +104,11 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
         completedAt: new Date().toISOString()
       };
 
-      // 直接將第四階段結果儲存到 sessionStorage，不依賴資料庫
+      // 將第四階段結果儲存到 sessionStorage
       sessionStorage.setItem('tcfd-stage4-results', JSON.stringify(stage4Results));
-      console.log('第四階段結果已儲存到 sessionStorage:', stage4Results);
+      console.log('第四階段結果已儲存:', stage4Results);
       
-      // 直接完成第四階段，進入第五階段
+      // 完成第四階段，進入第五階段
       onComplete();
     } catch (error) {
       console.error('Error saving stage 4 results:', error);
@@ -132,19 +119,13 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
 
   // 生成財務分析報告組件
   const FinancialAnalysisGrid = ({ selection }: { selection: SelectedStrategyData }) => {
-    if (!selection.strategy || !selection.analysis) return null;
-
-    // 從情境描述中判斷風險或機會類型
-    const isRisk = selection.analysis.risk_strategies ? true : false;
+    const isRisk = selection.categoryType === 'risk';
     
-    // 提取類別資訊
-    const [categoryName, subcategoryName] = selection.scenarioKey.split('-');
-
     const financialAnalysisInput: FinancialAnalysisInput = {
-      riskOrOpportunityType: isRisk ? 'risk' : 'opportunity',
-      categoryName: categoryName,
-      subcategoryName: subcategoryName,
-      scenarioDescription: selection.analysis.scenario_description,
+      riskOrOpportunityType: selection.categoryType,
+      categoryName: selection.categoryName,
+      subcategoryName: selection.subcategoryName,
+      scenarioDescription: selection.scenarioDescription,
       selectedStrategy: selection.strategy,
       companyProfile: {
         industry: assessment.industry,
@@ -337,15 +318,14 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
       {/* 策略分析卡片 */}
       <div className="grid gap-8">
         {stage3Results.strategySelections.map((selection, index) => {
-          const [categoryName, subcategoryName] = selection.scenarioKey.split('-');
           const strategyName = strategyMapping[selection.strategy] || selection.strategy;
-          const isRisk = selection.analysis.risk_strategies ? true : false;
+          const isRisk = selection.categoryType === 'risk';
 
           return (
             <Card key={selection.scenarioKey} className="border-l-4 border-gray-400">
               <CardHeader className="bg-gray-50 border-b border-gray-100">
                 <CardTitle className="text-lg text-gray-800">
-                  組合分析 {index + 1}: {subcategoryName} × {strategyName}
+                  組合分析 {index + 1}: {selection.subcategoryName} × {strategyName}
                 </CardTitle>
                 <div className="flex space-x-2">
                   <Badge className="bg-gray-100 text-gray-800 border border-gray-300">
@@ -353,7 +333,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
                     財務影響分析
                   </Badge>
                   <Badge variant={isRisk ? "destructive" : "default"}>
-                    {categoryName}
+                    {selection.categoryName}
                   </Badge>
                 </div>
               </CardHeader>
@@ -361,7 +341,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
                 {/* 情境回顧 */}
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
                   <h4 className="font-medium mb-2 text-gray-800">情境描述</h4>
-                  <p className="text-sm text-gray-700">{selection.analysis.scenario_description}</p>
+                  <p className="text-sm text-gray-700">{selection.scenarioDescription}</p>
                 </div>
 
                 {/* 選擇的策略 */}
