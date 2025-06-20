@@ -174,7 +174,7 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
 
       const response = await generateComprehensiveScenarioAnalysis(
         item.category_type,
-        item.categoryName,
+        item.category_name,
         item.subcategory_name,
         scenarioDescription,
         3, // 假設高影響評分
