@@ -26,7 +26,7 @@ interface StrategySelection {
 
 const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
   const { riskOpportunitySelections, loadRiskOpportunitySelections } = useTCFDRiskOpportunitySelections(assessment.id);
-  const { generateScenarioAnalysisWithLLM } = useTCFDScenarioEvaluations(assessment.id);
+  const { generateComprehensiveScenarioAnalysis } = useTCFDScenarioEvaluations(assessment.id);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [strategySelections, setStrategySelections] = useState<Record<string, StrategySelection>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,10 +161,15 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
         scenarioDescription
       });
 
-      const response = await generateScenarioAnalysisWithLLM(
+      const response = await generateComprehensiveScenarioAnalysis(
+        item.category_type,
+        item.category_name,
+        item.subcategory_name,
         scenarioDescription,
         3, // 假設高影響評分
-        assessment.industry
+        assessment.industry,
+        assessment.company_size,
+        assessment.business_description
       );
 
       console.log('LLM策略生成回應:', response);
@@ -206,12 +211,12 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     
     if (isRisk && llmData.risk_strategies) {
       const strategyData = llmData.risk_strategies[strategy];
-      if (strategyData && strategyData.description) {
+      if (strategyData && typeof strategyData.description === 'string') {
         return strategyData.description;
       }
     } else if (!isRisk && llmData.opportunity_strategies) {
       const strategyData = llmData.opportunity_strategies[strategy];
-      if (strategyData && strategyData.description) {
+      if (strategyData && typeof strategyData.description === 'string') {
         return strategyData.description;
       }
     }
