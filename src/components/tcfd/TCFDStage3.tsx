@@ -58,31 +58,9 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  useEffect(() => {
-    loadRiskOpportunitySelections();
-    loadScenarioEvaluations();
-  }, []);
-
-  useEffect(() => {
-    // 當載入現有評估資料時，填入對應的情境資料
-    const selectedItems = riskOpportunitySelections.filter(item => item.selected);
-    if (selectedItems.length > 0 && scenarioEvaluations.length > 0) {
-      const newScenarioData = { ...scenarioData };
-      
-      selectedItems.forEach(item => {
-        const existingEvaluation = scenarioEvaluations.find(
-          evaluation => evaluation.risk_opportunity_id === item.id
-        );
-        
-        if (existingEvaluation) {
-          newScenarioData[item.id] = {
-            scenarioDescription: existingEvaluation.scenario_description || '',
-            userInput: '',
-            scenario: item
-          };
-        } else if (!newScenarioData[item.id]) {
-          // 自動生成情境描述
-          const autoDescription = `基於${item.category_name}的${item.subcategory_name}情境，${assessment.industry}企業面臨以下具體挑戰：
+  // 自動生成情境描述
+  const generateAutoScenarioDescription = (item: any) => {
+    return `基於${item.category_name}的${item.subcategory_name}情境，${assessment.industry}企業面臨以下具體挑戰：
 
 【背景描述】
 ${item.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶來的${item.subcategory_name}影響正逐漸顯現，對${assessment.industry}產業造成結構性衝擊。
@@ -92,9 +70,31 @@ ${item.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶來的${ite
 
 【${item.category_type === 'risk' ? '風險' : '機會'}評估】
 ${item.category_type === 'risk' ? '若未能及時調整策略，可能面臨營收下滑、成本上升，以及競爭力削弱的多重壓力。' : '及時把握此機會，可望創造新的營收來源、提升競爭優勢，並強化長期永續發展能力。'}`;
+  };
 
+  useEffect(() => {
+    loadRiskOpportunitySelections();
+    loadScenarioEvaluations();
+  }, []);
+
+  useEffect(() => {
+    // 當載入風險機會選擇和情境評估資料時，立即初始化所有情境資料
+    const selectedItems = riskOpportunitySelections.filter(item => item.selected);
+    if (selectedItems.length > 0) {
+      const newScenarioData = { ...scenarioData };
+      
+      selectedItems.forEach(item => {
+        if (!newScenarioData[item.id]) {
+          // 檢查是否有現有的評估資料
+          const existingEvaluation = scenarioEvaluations.find(
+            evaluation => evaluation.risk_opportunity_id === item.id
+          );
+          
+          // 直接設定情境描述（從資料庫或自動生成）
+          const scenarioDescription = existingEvaluation?.scenario_description || generateAutoScenarioDescription(item);
+          
           newScenarioData[item.id] = {
-            scenarioDescription: autoDescription,
+            scenarioDescription: scenarioDescription,
             userInput: '',
             scenario: item
           };
@@ -309,7 +309,7 @@ ${data.userInput}
               id="scenario"
               value={currentData.scenarioDescription || ''}
               onChange={(e) => updateCurrentScenarioData({ scenarioDescription: e.target.value })}
-              placeholder="情境描述將自動載入..."
+              placeholder="情境描述載入中..."
               rows={8}
               className="text-sm border-gray-300"
             />
