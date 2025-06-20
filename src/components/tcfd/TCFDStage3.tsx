@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,18 +57,80 @@ const TCFDStage3 = ({ assessment, onComplete }: TCFDStage3Props) => {
     }
   };
 
-  // 自動生成情境描述
+  // 自動生成專業情境描述
   const generateAutoScenarioDescription = (item: any) => {
-    return `基於${item.category_name}的${item.subcategory_name}情境，${assessment.industry}企業面臨以下具體挑戰：
+    const industryContext = getIndustryContext(assessment.industry);
+    const companyProfile = getCompanyProfile(assessment);
+    const riskContext = getRiskContext(item, assessment.industry);
+    const challengePoints = getChallengePoints(item, assessment);
+    const pressureStatement = getPressureStatement(item, assessment);
 
-【背景描述】
-${item.category_type === 'risk' ? '氣候變遷' : '市場轉型'}帶來的${item.subcategory_name}影響正逐漸顯現，對${assessment.industry}產業造成結構性衝擊。
+    return `${industryContext}${riskContext}${companyProfile}面臨的主要挑戰包括${challengePoints}。${pressureStatement}`;
+  };
 
-【業務影響】
-企業營運模式需要調整以因應新的環境條件，包括供應鏈重組、技術升級投資，以及客戶需求變化的應對。
+  // 產業脈絡描述
+  const getIndustryContext = (industry: string) => {
+    const contexts = {
+      manufacturing: '製造業在全球供應鏈重組與環保法規趨嚴的雙重壓力下，',
+      technology: '科技業面對數據中心能耗管制與綠色技術轉型需求的同時，',
+      finance: '金融業在永續金融政策推動與氣候風險揭露要求下，',
+      retail: '零售業因消費者環保意識抬頭與循環經濟趨勢影響，',
+      construction: '營建業受到綠建築標準提升與建材碳足跡管制約束，',
+      healthcare: '醫療業在設備能效要求與廢棄物處理規範強化的背景下，',
+      hospitality: '服務業面臨客戶永續期待與營運成本上升的壓力中，',
+      transportation: '運輸業在電動化轉型與碳排放標準加嚴的趨勢下，',
+      education: '教育業因校園永續目標與預算限制的雙重考量，',
+      restaurant: '餐飲業受到食材溯源要求與包裝減塑政策影響，'
+    };
+    return contexts[industry] || '企業在氣候變遷與永續發展的趨勢下，';
+  };
 
-【${item.category_type === 'risk' ? '風險' : '機會'}評估】
-${item.category_type === 'risk' ? '若未能及時調整策略，可能面臨營收下滑、成本上升，以及競爭力削弱的多重壓力。' : '及時把握此機會，可望創造新的營收來源、提升競爭優勢，並強化長期永續發展能力。'}`;
+  // 風險/機會脈絡
+  const getRiskContext = (item: any, industry: string) => {
+    if (item.category_type === 'risk') {
+      return `${item.subcategory_name}風險正對${industry}企業營運模式形成結構性衝擊。`;
+    } else {
+      return `${item.subcategory_name}機會為${industry}企業帶來轉型發展的契機。`;
+    }
+  };
+
+  // 企業背景描述
+  const getCompanyProfile = (assessment: TCFDAssessment) => {
+    const sizeMap = {
+      small: '中小型企業',
+      medium: '中型企業',
+      large: '大型企業'
+    };
+    
+    const inventoryStatus = assessment.has_carbon_inventory ? '已建立碳盤查基礎' : '尚未建立完整碳盤查機制';
+    
+    return `作為${sizeMap[assessment.company_size]}且${inventoryStatus}的組織，`;
+  };
+
+  // 挑戰點描述
+  const getChallengePoints = (item: any, assessment: TCFDAssessment) => {
+    const baselineChallenge = assessment.has_carbon_inventory ? 
+      '現有排放基準調整、減量目標重新設定' : 
+      '缺乏準確數據基礎、量化評估困難';
+    
+    const resourceChallenge = assessment.company_size === 'small' ? 
+      '資源配置受限、專業人力不足' : 
+      '跨部門協調複雜、決策流程冗長';
+    
+    return `${baselineChallenge}，以及${resourceChallenge}`;
+  };
+
+  // 壓力判斷短句
+  const getPressureStatement = (item: any, assessment: TCFDAssessment) => {
+    if (item.category_type === 'risk') {
+      return assessment.company_size === 'small' ? 
+        '若未能及時建立應對機制，將直接衝擊企業競爭力與營運穩定性。' :
+        '企業須立即啟動跨部門風險管理機制，避免營運中斷與財務損失擴大。';
+    } else {
+      return assessment.company_size === 'small' ? 
+        '掌握此轉型時機將成為企業差異化競爭的關鍵優勢。' :
+        '積極布局相關投資將為企業創造長期競爭優勢與市場領導地位。';
+    }
   };
 
   useEffect(() => {
