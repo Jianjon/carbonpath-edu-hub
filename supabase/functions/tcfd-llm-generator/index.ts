@@ -237,7 +237,7 @@ serve(async (req) => {
 
 請直接提供 JSON 格式的回應：`;
 
-    } else if (type === 'scenario_analysis') {
+    } else if (type === 'scenario_analysis' || type === 'analyze_scenario') {
       // 詳細的情境分析生成（保留向後相容）
       systemPrompt = `你是一位專精於氣候風險管理、財務分析和策略規劃的 TCFD 專業顧問。請根據情境描述和影響評分，提供完整且實用的財務影響分析和策略建議，幫助企業做出明智的管理決策。`;
       
@@ -436,7 +436,7 @@ serve(async (req) => {
 
     const generatedContent = data.choices[0].message.content;
 
-    if (type === 'comprehensive_scenario_analysis' || type === 'scenario_analysis' || type === 'strategy') {
+    if (type === 'comprehensive_scenario_analysis' || type === 'scenario_analysis' || type === 'analyze_scenario' || type === 'strategy') {
       try {
         // 嘗試解析 JSON 回應
         const parsedContent = JSON.parse(generatedContent);
