@@ -39,25 +39,22 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
       
       scenarioEvaluations.forEach(evaluation => {
         const key = evaluation.risk_opportunity_id;
-        if (evaluation.llm_analysis) {
+        // Check if llm_response contains analysis data
+        if (evaluation.llm_response) {
           try {
-            analysisMap[key] = typeof evaluation.llm_analysis === 'string' 
-              ? JSON.parse(evaluation.llm_analysis) 
-              : evaluation.llm_analysis;
+            const analysisData = typeof evaluation.llm_response === 'string' 
+              ? JSON.parse(evaluation.llm_response) 
+              : evaluation.llm_response;
+            analysisMap[key] = analysisData;
             completed.add(key);
-            
-            if (evaluation.user_modifications) {
-              modifications[key] = evaluation.user_modifications;
-            }
           } catch (error) {
-            console.error('Error parsing LLM analysis:', error);
+            console.error('Error parsing LLM response:', error);
           }
         }
       });
       
       setAnalyses(analysisMap);
       setCompletedItems(completed);
-      setUserModifications(modifications);
     }
   }, [scenarioEvaluations]);
 
@@ -70,7 +67,7 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
       
       // 獲取對應的情境評估
       const scenarioEvaluation = scenarioEvaluations.find(
-        eval => eval.risk_opportunity_id === selection.id
+        evaluation => evaluation.risk_opportunity_id === selection.id
       );
       
       if (!scenarioEvaluation) {
@@ -87,8 +84,6 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
         assessment.company_size,
         assessment.business_description,
         {
-          user_notes: scenarioEvaluation.user_notes,
-          scenario_modifications: scenarioEvaluation.scenario_modifications,
           business_context: assessment.business_description
         }
       );
@@ -109,11 +104,8 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
         risk_opportunity_id: selection.id,
         scenario_description: scenarioEvaluation.scenario_description || '',
         user_score: scenarioEvaluation.user_score || 5,
-        user_notes: scenarioEvaluation.user_notes || '',
-        scenario_modifications: scenarioEvaluation.scenario_modifications || '',
-        llm_analysis: JSON.stringify(analysis),
-        user_modifications: userModifications[key] || '',
-        generated_by_llm: true,
+        llm_response: JSON.stringify(analysis),
+        scenario_generated_by_llm: true,
         is_demo_data: assessment.is_demo_data || false,
       });
       
@@ -138,13 +130,17 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
     const key = selection.id;
     try {
       const scenarioEvaluation = scenarioEvaluations.find(
-        eval => eval.risk_opportunity_id === selection.id
+        evaluation => evaluation.risk_opportunity_id === selection.id
       );
       
       if (scenarioEvaluation) {
+        // Create a note about user modifications in the scenario description
+        const modificationNote = userModifications[key] ? 
+          `\n\n用戶修改: ${userModifications[key]}` : '';
+        
         await saveScenarioEvaluation({
           ...scenarioEvaluation,
-          user_modifications: userModifications[key] || '',
+          scenario_description: scenarioEvaluation.scenario_description + modificationNote,
         });
         
         toast.success('修改已保存！');
