@@ -77,12 +77,12 @@ export const generateFinancialAnalysis = (input: FinancialAnalysisInput): Financ
 
   // 生成六大段落分析
   return {
-    profitLossAnalysis: generateProfitLossAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, companyProfile),
-    cashFlowAnalysis: generateCashFlowAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, companyProfile),
-    balanceSheetAnalysis: generateBalanceSheetAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, companyProfile),
-    strategyFeasibilityAnalysis: generateStrategyFeasibilityAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, companyProfile),
-    analysisMethodology: generateAnalysisMethodology(isRisk, categoryName, subcategoryName, strategyName, companyProfile),
-    calculationMethodSuggestions: generateCalculationMethodSuggestions(isRisk, categoryName, subcategoryName, strategyName, companyProfile)
+    profitLossAnalysis: generateProfitLossAnalysis(isRisk, categoryName || '', subcategoryName || '', strategyName, companyContext, companyProfile),
+    cashFlowAnalysis: generateCashFlowAnalysis(isRisk, categoryName || '', subcategoryName || '', strategyName, companyContext, companyProfile),
+    balanceSheetAnalysis: generateBalanceSheetAnalysis(isRisk, categoryName || '', subcategoryName || '', strategyName, companyContext, companyProfile),
+    strategyFeasibilityAnalysis: generateStrategyFeasibilityAnalysis(isRisk, categoryName || '', subcategoryName || '', strategyName, companyContext, companyProfile),
+    analysisMethodology: generateAnalysisMethodology(isRisk, categoryName || '', subcategoryName || '', strategyName, companyProfile),
+    calculationMethodSuggestions: generateCalculationMethodSuggestions(isRisk, categoryName || '', subcategoryName || '', strategyName, companyProfile)
   };
 };
 
@@ -94,7 +94,10 @@ const generateProfitLossAnalysis = (
   companyContext: string,
   companyProfile: any
 ): string => {
-  if (categoryName.includes('政策') || categoryName.includes('法規')) {
+  // Add null checks for categoryName
+  const safeCategoryName = categoryName || '';
+  
+  if (safeCategoryName.includes('政策') || safeCategoryName.includes('法規')) {
     if (strategyName.includes('轉移')) {
       return `採用轉移策略將協助${companyContext}將合規成本部分轉嫁，短期內可維持毛利率穩定。然而長期轉嫁能力將取決於市場接受度，可能影響產品定價競爭力，導致市場佔有率變動。`;
     } else if (strategyName.includes('減緩')) {
@@ -104,7 +107,7 @@ const generateProfitLossAnalysis = (
     }
   }
 
-  if (categoryName.includes('技術')) {
+  if (safeCategoryName.includes('技術')) {
     if (strategyName.includes('積極投入')) {
       return `積極投入技術升級將產生大額研發支出與設備投資，短期內將壓縮獲利表現。成功轉型後可望獲得技術優勢，提升產品附加價值並創造差異化營收來源。`;
     } else if (strategyName.includes('能力建設')) {
@@ -112,7 +115,7 @@ const generateProfitLossAnalysis = (
     }
   }
 
-  if (categoryName.includes('市場')) {
+  if (safeCategoryName.includes('市場')) {
     if (strategyName.includes('商業轉換')) {
       return `商業模式轉換將導致既有營收結構調整，初期可能面臨營收下滑風險。轉換成功後可開拓新客群，創造可持續的營收成長動能並提升獲利品質。`;
     }
@@ -143,7 +146,8 @@ const generateCashFlowAnalysis = (
     return `能力建設策略需要持續性的培訓與系統建置投入，現金流影響相對溫和但持續時間較長。建議納入年度預算規劃，並評估每季現金需求變化。`;
   }
 
-  if (categoryName.includes('實體風險')) {
+  const safeCategoryName = categoryName || '';
+  if (safeCategoryName.includes('實體風險')) {
     return `實體風險應對策略可能需要緊急資金調度，包含設備修復、替代方案啟動等支出。建議設立風險準備資金池，確保緊急狀況下的現金可用性。`;
   }
 
@@ -159,15 +163,17 @@ const generateBalanceSheetAnalysis = (
   companyContext: string,
   companyProfile: any
 ): string => {
-  if (categoryName.includes('技術')) {
+  const safeCategoryName = categoryName || '';
+
+  if (safeCategoryName.includes('技術')) {
     return `技術相關策略將改變${companyContext}的固定資產結構。新技術設備將增加資產項目，既有設備可能面臨減損風險。建議重新評估資產折舊政策並考慮設備汰換的財務處理。`;
   }
 
-  if (categoryName.includes('政策') || categoryName.includes('法規')) {
+  if (safeCategoryName.includes('政策') || safeCategoryName.includes('法規')) {
     return `法規遵循策略可能需要新增合規相關資產，如監測設備或資訊系統。同時可能需要提列合規準備金或潛在罰款準備，影響負債結構。`;
   }
 
-  if (categoryName.includes('實體風險')) {
+  if (safeCategoryName.includes('實體風險')) {
     return `實體風險管理策略可能導致資產價值重估，特別是暴露於風險區域的設施設備。建議定期進行資產減損測試，並檢視保險覆蓋率對資產保護的充足性。`;
   }
 
@@ -218,20 +224,21 @@ const generateAnalysisMethodology = (
   companyProfile: any
 ): string => {
   const baseMethod = '建議建立情境分析模型，設定不同嚴重程度的影響參數進行敏感度分析。';
+  const safeCategoryName = categoryName || '';
   
-  if (categoryName.includes('政策') || categoryName.includes('法規')) {
+  if (safeCategoryName.includes('政策') || safeCategoryName.includes('法規')) {
     return `${baseMethod}可建立合規成本追蹤系統，設定KPI如合規費用佔營收比例。建議每季模擬不同法規要求下的成本變動，並與同業進行標竿比較。`;
   }
 
-  if (categoryName.includes('技術')) {
+  if (safeCategoryName.includes('技術')) {
     return `${baseMethod}可建立技術投資效益評估模型，追蹤技術導入進度與成本效益。建議設定技術成熟度指標，並進行投資回收期分析。`;
   }
 
-  if (categoryName.includes('市場')) {
+  if (safeCategoryName.includes('市場')) {
     return `${baseMethod}可建立市場需求變化追蹤機制，分析客戶偏好轉移對營收結構的影響。建議定期進行市場調研，更新需求預測模型。`;
   }
 
-  if (categoryName.includes('實體風險')) {
+  if (safeCategoryName.includes('實體風險')) {
     return `${baseMethod}可結合歷史氣候資料建立風險發生機率模型，評估不同情境下的營運中斷成本。建議建立緊急應變績效指標。`;
   }
 
@@ -266,7 +273,8 @@ const generateCalculationMethodSuggestions = (
     return `風險準備金 = 預估風險成本 × 發生機率 × 安全係數（如1.2倍）。應變成本 = 緊急應變人力 + 替代方案執行成本。風險成本攤提 = 年度風險準備金 ÷ 預期影響年數。`;
   }
 
-  if (categoryName.includes('實體風險')) {
+  const safeCategoryName = categoryName || '';
+  if (safeCategoryName.includes('實體風險')) {
     return `營運中斷損失 = 平均日營收 × 預估中斷天數 × 影響程度（如70%）。復原成本 = 設備修復費 + 臨時措施費用 + 額外人力成本。保險理賠淨額 = 保險給付 - 自負額 - 理賠等待期損失。`;
   }
 
