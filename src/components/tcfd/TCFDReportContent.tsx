@@ -1,8 +1,9 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TCFDAssessment } from '@/types/tcfd';
-import { Building2, Target, TrendingUp, BarChart3, AlertTriangle, CheckCircle, DollarSign, Calculator } from 'lucide-react';
+import { Building2, Target, TrendingUp, BarChart3, AlertTriangle, CheckCircle, DollarSign, Calculator, Loader2 } from 'lucide-react';
 
 interface SelectedStrategyData {
   scenarioKey: string;
@@ -14,10 +15,15 @@ interface SelectedStrategyData {
   subcategoryName: string;
   notes: string;
 }
+
 interface TCFDReportContentProps {
   assessment: TCFDAssessment;
   strategySelections: SelectedStrategyData[];
   userModifications?: Record<string, string>;
+}
+
+interface GeneratedAnalysis {
+  [key: string]: string;
 }
 
 const TCFDReportContent = ({
@@ -25,6 +31,9 @@ const TCFDReportContent = ({
   strategySelections,
   userModifications
 }: TCFDReportContentProps) => {
+  const [generatedAnalyses, setGeneratedAnalyses] = useState<GeneratedAnalysis>({});
+  const [loadingAnalyses, setLoadingAnalyses] = useState<Set<string>>(new Set());
+
   // 參數中文對映
   const getChineseText = (text: string): string => {
     const translations: Record<string, string> = {
@@ -44,6 +53,7 @@ const TCFDReportContent = ({
     };
     return translations[text] || text;
   };
+  
   const industryName = getChineseText(assessment.industry);
   const companySize = getChineseText(assessment.company_size);
 
@@ -59,15 +69,15 @@ const TCFDReportContent = ({
     'collaborate': '合作策略',
     'invest': '投入策略'
   };
+
   const riskSelections = strategySelections.filter(s => s.categoryType === 'risk');
   const opportunitySelections = strategySelections.filter(s => s.categoryType === 'opportunity');
 
-  // Generate AI-driven comprehensive financial analysis with narrative format
-  const generateAIDrivenFinancialAnalysis = async (selection: SelectedStrategyData) => {
+  // 生成AI驅動的財務分析
+  const generateAIFinancialAnalysis = async (selection: SelectedStrategyData): Promise<string> => {
     const strategyName = strategyMapping[selection.strategy] || selection.strategy;
-    const isRisk = selection.categoryType === 'risk';
     
-    // Construct input for AI generation
+    // 構建AI生成的輸入參數
     const analysisInput = {
       categoryType: selection.categoryType,
       categoryName: selection.categoryName,
@@ -90,7 +100,7 @@ const TCFDReportContent = ({
     };
 
     try {
-      // Call LLM API to generate financial analysis
+      // 調用LLM API生成財務分析
       const response = await fetch('/api/functions/v1/tcfd-llm-generator', {
         method: 'POST',
         headers: {
@@ -110,129 +120,145 @@ const TCFDReportContent = ({
       return result.analysis;
     } catch (error) {
       console.error('AI財務分析生成錯誤:', error);
-      // Fallback to structured analysis if API fails
-      return generateStructuredFinancialAnalysis(selection, strategyName, isRisk);
+      // 如果AI生成失敗，返回基本的分析模板
+      return generateFallbackAnalysis(selection, strategyName);
     }
   };
 
-  // Fallback structured analysis when AI generation fails
-  const generateStructuredFinancialAnalysis = (selection: SelectedStrategyData, strategyName: string, isRisk: boolean) => {
+  // 備用分析生成（當AI失敗時使用）
+  const generateFallbackAnalysis = (selection: SelectedStrategyData, strategyName: string): string => {
+    return `
+**財務影響概述**
+
+針對${selection.subcategoryName}情境，本企業採用${strategyName}進行應對。基於${companySize}${industryName}的營運特性與資源配置，此策略預期將對企業財務結構產生重要影響。
+
+**損益表影響評估**
+
+${strategyName}執行後，預期對${companySize}${industryName}企業營收產生正面影響。透過提升永續競爭力與客戶信任度，估計可維持既有營收穩定性並創造3-8%的營收成長機會。
+
+• 短期營收維持穩定，中長期可透過效率提升創造競爭優勢
+• ESG表現改善有助於爭取永續採購訂單
+
+**現金流與資本配置**
+
+執行${strategyName}需要分階段資金投入，初期投資約200-500萬元，預計3-5年回收。透過政府補助與分期付款方式可有效管理現金流壓力。
+
+• 初期需投入預防性支出，但可避免未來更大的損失成本
+• 分階段投資可平衡現金流壓力，建議採用3-5年分期實施
+
+**資產負債結構調整**
+
+執行${strategyName}可能需要增加固定資產投資，但同時提升企業永續價值，有助改善ESG評等與融資條件，整體資產品質獲得提升。
+
+**策略執行可行性與建議**
+
+考量${companySize}${industryName}企業的資源條件與技術能力，${strategyName}具備良好的執行可行性。建議採用分階段實施方式，優先處理關鍵環節。
+
+**具體實施建議：**
+• 制定詳細的執行時程與里程碑管控機制
+• 建立跨部門協調機制，確保資源整合效率
+• 定期檢視執行成效，適時調整策略方向
+    `.trim();
+  };
+
+  // 載入特定策略的分析
+  const loadAnalysisForStrategy = async (selection: SelectedStrategyData) => {
+    const key = selection.scenarioKey;
+    
+    if (generatedAnalyses[key] || loadingAnalyses.has(key)) {
+      return; // 已經有分析內容或正在載入中
+    }
+
+    setLoadingAnalyses(prev => new Set(prev).add(key));
+    
+    try {
+      const analysis = await generateAIFinancialAnalysis(selection);
+      setGeneratedAnalyses(prev => ({
+        ...prev,
+        [key]: analysis
+      }));
+    } finally {
+      setLoadingAnalyses(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
+    }
+  };
+
+  // 在組件載入時為所有策略生成分析
+  useEffect(() => {
+    strategySelections.forEach(selection => {
+      loadAnalysisForStrategy(selection);
+    });
+  }, [strategySelections]);
+
+  // 渲染分析內容
+  const renderAnalysisContent = (selection: SelectedStrategyData) => {
+    const key = selection.scenarioKey;
+    const strategyName = strategyMapping[selection.strategy] || selection.strategy;
+    
+    if (loadingAnalyses.has(key)) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span className="text-gray-600">正在生成財務分析...</span>
+        </div>
+      );
+    }
+
+    const analysisContent = generatedAnalyses[key];
+    
+    if (!analysisContent) {
+      return (
+        <div className="text-gray-500 text-center py-4">
+          分析內容載入中...
+        </div>
+      );
+    }
+
+    // 將分析內容按段落分割並渲染
+    const paragraphs = analysisContent.split('\n\n').filter(p => p.trim());
+    
     return (
-      <div className="space-y-4">
-        <div>
-          <h6 className="font-medium text-gray-800 mb-2">財務影響概述</h6>
-          <p className="mb-3">
-            針對<span className="text-red-600 font-medium">{selection.subcategoryName}</span>情境，
-            本企業採用<span className="text-blue-600 font-medium">{strategyName}</span>進行應對。
-            基於{companySize}{industryName}的營運特性與資源配置，此策略預期將對企業財務結構產生以下影響：
-          </p>
-        </div>
-
-        <div>
-          <h6 className="font-medium text-gray-800 mb-2">損益表影響評估</h6>
-          <p className="mb-2">
-            {generateRevenueImpactText(selection, isRisk, strategyName)}
-          </p>
-          <ul className="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
-            <li>短期營收維持穩定，中長期可望透過效率提升創造競爭優勢</li>
-            <li>ESG表現改善有助於爭取永續採購訂單</li>
-          </ul>
-        </div>
-
-        <div>
-          <h6 className="font-medium text-gray-800 mb-2">現金流與資本配置</h6>
-          <p className="mb-2">
-            {generateCashFlowImpactText(selection, isRisk, strategyName)}
-          </p>
-          <ul className="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
-            <li>初期需投入預防性支出，但可避免未來更大的損失成本</li>
-            <li>分階段投資可平衡現金流壓力，建議採用3-5年分期實施</li>
-          </ul>
-        </div>
-
-        <div>
-          <h6 className="font-medium text-gray-800 mb-2">資產負債結構調整</h6>
-          <p className="mb-2">
-            {generateBalanceSheetImpactText(selection, isRisk, strategyName)}
-          </p>
-        </div>
-
-        <div>
-          <h6 className="font-medium text-gray-800 mb-2">策略執行可行性與建議</h6>
-          <p className="mb-2">
-            {generateFeasibilityText(selection, isRisk, strategyName)}
-          </p>
-          <div className="bg-gray-50 p-3 rounded border border-gray-200 mt-3">
-            <p className="text-sm font-medium text-gray-700 mb-2">具體實施建議：</p>
-            <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-              {generateImplementationSuggestions(selection, strategyName)}
-            </ul>
-          </div>
-        </div>
+      <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+        {paragraphs.map((paragraph, index) => {
+          const trimmedParagraph = paragraph.trim();
+          
+          // 處理標題（以**包圍的文字）
+          if (trimmedParagraph.startsWith('**') && trimmedParagraph.includes('**')) {
+            const titleMatch = trimmedParagraph.match(/^\*\*(.*?)\*\*(.*)/);
+            if (titleMatch) {
+              return (
+                <div key={index} className="mb-4">
+                  <h6 className="font-medium text-gray-800 mb-2">{titleMatch[1]}</h6>
+                  {titleMatch[2] && <p className="mb-2">{titleMatch[2].trim()}</p>}
+                </div>
+              );
+            }
+          }
+          
+          // 處理條列項目（以•開頭）
+          if (trimmedParagraph.includes('•')) {
+            const items = trimmedParagraph.split('•').filter(item => item.trim());
+            return (
+              <ul key={index} className="text-sm text-gray-600 mt-2 mb-4 space-y-1 list-disc list-inside">
+                {items.map((item, itemIndex) => (
+                  <li key={itemIndex}>{item.trim()}</li>
+                ))}
+              </ul>
+            );
+          }
+          
+          // 一般段落
+          return (
+            <p key={index} className="mb-3">
+              {trimmedParagraph}
+            </p>
+          );
+        })}
       </div>
     );
-  };
-
-  const generateRevenueImpactText = (selection: SelectedStrategyData, isRisk: boolean, strategyName: string) => {
-    const categoryLower = selection.categoryName.toLowerCase();
-    
-    if (categoryLower.includes('品牌') || categoryLower.includes('聲譽')) {
-      if (isRisk) {
-        return `${companySize}${industryName}企業若未妥善處理${selection.categoryName}風險，可能導致品牌信譽受損，估計銷售收入下滑5-15%。透過${strategyName}強化品牌透明度，預期可維持現有市場份額並爭取永續意識客群。`;
-      } else {
-        return `透過${strategyName}執行${selection.categoryName}機會，${companySize}${industryName}企業可望提升品牌ESG形象，預估可帶動營收成長3-8%，主要來自綠色產品溢價與新客戶開發。`;
-      }
-    }
-    
-    if (categoryLower.includes('碳費') || categoryLower.includes('法規')) {
-      return `碳費政策實施對${industryName}營收無直接影響，但企業成功執行${strategyName}達成減碳目標後，可透過碳權交易或綠色產品認證創造新收入來源，預估每年可增加營收50-150萬元。`;
-    }
-    
-    return `${strategyName}執行後，預期對${companySize}${industryName}企業營收產生正面影響。透過提升永續競爭力與客戶信任度，估計可維持既有營收穩定性並創造3-8%的營收成長機會。`;
-  };
-
-  const generateCashFlowImpactText = (selection: SelectedStrategyData, isRisk: boolean, strategyName: string) => {
-    if (selection.strategy.includes('invest') || selection.strategy.includes('build')) {
-      return `執行${strategyName}需要分階段資金投入，初期投資約200-500萬元，預計3-5年回收。透過政府補助與分期付款方式可有效管理現金流壓力，確保營運資金充足。`;
-    }
-    
-    if (selection.strategy.includes('collaborate')) {
-      return `透過${strategyName}與外部夥伴合作分攤成本，可降低單獨投資壓力。預估合作模式下企業自有資金需求可減少40-60%，現金流管理更加靈活。`;
-    }
-    
-    return `${strategyName}實施對現金流產生階段性影響，短期內需增加營運資金投入約100-300萬元，但長期可透過效率提升改善現金流表現。`;
-  };
-
-  const generateBalanceSheetImpactText = (selection: SelectedStrategyData, isRisk: boolean, strategyName: string) => {
-    if (selection.strategy.includes('transfer')) {
-      return `透過保險或契約轉移可降低或有負債風險，同時外部合作模式可減少自有資產投資需求，優化資產配置效率。`;
-    }
-    
-    return `執行${strategyName}可能需要增加固定資產投資，但同時提升企業永續價值，有助改善ESG評等與融資條件，整體資產品質獲得提升。`;
-  };
-
-  const generateFeasibilityText = (selection: SelectedStrategyData, isRisk: boolean, strategyName: string) => {
-    return `考量${companySize}${industryName}企業的資源條件與技術能力，${strategyName}具備良好的執行可行性。建議採用分階段實施方式，優先處理關鍵環節，逐步擴大實施範圍，確保策略執行的穩定性與有效性。`;
-  };
-
-  const generateImplementationSuggestions = (selection: SelectedStrategyData, strategyName: string) => {
-    const suggestions = [];
-    
-    if (selection.strategy.includes('invest')) {
-      suggestions.push('建議分三階段執行：評估期(6個月)、試行期(12個月)、全面實施期(24個月)');
-      suggestions.push('優先申請政府補助資源，可降低初期投資成本20-40%');
-      suggestions.push('建立內部專案團隊，確保執行效率與成本控制');
-    } else if (selection.strategy.includes('collaborate')) {
-      suggestions.push('選擇具備相關經驗的策略夥伴，降低執行風險');
-      suggestions.push('建立明確的成本分攤與效益分享機制');
-      suggestions.push('定期檢視合作成效，適時調整合作模式');
-    } else {
-      suggestions.push('制定詳細的執行時程與里程碑管控機制');
-      suggestions.push('建立跨部門協調機制，確保資源整合效率');
-      suggestions.push('定期檢視執行成效，適時調整策略方向');
-    }
-    
-    return suggestions;
   };
 
   return (
@@ -434,18 +460,16 @@ const TCFDReportContent = ({
                           </p>
                         </div>
                         
-                        {/* AI-Generated Financial Analysis */}
+                        {/* AI生成的財務分析 */}
                         <div className="mt-4 p-5 bg-slate-50 border border-slate-200 rounded-lg">
                           <h6 className="font-semibold text-slate-800 mb-4 flex items-center text-base">
                             <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
                             {strategyMapping[selection.strategy] || selection.strategy}財務影響分析
                           </h6>
                           
-                          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-                            {generateStructuredFinancialAnalysis(selection, strategyMapping[selection.strategy] || selection.strategy, true)}
-                          </div>
+                          {renderAnalysisContent(selection)}
                           
-                          {/* Show user modifications or strategy notes if available */}
+                          {/* 顯示用戶修改或策略備註 */}
                           {(selection.notes || userModifications?.[selection.scenarioKey]) && (
                             <div className="mt-4 pt-4 border-t border-slate-200">
                               <h6 className="font-medium text-slate-700 text-sm mb-2">企業執行補充說明</h6>
@@ -487,18 +511,16 @@ const TCFDReportContent = ({
                           </p>
                         </div>
                         
-                        {/* AI-Generated Financial Analysis */}
+                        {/* AI生成的財務分析 */}
                         <div className="mt-4 p-5 bg-slate-50 border border-slate-200 rounded-lg">
                           <h6 className="font-semibold text-slate-800 mb-4 flex items-center text-base">
                             <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
                             {strategyMapping[selection.strategy] || selection.strategy}財務影響分析
                           </h6>
                           
-                          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-                            {generateStructuredFinancialAnalysis(selection, strategyMapping[selection.strategy] || selection.strategy, false)}
-                          </div>
+                          {renderAnalysisContent(selection)}
                           
-                          {/* Show user modifications or strategy notes if available */}
+                          {/* 顯示用戶修改或策略備註 */}
                           {(selection.notes || userModifications?.[selection.scenarioKey]) && (
                             <div className="mt-4 pt-4 border-t border-slate-200">
                               <h6 className="font-medium text-slate-700 text-sm mb-2">企業執行補充說明</h6>
