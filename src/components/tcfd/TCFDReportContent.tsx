@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TCFDAssessment } from '@/types/tcfd';
 import { Building2, Target, TrendingUp, BarChart3, AlertTriangle, CheckCircle, DollarSign, Calculator } from 'lucide-react';
-
 interface SelectedStrategyData {
   scenarioKey: string;
   riskOpportunityId: string;
@@ -15,19 +13,21 @@ interface SelectedStrategyData {
   subcategoryName: string;
   notes: string;
 }
-
 interface TCFDReportContentProps {
   assessment: TCFDAssessment;
   strategySelections: SelectedStrategyData[];
   userModifications?: Record<string, string>;
 }
-
-const TCFDReportContent = ({ assessment, strategySelections, userModifications }: TCFDReportContentProps) => {
+const TCFDReportContent = ({
+  assessment,
+  strategySelections,
+  userModifications
+}: TCFDReportContentProps) => {
   // 參數中文對映
   const getChineseText = (text: string): string => {
     const translations: Record<string, string> = {
       'medium': '中型',
-      'large': '大型', 
+      'large': '大型',
       'small': '小型',
       'hospitality': '旅宿業',
       'manufacturing': '製造業',
@@ -42,7 +42,6 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
     };
     return translations[text] || text;
   };
-
   const industryName = getChineseText(assessment.industry);
   const companySize = getChineseText(assessment.company_size);
 
@@ -58,7 +57,6 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
     'collaborate': '合作策略',
     'invest': '投入策略'
   };
-
   const riskSelections = strategySelections.filter(s => s.categoryType === 'risk');
   const opportunitySelections = strategySelections.filter(s => s.categoryType === 'opportunity');
 
@@ -66,9 +64,7 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
   const generateFinancialAnalysisContent = (selection: SelectedStrategyData) => {
     const strategyName = strategyMapping[selection.strategy] || selection.strategy;
     const isRisk = selection.categoryType === 'risk';
-    
-    return (
-      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    return <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h6 className="font-medium text-blue-800 mb-3 flex items-center">
           <DollarSign className="h-4 w-4 mr-2" />
           財務影響分析
@@ -103,18 +99,13 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
             </span>
           </div>
         </div>
-        {userModifications?.[selection.scenarioKey] && (
-          <div className="mt-3 pt-3 border-t border-blue-200">
+        {userModifications?.[selection.scenarioKey] && <div className="mt-3 pt-3 border-t border-blue-200">
             <span className="font-medium text-blue-700 text-sm">企業補充說明：</span>
             <p className="text-sm text-blue-800 mt-1">{userModifications[selection.scenarioKey]}</p>
-          </div>
-        )}
-      </div>
-    );
+          </div>}
+      </div>;
   };
-
-  return (
-    <div className="space-y-8">
+  return <div className="space-y-8">
       {/* 模擬說明區塊 - 增強版 */}
       <Card className="bg-yellow-50 border-yellow-200">
         <CardHeader>
@@ -144,32 +135,25 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
               <div>
                 <span className="font-medium text-gray-700">國際營運：</span>
                 <span className="text-red-600 font-medium">
-                  {assessment.has_international_operations === true ? '是' : 
-                   assessment.has_international_operations === false ? '否' : '未提供'}
+                  {assessment.has_international_operations === true ? '是' : assessment.has_international_operations === false ? '否' : '未提供'}
                 </span>
               </div>
-              {assessment.annual_revenue_range && (
-                <div>
+              {assessment.annual_revenue_range && <div>
                   <span className="font-medium text-gray-700">營業額範圍：</span>
                   <span className="text-red-600 font-medium">{assessment.annual_revenue_range}</span>
-                </div>
-              )}
-              {assessment.main_emission_source && (
-                <div>
+                </div>}
+              {assessment.main_emission_source && <div>
                   <span className="font-medium text-gray-700">主要排放源：</span>
                   <span className="text-red-600 font-medium">{assessment.main_emission_source}</span>
-                </div>
-              )}
+                </div>}
             </div>
             
-            {assessment.business_description && (
-              <div className="mt-4 pt-4 border-t border-yellow-200">
+            {assessment.business_description && <div className="mt-4 pt-4 border-t border-yellow-200">
                 <span className="font-medium text-gray-700">營運簡述：</span>
                 <p className="text-red-600 mt-1 text-sm leading-relaxed">
                   {assessment.business_description}
                 </p>
-              </div>
-            )}
+              </div>}
           </div>
 
           <div className="bg-white p-4 rounded-lg border border-yellow-200">
@@ -262,15 +246,13 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
               </p>
 
               {/* 風險情境 */}
-              {riskSelections.length > 0 && (
-                <div className="mb-6">
+              {riskSelections.length > 0 && <div className="mb-6">
                   <h5 className="font-medium text-red-600 mb-3 flex items-center">
                     <AlertTriangle className="h-4 w-4 mr-2" />
                     識別之氣候風險情境與財務分析
                   </h5>
                   <div className="space-y-4">
-                    {riskSelections.map((selection, index) => (
-                      <div key={selection.scenarioKey} className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    {riskSelections.map((selection, index) => <div key={selection.scenarioKey} className="bg-red-50 p-4 rounded-lg border border-red-200">
                         <div className="flex items-start justify-between mb-2">
                           <h6 className="font-medium text-red-800">
                             風險情境 {index + 1}：<span className="text-red-600">{selection.categoryName}</span>
@@ -279,32 +261,26 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
                             {strategyMapping[selection.strategy] || selection.strategy}
                           </Badge>
                         </div>
-                        <p className="text-sm text-red-700 leading-relaxed mb-3">
+                        <p className="text-sm leading-relaxed mb-3 text-gray-950">
                           <span className="text-red-600 font-medium">{selection.subcategoryName}</span> - {selection.scenarioDescription}
                         </p>
-                        {selection.notes && (
-                          <div className="mb-3 p-2 bg-red-100 rounded border border-red-300">
+                        {selection.notes && <div className="mb-3 p-2 bg-red-100 rounded border border-red-300">
                             <span className="text-xs text-red-600 font-medium">策略備註：</span>
                             <p className="text-xs text-red-700">{selection.notes}</p>
-                          </div>
-                        )}
+                          </div>}
                         {generateFinancialAnalysisContent(selection)}
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* 機會情境 */}
-              {opportunitySelections.length > 0 && (
-                <div>
+              {opportunitySelections.length > 0 && <div>
                   <h5 className="font-medium text-green-600 mb-3 flex items-center">
                     <CheckCircle className="h-4 w-4 mr-2" />
                     識別之氣候機會情境與財務分析
                   </h5>
                   <div className="space-y-4">
-                    {opportunitySelections.map((selection, index) => (
-                      <div key={selection.scenarioKey} className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    {opportunitySelections.map((selection, index) => <div key={selection.scenarioKey} className="bg-green-50 p-4 rounded-lg border border-green-200">
                         <div className="flex items-start justify-between mb-2">
                           <h6 className="font-medium text-green-800">
                             機會情境 {index + 1}：<span className="text-red-600">{selection.categoryName}</span>
@@ -313,21 +289,17 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
                             {strategyMapping[selection.strategy] || selection.strategy}
                           </Badge>
                         </div>
-                        <p className="text-sm text-green-700 leading-relaxed mb-3">
+                        <p className="text-sm leading-relaxed mb-3 text-green-950">
                           <span className="text-red-600 font-medium">{selection.subcategoryName}</span> - {selection.scenarioDescription}
                         </p>
-                        {selection.notes && (
-                          <div className="mb-3 p-2 bg-green-100 rounded border border-green-300">
+                        {selection.notes && <div className="mb-3 p-2 bg-green-100 rounded border border-green-300">
                             <span className="text-xs text-green-600 font-medium">策略備註：</span>
                             <p className="text-xs text-green-700">{selection.notes}</p>
-                          </div>
-                        )}
+                          </div>}
                         {generateFinancialAnalysisContent(selection)}
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
 
             <div>
@@ -428,8 +400,6 @@ const TCFDReportContent = ({ assessment, strategySelections, userModifications }
           </p>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default TCFDReportContent;
