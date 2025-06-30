@@ -90,10 +90,10 @@ export const generateFinancialAnalysis = (input: FinancialAnalysisInput): Financ
 
   // 生成詳細的六個分析區塊
   const detailedAnalysis = {
-    profitLossAnalysis: generateProfitLossAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
-    cashFlowAnalysis: generateDetailedCashFlowAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
-    balanceSheetAnalysis: generateDetailedBalanceSheetAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
-    strategyFeasibilityAnalysis: generateStrategyFeasibilityAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    profitLossAnalysis: generateProfitLossAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription, industryText, sizeText),
+    cashFlowAnalysis: generateDetailedCashFlowAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription, industryText, sizeText),
+    balanceSheetAnalysis: generateDetailedBalanceSheetAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription, industryText, sizeText),
+    strategyFeasibilityAnalysis: generateStrategyFeasibilityAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription, industryText, sizeText),
     analysisMethodology: generateAnalysisMethodology(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
     calculationMethodSuggestions: generateCalculationMethodSuggestions(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription)
   };
@@ -122,7 +122,9 @@ const generateProfitLossAnalysis = (
   strategyName: string,
   companyContext: string,
   elements: string[],
-  scenarioDescription: string
+  scenarioDescription: string,
+  industryText: string,
+  sizeText: string
 ): string => {
   let analysis = '';
   
@@ -180,7 +182,9 @@ const generateDetailedCashFlowAnalysis = (
   strategyName: string,
   companyContext: string,
   elements: string[],
-  scenarioDescription: string
+  scenarioDescription: string,
+  industryText: string,
+  sizeText: string
 ): string => {
   let analysis = '';
   
@@ -238,7 +242,9 @@ const generateDetailedBalanceSheetAnalysis = (
   strategyName: string,
   companyContext: string,
   elements: string[],
-  scenarioDescription: string
+  scenarioDescription: string,
+  industryText: string,
+  sizeText: string
 ): string => {
   let analysis = '';
   
@@ -284,7 +290,9 @@ const generateStrategyFeasibilityAnalysis = (
   strategyName: string,
   companyContext: string,
   elements: string[],
-  scenarioDescription: string
+  scenarioDescription: string,
+  industryText: string,
+  sizeText: string
 ): string => {
   let analysis = '';
   
