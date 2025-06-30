@@ -24,7 +24,7 @@ serve(async (req) => {
     
     switch (type) {
       case 'generate_scenario_description':
-        result = await generateScenarioDescription(params, openaiApiKey);
+        result = await generateScenarioDescriptionWithCache(params);
         break;
       case 'comprehensive_scenario_analysis':
         result = await generateComprehensiveScenarioAnalysis(params, openaiApiKey);
@@ -33,7 +33,7 @@ serve(async (req) => {
         result = await generateFinancialAnalysis(params, openaiApiKey);
         break;
       case 'generate_stage4_analysis':
-        result = await generateStage4Analysis(params, openaiApiKey);
+        result = await generateStage4AnalysisWithCache(params);
         break;
       default:
         throw new Error(`Unknown type: ${type}`);
@@ -51,6 +51,80 @@ serve(async (req) => {
     });
   }
 });
+
+async function generateScenarioDescriptionWithCache(params: any) {
+  try {
+    // 先嘗試從快取獲取
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/tcfd-scenario-cache`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+      },
+      body: JSON.stringify({
+        categoryType: params.category_type,
+        categoryName: params.category_name,
+        subcategoryName: params.subcategory_name,
+        industry: params.industry,
+        companySize: params.company_size,
+        businessDescription: params.business_description,
+        hasCarbonInventory: params.has_carbon_inventory,
+        hasInternationalOperations: params.has_international_operations,
+        annualRevenueRange: params.annual_revenue_range,
+        mainEmissionSource: params.main_emission_source
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        return { scenario_description: result.scenario_description };
+      }
+    }
+    
+    // 如果快取失敗，使用原有邏輯
+    return await generateScenarioDescription(params, Deno.env.get('OPENAI_API_KEY'));
+  } catch (error) {
+    console.error('快取情境描述生成失敗，使用原有邏輯:', error);
+    return await generateScenarioDescription(params, Deno.env.get('OPENAI_API_KEY'));
+  }
+}
+
+async function generateStage4AnalysisWithCache(params: any) {
+  try {
+    // 先嘗試從快取獲取
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/tcfd-financial-cache`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+      },
+      body: JSON.stringify({
+        categoryType: params.categoryType,
+        categoryName: params.categoryName,
+        subcategoryName: params.subcategoryName,
+        industry: params.companyProfile?.industry,
+        companySize: params.companyProfile?.size,
+        strategyType: params.selectedStrategy,
+        scenarioDescription: params.scenarioDescription,
+        companyProfile: params.companyProfile
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        return { analysis: result.analysis };
+      }
+    }
+    
+    // 如果快取失敗，使用原有邏輯
+    return await generateStage4Analysis(params, Deno.env.get('OPENAI_API_KEY'));
+  } catch (error) {
+    console.error('快取財務分析生成失敗，使用原有邏輯:', error);
+    return await generateStage4Analysis(params, Deno.env.get('OPENAI_API_KEY'));
+  }
+}
 
 async function generateStage4Analysis(params: any, openaiApiKey: string) {
   const {
