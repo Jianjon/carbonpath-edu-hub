@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { FinancialAnalysisInput, generateFinancialAnalysis } from '@/services/tcfd/financialAnalysisService';
 
 interface TCFDStage4Props {
   assessment: any;
@@ -54,6 +56,26 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     }));
   };
 
+  const generateStrategyFinancialAnalysis = (selection: SelectedStrategyData) => {
+    const financialInput: FinancialAnalysisInput = {
+      riskOrOpportunityType: selection.categoryType,
+      categoryName: selection.categoryName,
+      subcategoryName: selection.subcategoryName,
+      scenarioDescription: selection.scenarioDescription,
+      selectedStrategy: selection.strategy,
+      strategyNotes: selection.notes || userModifications[selection.scenarioKey] || '',
+      companyProfile: {
+        industry: assessment.industry,
+        size: assessment.company_size,
+        hasInternationalOperations: assessment.has_international_operations || false,
+        hasCarbonInventory: assessment.has_carbon_inventory,
+        mainEmissionSource: assessment.main_emission_source || ''
+      }
+    };
+
+    return generateFinancialAnalysis(financialInput);
+  };
+
   const handleComplete = () => {
     if (!stage3Results) {
       toast.error('請先完成第三階段');
@@ -94,49 +116,108 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
         </CardContent>
       </Card>
 
-      {stage3Results.strategySelections.map((selection) => (
-        <Card key={selection.scenarioKey}>
-          <CardHeader>
-            <CardTitle>{selection.categoryName} - {selection.subcategoryName}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor={`scenario-${selection.scenarioKey}`} className="text-sm font-medium text-gray-700">
-                情境描述
-              </Label>
-              <Input
-                id={`scenario-${selection.scenarioKey}`}
-                className="mt-1"
-                value={selection.scenarioDescription}
-                readOnly
-              />
-            </div>
-            <div>
-              <Label htmlFor={`strategy-${selection.scenarioKey}`} className="text-sm font-medium text-gray-700">
-                選擇的策略
-              </Label>
-              <Input
-                id={`strategy-${selection.scenarioKey}`}
-                className="mt-1"
-                value={selection.strategy}
-                readOnly
-              />
-            </div>
-            <div>
-              <Label htmlFor={`notes-${selection.scenarioKey}`} className="text-sm font-medium text-gray-700">
-                策略執行備註
-              </Label>
-              <Textarea
-                id={`notes-${selection.scenarioKey}`}
-                className="mt-1"
-                placeholder="請輸入策略執行的具體細節與預期效益"
-                value={userModifications[selection.scenarioKey] || ''}
-                onChange={(e) => handleNotesChange(selection.scenarioKey, e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {stage3Results.strategySelections.map((selection) => {
+        const financialAnalysis = generateStrategyFinancialAnalysis(selection);
+        
+        return (
+          <Card key={selection.scenarioKey}>
+            <CardHeader>
+              <CardTitle>{selection.categoryName} - {selection.subcategoryName}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor={`scenario-${selection.scenarioKey}`} className="text-sm font-medium text-gray-700">
+                  情境描述
+                </Label>
+                <Input
+                  id={`scenario-${selection.scenarioKey}`}
+                  className="mt-1"
+                  value={selection.scenarioDescription}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label htmlFor={`strategy-${selection.scenarioKey}`} className="text-sm font-medium text-gray-700">
+                  選擇的策略
+                </Label>
+                <Input
+                  id={`strategy-${selection.scenarioKey}`}
+                  className="mt-1"
+                  value={selection.strategy}
+                  readOnly
+                />
+              </div>
+
+              {/* 量化分析結果 */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-800 mb-3">量化分析結果</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white p-3 rounded border border-blue-200">
+                    <div className="flex items-center mb-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+                      <span className="font-medium text-blue-700 text-sm">1. 損益表影響分析</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{financialAnalysis.profitLossAnalysis}</p>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border border-green-200">
+                    <div className="flex items-center mb-2">
+                      <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
+                      <span className="font-medium text-green-700 text-sm">2. 現金流影響分析</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{financialAnalysis.cashFlowAnalysis}</p>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border border-gray-200">
+                    <div className="flex items-center mb-2">
+                      <div className="w-3 h-3 bg-gray-500 rounded mr-2"></div>
+                      <span className="font-medium text-gray-700 text-sm">3. 資產負債影響分析</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{financialAnalysis.balanceSheetAnalysis}</p>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border border-pink-200">
+                    <div className="flex items-center mb-2">
+                      <div className="w-3 h-3 bg-pink-500 rounded mr-2"></div>
+                      <span className="font-medium text-pink-700 text-sm">4. 策略可行性說明</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{financialAnalysis.strategyFeasibilityAnalysis}</p>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border border-purple-200">
+                    <div className="flex items-center mb-2">
+                      <div className="w-3 h-3 bg-purple-500 rounded mr-2"></div>
+                      <span className="font-medium text-purple-700 text-sm">5. 分析方法說明</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{financialAnalysis.analysisMethodology}</p>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border border-orange-200">
+                    <div className="flex items-center mb-2">
+                      <div className="w-3 h-3 bg-orange-500 rounded mr-2"></div>
+                      <span className="font-medium text-orange-700 text-sm">6. 財務計算建議說明</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{financialAnalysis.calculationMethodSuggestions}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor={`notes-${selection.scenarioKey}`} className="text-sm font-medium text-gray-700">
+                  企業可依項目情況補充
+                </Label>
+                <Textarea
+                  id={`notes-${selection.scenarioKey}`}
+                  className="mt-1"
+                  placeholder="請補充企業實際情形或財務影響相關補充說明"
+                  value={userModifications[selection.scenarioKey] || ''}
+                  onChange={(e) => handleNotesChange(selection.scenarioKey, e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={() => window.history.back()}>
@@ -153,3 +234,4 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
 };
 
 export default TCFDStage4;
+
