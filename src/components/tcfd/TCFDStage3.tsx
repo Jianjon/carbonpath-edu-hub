@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -226,6 +225,48 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
     completedItems.has(selection.id) && selectedStrategies[selection.id]
   );
 
+  // 準備第四階段需要的資料
+  const prepareStage4Data = () => {
+    if (!riskOpportunitySelections || !scenarioEvaluations) return null;
+
+    const strategySelections = riskOpportunitySelections
+      .filter(selection => completedItems.has(selection.id) && selectedStrategies[selection.id])
+      .map(selection => {
+        const evaluation = scenarioEvaluations.find(eval => eval.risk_opportunity_id === selection.id);
+        return {
+          scenarioKey: selection.id,
+          riskOpportunityId: selection.id,
+          strategy: selectedStrategies[selection.id],
+          scenarioDescription: evaluation?.scenario_description || '',
+          categoryType: selection.category_type as 'risk' | 'opportunity',
+          categoryName: selection.category_name,
+          subcategoryName: selection.subcategory_name,
+          notes: '' // 可以在第四階段補充
+        };
+      });
+
+    return {
+      assessment: assessment,
+      strategySelections: strategySelections
+    };
+  };
+
+  const handleNext = () => {
+    if (!allItemsCompleted) {
+      toast.error('請完成所有情境評估與策略選擇');
+      return;
+    }
+
+    // 準備並儲存第三階段結果到 sessionStorage
+    const stage3Results = prepareStage4Data();
+    if (stage3Results) {
+      sessionStorage.setItem('tcfd-stage3-results', JSON.stringify(stage3Results));
+      console.log('第三階段結果已儲存到 sessionStorage:', stage3Results);
+    }
+
+    onNext();
+  };
+
   if (!riskOpportunitySelections || riskOpportunitySelections.length === 0) {
     return (
       <div className="text-center py-8">
@@ -239,7 +280,7 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
           <Button variant="outline" onClick={onPrevious}>
             返回
           </Button>
-          <Button onClick={onNext} disabled>
+          <Button onClick={handleNext} disabled>
             下一步
           </Button>
         </div>
@@ -369,7 +410,7 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
           返回
         </Button>
         <Button 
-          onClick={onNext}
+          onClick={handleNext}
           disabled={!allItemsCompleted}
         >
           下一步

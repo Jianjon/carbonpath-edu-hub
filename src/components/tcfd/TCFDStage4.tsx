@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
   const [stage3Results, setStage3Results] = useState<Stage3Results | null>(null);
   const [userModifications, setUserModifications] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 參數中文對映
   const getChineseText = (text: string): string => {
@@ -60,25 +60,48 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     'transfer': '轉移策略',
     'accept': '接受策略',
     'control': '控制策略',
-    'evaluate_explore': '評估探索',
-    'capability_building': '能力建設',
-    'business_transformation': '商業轉換',
-    'cooperation_participation': '合作參與',
-    'aggressive_investment': '積極投入'
+    'explore': '探索策略',
+    'build': '建設策略',
+    'transform': '轉換策略',
+    'collaborate': '合作策略',
+    'invest': '投入策略'
   };
 
   useEffect(() => {
-    // 從 sessionStorage 讀取第三階段的結果
-    const storedResults = sessionStorage.getItem('tcfd-stage3-results');
-    if (storedResults) {
-      try {
-        const results = JSON.parse(storedResults);
-        console.log('第四階段載入第三階段結果:', results);
-        setStage3Results(results);
-      } catch (error) {
-        console.error('解析第三階段結果失敗:', error);
+    const loadStage3Data = () => {
+      console.log('第四階段開始載入第三階段資料...');
+      
+      // 從 sessionStorage 讀取第三階段的結果
+      const storedResults = sessionStorage.getItem('tcfd-stage3-results');
+      if (storedResults) {
+        try {
+          const results = JSON.parse(storedResults);
+          console.log('第四階段成功載入第三階段結果:', results);
+          setStage3Results(results);
+        } catch (error) {
+          console.error('解析第三階段結果失敗:', error);
+        }
+      } else {
+        console.warn('未找到第三階段結果，嘗試重新載入...');
+        // 如果沒有找到 sessionStorage 中的資料，可能需要重新載入
+        setTimeout(() => {
+          const retryResults = sessionStorage.getItem('tcfd-stage3-results');
+          if (retryResults) {
+            try {
+              const results = JSON.parse(retryResults);
+              console.log('重新載入第三階段結果成功:', results);
+              setStage3Results(results);
+            } catch (error) {
+              console.error('重新載入第三階段結果失敗:', error);
+            }
+          }
+        }, 1000);
       }
-    }
+      
+      setIsLoading(false);
+    };
+
+    loadStage3Data();
   }, []);
 
   const handleModificationChange = (scenarioKey: string, modification: string) => {
@@ -244,7 +267,7 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
     );
   };
 
-  if (!stage3Results || !stage3Results.strategySelections) {
+  if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto space-y-8">
         <Card>
@@ -264,9 +287,39 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
             </div>
-            <h3 className="text-lg font-medium mb-2">載入策略選擇資料...</h3>
+            <h3 className="text-lg font-medium mb-2">載入第三階段資料...</h3>
             <p className="text-gray-600">
-              請確保已完成第三階段的策略選擇
+              正在載入策略選擇與情境評估結果...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!stage3Results || !stage3Results.strategySelections || stage3Results.strategySelections.length === 0) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center flex items-center justify-center space-x-2">
+              <Target className="h-8 w-8 text-gray-600" />
+              <span>第四階段：財務影響分析與計算建議</span>
+            </CardTitle>
+            <p className="text-gray-600 text-center">
+              針對每個氣候風險／機會情境與選定策略，進行結構化的財務影響分析與計算方法建議
+            </p>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardContent className="py-12 text-center">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">無法載入第三階段資料</h3>
+            <p className="text-gray-600">
+              請返回第三階段確保已完成所有策略選擇，或重新整理頁面
             </p>
           </CardContent>
         </Card>
