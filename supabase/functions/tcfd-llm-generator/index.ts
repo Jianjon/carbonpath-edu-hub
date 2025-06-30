@@ -29,6 +29,9 @@ serve(async (req) => {
       case 'comprehensive_scenario_analysis':
         result = await generateComprehensiveScenarioAnalysis(params, openaiApiKey);
         break;
+      case 'generate_financial_analysis':
+        result = await generateFinancialAnalysis(params, openaiApiKey);
+        break;
       default:
         throw new Error(`Unknown type: ${type}`);
     }
@@ -45,6 +48,91 @@ serve(async (req) => {
     });
   }
 });
+
+async function generateFinancialAnalysis(params: any, openaiApiKey: string) {
+  const {
+    categoryType,
+    categoryName,
+    subcategoryName,
+    scenarioDescription,
+    selectedStrategy,
+    strategyName,
+    companyProfile,
+    userNotes
+  } = params;
+
+  const systemPrompt = `你是一位專精於TCFD氣候風險財務分析的專業顧問，具備深厚的財務分析、風險管理和策略規劃經驗。請為企業提供針對特定策略的詳細財務影響分析。`;
+
+  const prompt = `請為以下企業策略提供詳細的財務影響分析，分析內容需要具體、實用且符合台灣企業實況：
+
+企業背景：
+- 產業：${companyProfile.industryText}
+- 企業規模：${companyProfile.sizeText}企業
+- 營運簡述：${companyProfile.businessDescription || '未提供'}
+- 是否有碳盤查：${companyProfile.hasCarbonInventory ? '是' : '否'}
+- 是否有國際業務：${companyProfile.hasInternationalOperations ? '是' : '否'}
+- 年營收規模：${companyProfile.annualRevenueRange || '未提供'}
+- 主要排放源：${companyProfile.mainEmissionSource || '未提供'}
+
+情境分析：
+- ${categoryType === 'risk' ? '風險' : '機會'}類別：${categoryName}
+- 子類別：${subcategoryName}
+- 具體情境：${scenarioDescription}
+- 選擇策略：${strategyName}
+
+${userNotes ? `企業補充說明：${userNotes}` : ''}
+
+請提供以下四個面向的詳細分析，每個面向約60-80字，總計250-350字：
+
+1. **財務影響概述**：簡要說明此策略對企業整體財務結構的影響
+
+2. **損益表影響評估**：分析對營收、成本、利潤的具體影響，包含數字估算
+
+3. **現金流與資本配置**：評估現金流變化、投資需求及資金管理建議
+
+4. **資產負債結構調整**：說明對企業資產配置、負債結構的影響
+
+5. **策略執行可行性與建議**：提供3-4個具體實施建議
+
+要求：
+- 內容必須針對「${subcategoryName}」情境和「${strategyName}」策略量身定制
+- 充分考慮${companyProfile.sizeText}在${companyProfile.industryText}的實際執行能力
+- 提供具體的數字估算和時間框架
+- 語言專業但易懂，適合企業管理層閱讀
+- 使用繁體中文
+
+請直接提供分析內容，格式為完整的段落文字，不需要JSON格式。`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 800,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const analysisContent = data.choices[0]?.message?.content?.trim();
+
+  if (!analysisContent) {
+    throw new Error('無法生成財務分析');
+  }
+
+  return { analysis: analysisContent };
+}
 
 async function generateScenarioDescription(params: any, openaiApiKey: string) {
   const {
