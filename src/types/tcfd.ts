@@ -42,6 +42,9 @@ export interface ScenarioEvaluation {
   likelihood_score?: number;
   llm_response?: string;
   selected_strategy?: string;
+  strategy_type?: 'mitigate' | 'transfer' | 'accept' | 'control' | 'explore' | 'build' | 'transform' | 'collaborate' | 'invest';
+  strategy_description?: string;
+  custom_scenario_context?: string;
   created_at: string;
   is_demo_data?: boolean;
 }

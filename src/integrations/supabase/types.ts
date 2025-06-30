@@ -84,6 +84,152 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_sessions: {
+        Row: {
+          completed_at: string | null
+          correct_answers: number
+          id: string
+          score_percentage: number
+          subject: string
+          time_taken: number
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          correct_answers?: number
+          id?: string
+          score_percentage?: number
+          subject?: string
+          time_taken?: number
+          total_questions?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          correct_answers?: number
+          id?: string
+          score_percentage?: number
+          subject?: string
+          time_taken?: number
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      page_units: {
+        Row: {
+          correct_answer: string | null
+          created_at: string | null
+          explanation: string | null
+          id: string
+          image_description: string | null
+          key_terms: string[] | null
+          page_image_url: string | null
+          page_number: number
+          page_text: string | null
+          pdf_document_id: string | null
+          pdf_name: string
+          processing_status: string | null
+          question_type: string | null
+          quiz_options: Json | null
+          quiz_question: string | null
+          summary: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string | null
+          explanation?: string | null
+          id?: string
+          image_description?: string | null
+          key_terms?: string[] | null
+          page_image_url?: string | null
+          page_number: number
+          page_text?: string | null
+          pdf_document_id?: string | null
+          pdf_name: string
+          processing_status?: string | null
+          question_type?: string | null
+          quiz_options?: Json | null
+          quiz_question?: string | null
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string | null
+          explanation?: string | null
+          id?: string
+          image_description?: string | null
+          key_terms?: string[] | null
+          page_image_url?: string | null
+          page_number?: number
+          page_text?: string | null
+          pdf_document_id?: string | null
+          pdf_name?: string
+          processing_status?: string | null
+          question_type?: string | null
+          quiz_options?: Json | null
+          quiz_question?: string | null
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_units_pdf_document_id_fkey"
+            columns: ["pdf_document_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdf_documents: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          file_name: string
+          file_size: number
+          id: string
+          original_name: string
+          processing_progress: number | null
+          storage_path: string
+          total_pages: number | null
+          updated_at: string | null
+          upload_status: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          file_name: string
+          file_size: number
+          id?: string
+          original_name: string
+          processing_progress?: number | null
+          storage_path: string
+          total_pages?: number | null
+          updated_at?: string | null
+          upload_status?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          file_name?: string
+          file_size?: number
+          id?: string
+          original_name?: string
+          processing_progress?: number | null
+          storage_path?: string
+          total_pages?: number | null
+          updated_at?: string | null
+          upload_status?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           id: string
@@ -96,6 +242,144 @@ export type Database = {
         Update: {
           id?: string
           is_admin?: boolean
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          answer: string
+          chapter: string
+          content: string
+          created_at: string | null
+          difficulty: string
+          explanation: string
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          subject: string
+          topic: string
+        }
+        Insert: {
+          answer: string
+          chapter?: string
+          content: string
+          created_at?: string | null
+          difficulty?: string
+          explanation?: string
+          id?: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          subject?: string
+          topic?: string
+        }
+        Update: {
+          answer?: string
+          chapter?: string
+          content?: string
+          created_at?: string | null
+          difficulty?: string
+          explanation?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          subject?: string
+          topic?: string
+        }
+        Relationships: []
+      }
+      subject_one_questions: {
+        Row: {
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          知識點: string
+          答案: string
+          解析: string
+          選項a: string
+          選項b: string
+          選項c: string
+          選項d: string
+          難度: Database["public"]["Enums"]["difficulty_level"]
+          題目: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          知識點?: string
+          答案: string
+          解析?: string
+          選項a: string
+          選項b: string
+          選項c: string
+          選項d: string
+          難度?: Database["public"]["Enums"]["difficulty_level"]
+          題目: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          知識點?: string
+          答案?: string
+          解析?: string
+          選項a?: string
+          選項b?: string
+          選項c?: string
+          選項d?: string
+          難度?: Database["public"]["Enums"]["difficulty_level"]
+          題目?: string
+        }
+        Relationships: []
+      }
+      subject_two_questions: {
+        Row: {
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          知識點: string
+          答案: string
+          解析: string
+          選項a: string
+          選項b: string
+          選項c: string
+          選項d: string
+          難度: Database["public"]["Enums"]["difficulty_level"]
+          題目: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          知識點?: string
+          答案: string
+          解析?: string
+          選項a: string
+          選項b: string
+          選項c: string
+          選項d: string
+          難度?: Database["public"]["Enums"]["difficulty_level"]
+          題目: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          知識點?: string
+          答案?: string
+          解析?: string
+          選項a?: string
+          選項b?: string
+          選項c?: string
+          選項d?: string
+          難度?: Database["public"]["Enums"]["difficulty_level"]
+          題目?: string
         }
         Relationships: []
       }
@@ -254,34 +538,46 @@ export type Database = {
         Row: {
           assessment_id: string
           created_at: string
+          custom_scenario_context: string | null
           id: string
           is_demo_data: boolean | null
           llm_response: string | null
           risk_opportunity_id: string
           scenario_description: string
           scenario_generated_by_llm: boolean
+          selected_strategy: string | null
+          strategy_description: string | null
+          strategy_type: Database["public"]["Enums"]["strategy_type"] | null
           user_score: number | null
         }
         Insert: {
           assessment_id: string
           created_at?: string
+          custom_scenario_context?: string | null
           id?: string
           is_demo_data?: boolean | null
           llm_response?: string | null
           risk_opportunity_id: string
           scenario_description: string
           scenario_generated_by_llm?: boolean
+          selected_strategy?: string | null
+          strategy_description?: string | null
+          strategy_type?: Database["public"]["Enums"]["strategy_type"] | null
           user_score?: number | null
         }
         Update: {
           assessment_id?: string
           created_at?: string
+          custom_scenario_context?: string | null
           id?: string
           is_demo_data?: boolean | null
           llm_response?: string | null
           risk_opportunity_id?: string
           scenario_description?: string
           scenario_generated_by_llm?: boolean
+          selected_strategy?: string | null
+          strategy_description?: string | null
+          strategy_type?: Database["public"]["Enums"]["strategy_type"] | null
           user_score?: number | null
         }
         Relationships: [
@@ -412,6 +708,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_answers: {
+        Row: {
+          id: string
+          is_correct: boolean
+          mode: string
+          question_id: string
+          selected_option: string
+          session_id: string | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_correct?: boolean
+          mode?: string
+          question_id: string
+          selected_option?: string
+          session_id?: string | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_correct?: boolean
+          mode?: string
+          question_id?: string
+          selected_option?: string
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -511,7 +848,18 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      difficulty_level: "basic" | "applied" | "integrated"
+      question_type: "concept" | "scenario" | "calculation" | "regulation"
+      strategy_type:
+        | "mitigate"
+        | "transfer"
+        | "accept"
+        | "control"
+        | "explore"
+        | "build"
+        | "transform"
+        | "collaborate"
+        | "invest"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -626,6 +974,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      difficulty_level: ["basic", "applied", "integrated"],
+      question_type: ["concept", "scenario", "calculation", "regulation"],
+      strategy_type: [
+        "mitigate",
+        "transfer",
+        "accept",
+        "control",
+        "explore",
+        "build",
+        "transform",
+        "collaborate",
+        "invest",
+      ],
+    },
   },
 } as const
