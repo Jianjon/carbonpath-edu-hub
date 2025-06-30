@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -232,7 +233,7 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
     const strategySelections = riskOpportunitySelections
       .filter(selection => completedItems.has(selection.id) && selectedStrategies[selection.id])
       .map(selection => {
-        const evaluation = scenarioEvaluations.find(eval => eval.risk_opportunity_id === selection.id);
+        const evaluation = scenarioEvaluations.find(scenarioEval => scenarioEval.risk_opportunity_id === selection.id);
         return {
           scenarioKey: selection.id,
           riskOpportunityId: selection.id,
