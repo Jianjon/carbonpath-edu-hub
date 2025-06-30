@@ -24,10 +24,20 @@ interface SelectedStrategyData {
   notes: string;
 }
 
+interface GeneratedAnalysis {
+  profitLossAnalysis: string;
+  cashFlowAnalysis: string;
+  balanceSheetAnalysis: string;
+  strategyFeasibilityAnalysis: string;
+  analysisMethodology: string;
+  calculationMethodSuggestions: string;
+}
+
 interface Stage4Results {
   assessment: TCFDAssessment;
   strategySelections: SelectedStrategyData[];
   userModifications: Record<string, string>;
+  generatedAnalyses?: Record<string, GeneratedAnalysis>;
   completedAt: string;
 }
 
@@ -83,6 +93,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
           assessment: stage3Results.assessment,
           strategySelections: stage3Results.strategySelections,
           userModifications: {},
+          generatedAnalyses: {},
           completedAt: new Date().toISOString()
         };
         setStage4Results(convertedResults);
@@ -112,7 +123,8 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
         json_output: {
           assessment: assessment,
           strategies: stage4Results.strategySelections,
-          userModifications: stage4Results.userModifications
+          userModifications: stage4Results.userModifications,
+          generatedAnalyses: stage4Results.generatedAnalyses || {}
         }
       };
 
@@ -184,6 +196,11 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
               <h3 className="font-medium text-green-800">TCFD 報告摘要</h3>
               <p className="text-sm text-green-700">
                 完成 {stage4Results.strategySelections.length} 個風險機會情境分析，涵蓋四大揭露面向
+                {stage4Results.generatedAnalyses && Object.keys(stage4Results.generatedAnalyses).length > 0 && (
+                  <span className="block mt-1">
+                    包含 {Object.keys(stage4Results.generatedAnalyses).length} 個 AI 生成的詳細財務分析
+                  </span>
+                )}
               </p>
             </div>
             <div className="text-right">
@@ -196,11 +213,12 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
         </CardContent>
       </Card>
 
-      {/* TCFD 報告內容 */}
+      {/* TCFD 報告內容 - 傳遞第四階段生成的分析結果 */}
       <TCFDReportContent 
         assessment={assessment}
         strategySelections={stage4Results.strategySelections}
         userModifications={stage4Results.userModifications}
+        generatedAnalyses={stage4Results.generatedAnalyses}
       />
 
       {/* 報告操作區 */}
@@ -220,7 +238,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>策略財務影響評估</span>
+                  <span>AI 動態策略財務分析</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,22 +15,33 @@ interface SelectedStrategyData {
   notes: string;
 }
 
+interface GeneratedAnalysis {
+  profitLossAnalysis: string;
+  cashFlowAnalysis: string;
+  balanceSheetAnalysis: string;
+  strategyFeasibilityAnalysis: string;
+  analysisMethodology: string;
+  calculationMethodSuggestions: string;
+}
+
 interface TCFDReportContentProps {
   assessment: TCFDAssessment;
   strategySelections: SelectedStrategyData[];
   userModifications?: Record<string, string>;
+  generatedAnalyses?: Record<string, GeneratedAnalysis>;
 }
 
-interface GeneratedAnalysis {
+interface GeneratedReportAnalysis {
   [key: string]: string;
 }
 
 const TCFDReportContent = ({
   assessment,
-  strategySelections,
-  userModifications
+  strategySelections,  
+  userModifications,
+  generatedAnalyses
 }: TCFDReportContentProps) => {
-  const [generatedAnalyses, setGeneratedAnalyses] = useState<GeneratedAnalysis>({});
+  const [generatedReportAnalyses, setGeneratedReportAnalyses] = useState<GeneratedReportAnalysis>({});
   const [loadingAnalyses, setLoadingAnalyses] = useState<Set<string>>(new Set());
 
   // 參數中文對映
@@ -72,6 +82,50 @@ const TCFDReportContent = ({
 
   const riskSelections = strategySelections.filter(s => s.categoryType === 'risk');
   const opportunitySelections = strategySelections.filter(s => s.categoryType === 'opportunity');
+
+  // 如果有第四階段的分析結果，直接使用；否則生成新的報告分析
+  const getAnalysisContent = (selection: SelectedStrategyData) => {
+    const key = selection.scenarioKey;
+    
+    // 優先使用第四階段生成的分析
+    if (generatedAnalyses && generatedAnalyses[key]) {
+      const stage4Analysis = generatedAnalyses[key];
+      const strategyName = strategyMapping[selection.strategy] || selection.strategy;
+      
+      return `
+**財務影響概述**
+
+針對${selection.subcategoryName}情境，本企業採用${strategyName}進行應對。基於${companySize}${industryName}的營運特性與資源配置，此策略預期將對企業財務結構產生重要影響。
+
+**損益表影響評估**
+
+${stage4Analysis.profitLossAnalysis}
+
+**現金流與資本配置**
+
+${stage4Analysis.cashFlowAnalysis}
+
+**資產負債結構調整**
+
+${stage4Analysis.balanceSheetAnalysis}
+
+**策略執行可行性與建議**
+
+${stage4Analysis.strategyFeasibilityAnalysis}
+
+**分析方法說明**
+
+${stage4Analysis.analysisMethodology}
+
+**財務計算建議說明**
+
+${stage4Analysis.calculationMethodSuggestions}
+      `.trim();
+    }
+    
+    // 如果沒有第四階段分析，使用第五階段生成的分析
+    return generatedReportAnalyses[key];
+  };
 
   // 生成AI驅動的財務分析
   const generateAIFinancialAnalysis = async (selection: SelectedStrategyData): Promise<string> => {
@@ -165,7 +219,7 @@ ${strategyName}執行後，預期對${companySize}${industryName}企業營收產
   const loadAnalysisForStrategy = async (selection: SelectedStrategyData) => {
     const key = selection.scenarioKey;
     
-    if (generatedAnalyses[key] || loadingAnalyses.has(key)) {
+    if (generatedReportAnalyses[key] || loadingAnalyses.has(key)) {
       return; // 已經有分析內容或正在載入中
     }
 
@@ -173,7 +227,7 @@ ${strategyName}執行後，預期對${companySize}${industryName}企業營收產
     
     try {
       const analysis = await generateAIFinancialAnalysis(selection);
-      setGeneratedAnalyses(prev => ({
+      setGeneratedReportAnalyses(prev => ({
         ...prev,
         [key]: analysis
       }));
@@ -193,7 +247,7 @@ ${strategyName}執行後，預期對${companySize}${industryName}企業營收產
     });
   }, [strategySelections]);
 
-  // 渲染分析內容
+  // 修改 renderAnalysisContent 函數
   const renderAnalysisContent = (selection: SelectedStrategyData) => {
     const key = selection.scenarioKey;
     const strategyName = strategyMapping[selection.strategy] || selection.strategy;
@@ -207,7 +261,7 @@ ${strategyName}執行後，預期對${companySize}${industryName}企業營收產
       );
     }
 
-    const analysisContent = generatedAnalyses[key];
+    const analysisContent = getAnalysisContent(selection);
     
     if (!analysisContent) {
       return (
