@@ -63,8 +63,8 @@ const TCFDReportContent = ({
   const riskSelections = strategySelections.filter(s => s.categoryType === 'risk');
   const opportunitySelections = strategySelections.filter(s => s.categoryType === 'opportunity');
 
-  // Generate strategy-specific financial analysis with actual user selections
-  const generateStrategyFinancialAnalysis = (selection: SelectedStrategyData) => {
+  // Generate comprehensive financial analysis with narrative format
+  const generateComprehensiveFinancialAnalysis = (selection: SelectedStrategyData) => {
     const strategyName = strategyMapping[selection.strategy] || selection.strategy;
     const isRisk = selection.categoryType === 'risk';
     
@@ -86,57 +86,144 @@ const TCFDReportContent = ({
 
     const analysis = generateFinancialAnalysis(financialAnalysisInput);
 
+    // Create comprehensive narrative analysis
+    const narrativeAnalysis = createNarrativeFinancialAnalysis(selection, analysis, strategyName, isRisk);
+
     return (
-      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h6 className="font-medium text-blue-800 mb-3 flex items-center">
-          <DollarSign className="h-4 w-4 mr-2" />
-          策略財務影響分析 - {strategyName}
+      <div className="mt-4 p-5 bg-slate-50 border border-slate-200 rounded-lg">
+        <h6 className="font-semibold text-slate-800 mb-4 flex items-center text-base">
+          <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
+          {strategyName}財務影響分析
         </h6>
-        <div className="space-y-3">
-          <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">損益表影響分析：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.profitLossAnalysis}</p>
-          </div>
-          <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">現金流影響分析：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.cashFlowAnalysis}</p>
-          </div>
-          <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">資產負債影響分析：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.balanceSheetAnalysis}</p>
-          </div>
-          <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">策略可行性說明：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.strategyFeasibilityAnalysis}</p>
-          </div>
-          
-          {/* Show additional analysis dimensions if available */}
-          {analysis.analysisMethodology && (
-            <div className="bg-white p-3 rounded border border-blue-200">
-              <span className="font-medium text-blue-700 text-sm">分析方法說明：</span>
-              <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.analysisMethodology}</p>
-            </div>
-          )}
-          
-          {analysis.calculationMethodSuggestions && (
-            <div className="bg-white p-3 rounded border border-blue-200">
-              <span className="font-medium text-blue-700 text-sm">計算方法建議：</span>
-              <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.calculationMethodSuggestions}</p>
-            </div>
-          )}
+        
+        <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+          {narrativeAnalysis}
         </div>
         
         {/* Show user modifications or strategy notes if available */}
         {(selection.notes || userModifications?.[selection.scenarioKey]) && (
-          <div className="mt-3 pt-3 border-t border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">策略執行備註：</span>
-            <p className="text-sm text-blue-800 mt-1">
-              {selection.notes || userModifications?.[selection.scenarioKey]}
-            </p>
+          <div className="mt-4 pt-4 border-t border-slate-200">
+            <h6 className="font-medium text-slate-700 text-sm mb-2">企業執行補充說明</h6>
+            <div className="bg-blue-50 p-3 rounded border border-blue-200">
+              <p className="text-sm text-blue-800 leading-relaxed">
+                {selection.notes || userModifications?.[selection.scenarioKey]}
+              </p>
+            </div>
           </div>
         )}
       </div>
     );
+  };
+
+  const createNarrativeFinancialAnalysis = (
+    selection: SelectedStrategyData, 
+    analysis: any, 
+    strategyName: string, 
+    isRisk: boolean
+  ) => {
+    const categoryLower = selection.categoryName.toLowerCase();
+    const strategyLower = selection.strategy.toLowerCase();
+    
+    return (
+      <div className="space-y-4">
+        <div>
+          <h6 className="font-medium text-gray-800 mb-2">財務影響概述</h6>
+          <p className="mb-3">
+            針對<span className="text-red-600 font-medium">{selection.subcategoryName}</span>情境，
+            本企業採用<span className="text-blue-600 font-medium">{strategyName}</span>進行應對。
+            基於{companySize}{industryName}的營運特性與資源配置，此策略預期將對企業財務結構產生以下影響：
+          </p>
+        </div>
+
+        <div>
+          <h6 className="font-medium text-gray-800 mb-2">損益表影響評估</h6>
+          <p className="mb-2">{analysis.profitLossAnalysis}</p>
+          {generateSpecificImpactPoints(selection, 'revenue', strategyLower, isRisk)}
+        </div>
+
+        <div>
+          <h6 className="font-medium text-gray-800 mb-2">現金流與資本配置</h6>
+          <p className="mb-2">{analysis.cashFlowAnalysis}</p>
+          {generateSpecificImpactPoints(selection, 'cashflow', strategyLower, isRisk)}
+        </div>
+
+        <div>
+          <h6 className="font-medium text-gray-800 mb-2">資產負債結構調整</h6>
+          <p className="mb-2">{analysis.balanceSheetAnalysis}</p>
+          {generateSpecificImpactPoints(selection, 'balance', strategyLower, isRisk)}
+        </div>
+
+        <div>
+          <h6 className="font-medium text-gray-800 mb-2">策略執行可行性與建議</h6>
+          <p className="mb-2">{analysis.strategyFeasibilityAnalysis}</p>
+          <div className="bg-gray-50 p-3 rounded border border-gray-200 mt-3">
+            <p className="text-sm font-medium text-gray-700 mb-2">具體實施建議：</p>
+            <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+              {generateImplementationSuggestions(selection, strategyLower)}
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const generateSpecificImpactPoints = (selection: SelectedStrategyData, impactType: string, strategy: string, isRisk: boolean) => {
+    const points = [];
+    
+    if (impactType === 'revenue') {
+      if (strategy.includes('invest') || strategy.includes('build')) {
+        points.push('短期營收維持穩定，中長期可望透過效率提升創造競爭優勢');
+        points.push('ESG表現改善有助於爭取永續採購訂單，預估年增營收3-8%');
+      } else if (strategy.includes('collaborate')) {
+        points.push('透過夥伴合作可降低市場開發成本，提升獲利率2-5%');
+        points.push('供應鏈永續管理可減少營運中斷風險，保護既有營收基礎');
+      }
+    } else if (impactType === 'cashflow') {
+      if (strategy.includes('mitigate') || strategy.includes('control')) {
+        points.push('初期需投入預防性支出，但可避免未來更大的損失成本');
+        points.push('分階段投資可平衡現金流壓力，建議採用3-5年分期實施');
+      }
+    } else if (impactType === 'balance') {
+      if (strategy.includes('transfer')) {
+        points.push('透過保險或契約轉移可降低或有負債風險');
+        points.push('外部合作模式可減少自有資產投資需求');
+      }
+    }
+    
+    if (points.length > 0) {
+      return (
+        <ul className="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
+          {points.map((point, index) => (
+            <li key={index}>{point}</li>
+          ))}
+        </ul>
+      );
+    }
+    return null;
+  };
+
+  const generateImplementationSuggestions = (selection: SelectedStrategyData, strategy: string) => {
+    const suggestions = [];
+    
+    if (strategy.includes('invest')) {
+      suggestions.push('建議分三階段執行：評估期(6個月)、試行期(12個月)、全面實施期(24個月)');
+      suggestions.push('優先申請政府補助資源，可降低初期投資成本20-40%');
+      suggestions.push('建立內部專案團隊，確保執行效率與成本控制');
+    } else if (strategy.includes('collaborate')) {
+      suggestions.push('選擇具備相關經驗的策略夥伴，降低執行風險');
+      suggestions.push('建立明確的成本分攤與效益分享機制');
+      suggestions.push('定期檢視合作成效，適時調整合作模式');
+    } else if (strategy.includes('mitigate')) {
+      suggestions.push('建立風險監控機制，定期評估策略執行成效');
+      suggestions.push('準備應變方案，確保策略執行的靈活性');
+      suggestions.push('整合既有管理系統，降低額外管理成本');
+    } else {
+      suggestions.push('制定詳細的執行時程與里程碑管控機制');
+      suggestions.push('建立跨部門協調機制，確保資源整合效率');
+      suggestions.push('定期檢視執行成效，適時調整策略方向');
+    }
+    
+    return suggestions;
   };
 
   return (
@@ -319,29 +406,25 @@ const TCFDReportContent = ({
                 <div className="mb-6">
                   <h5 className="font-medium text-red-600 mb-3 flex items-center">
                     <AlertTriangle className="h-4 w-4 mr-2" />
-                    識別之氣候風險情境與策略財務分析
+                    識別之氣候風險情境與因應策略
                   </h5>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {riskSelections.map((selection, index) => (
                       <div key={selection.scenarioKey} className="bg-red-50 p-4 rounded-lg border border-red-200">
-                        <div className="flex items-start justify-between mb-2">
-                          <h6 className="font-medium text-red-800">
+                        <div className="flex items-start justify-between mb-3">
+                          <h6 className="font-medium text-red-800 text-lg">
                             風險情境 {index + 1}：<span className="text-red-600">{selection.categoryName}</span>
                           </h6>
                           <Badge variant="destructive" className="text-xs">
                             {strategyMapping[selection.strategy] || selection.strategy}
                           </Badge>
                         </div>
-                        <p className="text-sm leading-relaxed mb-3 text-gray-950">
-                          <span className="text-red-600 font-medium">{selection.subcategoryName}</span> - {selection.scenarioDescription}
-                        </p>
-                        {selection.notes && (
-                          <div className="mb-3 p-2 bg-red-100 rounded border border-red-300">
-                            <span className="text-xs text-red-600 font-medium">策略備註：</span>
-                            <p className="text-xs text-red-700">{selection.notes}</p>
-                          </div>
-                        )}
-                        {generateStrategyFinancialAnalysis(selection)}
+                        <div className="mb-4">
+                          <p className="text-sm leading-relaxed text-gray-800">
+                            <strong className="text-red-600">{selection.subcategoryName}</strong> - {selection.scenarioDescription}
+                          </p>
+                        </div>
+                        {generateComprehensiveFinancialAnalysis(selection)}
                       </div>
                     ))}
                   </div>
@@ -353,29 +436,25 @@ const TCFDReportContent = ({
                 <div>
                   <h5 className="font-medium text-green-600 mb-3 flex items-center">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    識別之氣候機會情境與策略財務分析
+                    識別之氣候機會情境與把握策略
                   </h5>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {opportunitySelections.map((selection, index) => (
                       <div key={selection.scenarioKey} className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <div className="flex items-start justify-between mb-2">
-                          <h6 className="font-medium text-green-800">
+                        <div className="flex items-start justify-between mb-3">
+                          <h6 className="font-medium text-green-800 text-lg">
                             機會情境 {index + 1}：<span className="text-red-600">{selection.categoryName}</span>
                           </h6>
                           <Badge className="text-xs bg-green-600">
                             {strategyMapping[selection.strategy] || selection.strategy}
                           </Badge>
                         </div>
-                        <p className="text-sm leading-relaxed mb-3 text-green-950">
-                          <span className="text-red-600 font-medium">{selection.subcategoryName}</span> - {selection.scenarioDescription}
-                        </p>
-                        {selection.notes && (
-                          <div className="mb-3 p-2 bg-green-100 rounded border border-green-300">
-                            <span className="text-xs text-green-600 font-medium">策略備註：</span>
-                            <p className="text-xs text-green-700">{selection.notes}</p>
-                          </div>
-                        )}
-                        {generateStrategyFinancialAnalysis(selection)}
+                        <div className="mb-4">
+                          <p className="text-sm leading-relaxed text-gray-800">
+                            <strong className="text-red-600">{selection.subcategoryName}</strong> - {selection.scenarioDescription}
+                          </p>
+                        </div>
+                        {generateComprehensiveFinancialAnalysis(selection)}
                       </div>
                     ))}
                   </div>
