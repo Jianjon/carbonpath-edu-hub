@@ -15,8 +15,12 @@ interface TCFDStage5Props {
 
 interface SelectedStrategyData {
   scenarioKey: string;
+  riskOpportunityId: string;
   strategy: string;
-  analysis: any;
+  scenarioDescription: string;
+  categoryType: 'risk' | 'opportunity';
+  categoryName: string;
+  subcategoryName: string;
   notes: string;
 }
 
@@ -196,6 +200,7 @@ const TCFDStage5 = ({ assessment, onComplete }: TCFDStage5Props) => {
       <TCFDReportContent 
         assessment={assessment}
         strategySelections={stage4Results.strategySelections}
+        userModifications={stage4Results.userModifications}
       />
 
       {/* 報告操作區 */}
