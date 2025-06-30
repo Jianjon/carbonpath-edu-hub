@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -5,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from 'sonner';
-import { FinancialAnalysisInput, generateFinancialAnalysis } from '@/services/tcfd/financialAnalysisService';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface TCFDStage4Props {
@@ -52,26 +52,6 @@ const TCFDStage4 = ({ assessment, onComplete }: TCFDStage4Props) => {
       ...prev,
       [scenarioKey]: notes
     }));
-  };
-
-  const generateFinancialAnalysis = (selection: SelectedStrategyData) => {
-    const financialInput: FinancialAnalysisInput = {
-      riskOrOpportunityType: selection.categoryType,
-      categoryName: selection.categoryName,
-      subcategoryName: selection.subcategoryName,
-      scenarioDescription: selection.scenarioDescription,
-      selectedStrategy: selection.strategy,
-      strategyNotes: selection.notes || '',
-      companyProfile: {
-        industry: assessment.industry,
-        size: assessment.company_size,
-        hasInternationalOperations: assessment.has_international_operations || false,
-        hasCarbonInventory: assessment.has_carbon_inventory,
-        mainEmissionSource: assessment.main_emission_source || ''
-      }
-    };
-
-    return generateFinancialAnalysis(financialInput);
   };
 
   const handleComplete = () => {
