@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TCFDAssessment } from '@/types/tcfd';
 import { Building2, Target, TrendingUp, BarChart3, AlertTriangle, CheckCircle, DollarSign, Calculator } from 'lucide-react';
+import { FinancialAnalysisInput, generateFinancialAnalysis } from '@/services/tcfd/financialAnalysisService';
+
 interface SelectedStrategyData {
   scenarioKey: string;
   riskOpportunityId: string;
@@ -18,6 +20,7 @@ interface TCFDReportContentProps {
   strategySelections: SelectedStrategyData[];
   userModifications?: Record<string, string>;
 }
+
 const TCFDReportContent = ({
   assessment,
   strategySelections,
@@ -60,52 +63,65 @@ const TCFDReportContent = ({
   const riskSelections = strategySelections.filter(s => s.categoryType === 'risk');
   const opportunitySelections = strategySelections.filter(s => s.categoryType === 'opportunity');
 
-  // 生成財務影響分析內容
-  const generateFinancialAnalysisContent = (selection: SelectedStrategyData) => {
+  // 生成策略對應的財務影響分析內容
+  const generateStrategyFinancialAnalysis = (selection: SelectedStrategyData) => {
     const strategyName = strategyMapping[selection.strategy] || selection.strategy;
     const isRisk = selection.categoryType === 'risk';
-    return <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    
+    const financialAnalysisInput: FinancialAnalysisInput = {
+      riskOrOpportunityType: selection.categoryType,
+      categoryName: selection.categoryName,
+      subcategoryName: selection.subcategoryName,
+      scenarioDescription: selection.scenarioDescription,
+      selectedStrategy: selection.strategy,
+      strategyNotes: selection.notes,
+      companyProfile: {
+        industry: assessment.industry,
+        size: assessment.company_size,
+        hasInternationalOperations: assessment.has_international_operations,
+        hasCarbonInventory: assessment.has_carbon_inventory,
+        mainEmissionSource: assessment.main_emission_source
+      }
+    };
+
+    const analysis = generateFinancialAnalysis(financialAnalysisInput);
+
+    return (
+      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h6 className="font-medium text-blue-800 mb-3 flex items-center">
           <DollarSign className="h-4 w-4 mr-2" />
-          財務影響分析
+          策略財務影響分析
         </h6>
-        <div className="space-y-3 text-sm">
-          <div>
-            <span className="font-medium text-blue-700">損益表影響：</span>
-            <span className="text-red-600">
-              {isRisk ? '可能增加營運成本或影響營收' : '預期創造新營收機會'}
-              （建議計算：年度影響金額 ÷ 總營收 × 100%）
-            </span>
+        <div className="space-y-3">
+          <div className="bg-white p-3 rounded border border-blue-200">
+            <span className="font-medium text-blue-700 text-sm">指標表現變動：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.kpiImpact}</p>
           </div>
-          <div>
-            <span className="font-medium text-blue-700">現金流影響：</span>
-            <span className="text-red-600">
-              {isRisk ? '需要準備應變資金' : '可能產生正向現金流'}
-              （建議評估：每季現金需求變動 ± X 萬元）
-            </span>
+          <div className="bg-white p-3 rounded border border-blue-200">
+            <span className="font-medium text-blue-700 text-sm">現金流影響：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.cashFlowImpact}</p>
           </div>
-          <div>
-            <span className="font-medium text-blue-700">資產負債表影響：</span>
-            <span className="text-red-600">
-              可能影響資產價值或負債結構
-              （建議檢視：相關資產減損風險評估）
-            </span>
+          <div className="bg-white p-3 rounded border border-blue-200">
+            <span className="font-medium text-blue-700 text-sm">資產負債表變化：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.balanceSheetImpact}</p>
           </div>
-          <div>
-            <span className="font-medium text-blue-700">策略執行成本：</span>
-            <span className="text-red-600">
-              實施{strategyName}預估需投入資源
-              （建議估算：人力成本 + 系統成本 + 外部諮詢費用）
-            </span>
+          <div className="bg-white p-3 rounded border border-blue-200">
+            <span className="font-medium text-blue-700 text-sm">策略執行成本：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.executionCost}</p>
           </div>
         </div>
-        {userModifications?.[selection.scenarioKey] && <div className="mt-3 pt-3 border-t border-blue-200">
+        {userModifications?.[selection.scenarioKey] && (
+          <div className="mt-3 pt-3 border-t border-blue-200">
             <span className="font-medium text-blue-700 text-sm">企業補充說明：</span>
             <p className="text-sm text-blue-800 mt-1">{userModifications[selection.scenarioKey]}</p>
-          </div>}
-      </div>;
+          </div>
+        )}
+      </div>
+    );
   };
-  return <div className="space-y-8">
+
+  return (
+    <div className="space-y-8">
       {/* 模擬說明區塊 - 增強版 */}
       <Card className="bg-yellow-50 border-yellow-200">
         <CardHeader>
@@ -138,22 +154,53 @@ const TCFDReportContent = ({
                   {assessment.has_international_operations === true ? '是' : assessment.has_international_operations === false ? '否' : '未提供'}
                 </span>
               </div>
-              {assessment.annual_revenue_range && <div>
+              {assessment.annual_revenue_range && (
+                <div>
                   <span className="font-medium text-gray-700">營業額範圍：</span>
                   <span className="text-red-600 font-medium">{assessment.annual_revenue_range}</span>
-                </div>}
-              {assessment.main_emission_source && <div>
+                </div>
+              )}
+              {assessment.main_emission_source && (
+                <div>
                   <span className="font-medium text-gray-700">主要排放源：</span>
                   <span className="text-red-600 font-medium">{assessment.main_emission_source}</span>
-                </div>}
+                </div>
+              )}
             </div>
             
-            {assessment.business_description && <div className="mt-4 pt-4 border-t border-yellow-200">
+            {assessment.business_description && (
+              <div className="mt-4 pt-4 border-t border-yellow-200">
                 <span className="font-medium text-gray-700">營運簡述：</span>
                 <p className="text-red-600 mt-1 text-sm leading-relaxed">
                   {assessment.business_description}
                 </p>
-              </div>}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-yellow-200">
+            <h4 className="font-semibold text-gray-800 mb-3">策略選擇與財務分析對應邏輯</h4>
+            <div className="space-y-3 text-sm">
+              <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                <h5 className="font-medium text-blue-800 mb-2">分析一致性確保</h5>
+                <ul className="text-blue-700 space-y-1 text-xs">
+                  <li>• <span className="text-red-600 font-medium">策略財務分析內容完全依據第三階段用戶實際選擇項目生成</span></li>
+                  <li>• 若選擇「人力投入」策略，財務分析僅呈現人力相關成本與效益</li>
+                  <li>• 若選擇「系統建置」策略，財務分析聚焦於系統投資與數位化效益</li>
+                  <li>• <span className="text-red-600 font-medium">不會出現未選擇策略項目的相關分析內容</span></li>
+                </ul>
+              </div>
+              
+              <div className="bg-green-50 p-3 rounded border border-green-200">
+                <h5 className="font-medium text-green-800 mb-2">財務分析架構</h5>
+                <div className="grid grid-cols-2 gap-2 text-xs text-green-700">
+                  <div>• 指標表現變動（KPI影響）</div>
+                  <div>• 現金流影響（收支變化）</div>
+                  <div>• 資產負債表變化（結構調整）</div>
+                  <div>• 策略執行成本（具體投入）</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="bg-white p-4 rounded-lg border border-yellow-200">
@@ -182,10 +229,11 @@ const TCFDReportContent = ({
             <div className="bg-gray-50 p-3 rounded border">
               <h5 className="font-medium text-gray-800 mb-2 text-sm">評估範圍與方法說明</h5>
               <ul className="text-xs text-gray-700 space-y-1">
-                <li>• 本評估採用 TCFD 建議框架，涵蓋治理、策略، 風險管理及指標目標四大面向</li>
+                <li>• 本評估採用 TCFD 建議框架，涵蓋治理、策略、風險管理及指標目標四大面向</li>
                 <li>• <span className="text-red-600 font-medium">風險機會識別基於{industryName}特性</span>，結合氣候科學情境進行分析</li>
                 <li>• <span className="text-red-600 font-medium">策略建議考量{companySize}企業資源條件</span>，提供階段性實施建議</li>
-                <li>• 財務影響分析提供計算方法指引，協助企業進行量化評估</li>
+                <li>• <span className="text-red-600 font-medium">財務影響分析精準對應用戶選擇的策略項目</span>，避免無關內容干擾</li>
+                <li>• 每項策略的成本估算方法具體且可操作，協助企業進行實際規劃</li>
               </ul>
             </div>
           </div>
@@ -193,7 +241,9 @@ const TCFDReportContent = ({
           <div className="text-xs text-yellow-700 bg-yellow-100 p-3 rounded border border-yellow-300">
             <strong>重要說明：</strong>本報告內容為基於輸入條件的模擬評估結果。
             <span className="text-red-600 font-medium">紅色標註文字</span>為根據您的企業背景與選擇條件所產生的客製化內容，
-            黑色文字為依據 TCFD 框架提供的標準分析架構。實際應用時請結合企業真實營運資料與財務數據進行調整與驗證。
+            黑色文字為依據 TCFD 框架提供的標準分析架構。
+            <span className="text-red-600 font-medium">策略財務分析內容完全對應您在第三、四階段的實際選擇</span>，
+            確保分析結果的一致性與實用性。實際應用時請結合企業真實營運資料與財務數據進行調整與驗證。
           </div>
         </CardContent>
       </Card>
@@ -246,13 +296,15 @@ const TCFDReportContent = ({
               </p>
 
               {/* 風險情境 */}
-              {riskSelections.length > 0 && <div className="mb-6">
+              {riskSelections.length > 0 && (
+                <div className="mb-6">
                   <h5 className="font-medium text-red-600 mb-3 flex items-center">
                     <AlertTriangle className="h-4 w-4 mr-2" />
-                    識別之氣候風險情境與財務分析
+                    識別之氣候風險情境與策略財務分析
                   </h5>
                   <div className="space-y-4">
-                    {riskSelections.map((selection, index) => <div key={selection.scenarioKey} className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    {riskSelections.map((selection, index) => (
+                      <div key={selection.scenarioKey} className="bg-red-50 p-4 rounded-lg border border-red-200">
                         <div className="flex items-start justify-between mb-2">
                           <h6 className="font-medium text-red-800">
                             風險情境 {index + 1}：<span className="text-red-600">{selection.categoryName}</span>
@@ -264,23 +316,29 @@ const TCFDReportContent = ({
                         <p className="text-sm leading-relaxed mb-3 text-gray-950">
                           <span className="text-red-600 font-medium">{selection.subcategoryName}</span> - {selection.scenarioDescription}
                         </p>
-                        {selection.notes && <div className="mb-3 p-2 bg-red-100 rounded border border-red-300">
+                        {selection.notes && (
+                          <div className="mb-3 p-2 bg-red-100 rounded border border-red-300">
                             <span className="text-xs text-red-600 font-medium">策略備註：</span>
                             <p className="text-xs text-red-700">{selection.notes}</p>
-                          </div>}
-                        {generateFinancialAnalysisContent(selection)}
-                      </div>)}
+                          </div>
+                        )}
+                        {generateStrategyFinancialAnalysis(selection)}
+                      </div>
+                    ))}
                   </div>
-                </div>}
+                </div>
+              )}
 
               {/* 機會情境 */}
-              {opportunitySelections.length > 0 && <div>
+              {opportunitySelections.length > 0 && (
+                <div>
                   <h5 className="font-medium text-green-600 mb-3 flex items-center">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    識別之氣候機會情境與財務分析
+                    識別之氣候機會情境與策略財務分析
                   </h5>
                   <div className="space-y-4">
-                    {opportunitySelections.map((selection, index) => <div key={selection.scenarioKey} className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    {opportunitySelections.map((selection, index) => (
+                      <div key={selection.scenarioKey} className="bg-green-50 p-4 rounded-lg border border-green-200">
                         <div className="flex items-start justify-between mb-2">
                           <h6 className="font-medium text-green-800">
                             機會情境 {index + 1}：<span className="text-red-600">{selection.categoryName}</span>
@@ -292,14 +350,18 @@ const TCFDReportContent = ({
                         <p className="text-sm leading-relaxed mb-3 text-green-950">
                           <span className="text-red-600 font-medium">{selection.subcategoryName}</span> - {selection.scenarioDescription}
                         </p>
-                        {selection.notes && <div className="mb-3 p-2 bg-green-100 rounded border border-green-300">
+                        {selection.notes && (
+                          <div className="mb-3 p-2 bg-green-100 rounded border border-green-300">
                             <span className="text-xs text-green-600 font-medium">策略備註：</span>
                             <p className="text-xs text-green-700">{selection.notes}</p>
-                          </div>}
-                        {generateFinancialAnalysisContent(selection)}
-                      </div>)}
+                          </div>
+                        )}
+                        {generateStrategyFinancialAnalysis(selection)}
+                      </div>
+                    ))}
                   </div>
-                </div>}
+                </div>
+              )}
             </div>
 
             <div>
@@ -400,6 +462,8 @@ const TCFDReportContent = ({
           </p>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 };
+
 export default TCFDReportContent;
