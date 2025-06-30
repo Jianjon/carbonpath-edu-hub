@@ -17,20 +17,76 @@ interface TCFDStage3Props {
   onPrevious: () => void;
 }
 
-// 策略選項定義
+// 根據企業背景生成個人化策略描述的函數
+const getPersonalizedStrategyDescription = (
+  strategyType: string, 
+  industry: string, 
+  companySize: string,
+  categoryName: string,
+  categoryType: 'risk' | 'opportunity'
+) => {
+  const industryMap: {[key: string]: string} = {
+    'manufacturing': '製造業',
+    'service': '服務業',
+    'technology': '科技業',
+    'finance': '金融業',
+    'retail': '零售業'
+  };
+
+  const sizeMap: {[key: string]: string} = {
+    'large': '大型',
+    'medium': '中型',
+    'small': '小型'
+  };
+
+  const industryName = industryMap[industry] || industry;
+  const sizeName = sizeMap[companySize] || companySize;
+
+  if (categoryType === 'risk') {
+    switch(strategyType) {
+      case 'mitigate':
+        return `針對${industryName}${sizeName}企業，建議採取積極的預防措施，如導入新技術、改善作業流程或建立監控系統，以降低${categoryName}發生的可能性與衝擊程度。`;
+      case 'transfer':
+        return `考量${sizeName}企業資源限制，可透過購買相關保險、外包專業服務或與合作夥伴分攤風險的方式，將${categoryName}的潛在損失轉移給第三方承擔。`;
+      case 'accept':
+        return `基於${industryName}特性與成本效益考量，企業選擇承認並接受${categoryName}的存在，同時建立應變計畫與準備金，以因應風險發生時的後果。`;
+      case 'control':
+        return `建立完善的內控制度與定期監測機制，透過標準作業程序、員工訓練與定期稽核，持續監控並管理${categoryName}的發展趨勢與影響範圍。`;
+      default:
+        return '請選擇適合的風險管理策略';
+    }
+  } else {
+    switch(strategyType) {
+      case 'explore':
+        return `針對${industryName}市場特性，建議先進行市場調研與可行性分析，評估${categoryName}的潛在價值與實現條件，為後續投入做好充分準備。`;
+      case 'build':
+        return `依據${sizeName}企業現況，逐步建立相關能力與資源基礎，包含人才培育、技術開發與組織調整，為把握${categoryName}做好內部準備。`;
+      case 'transform':
+        return `考量${industryName}轉型趨勢，建議調整現有營運模式或開發新的服務產品，透過組織變革與流程再造來充分利用${categoryName}的價值。`;
+      case 'collaborate':
+        return `善用${sizeName}企業靈活性，主動尋求與業界夥伴、研究機構或政府部門的合作機會，透過策略聯盟共同開發${categoryName}的市場潛力。`;
+      case 'invest':
+        return `基於${categoryName}的長期價值，建議企業投入必要的資金與資源，包含設備更新、系統建置與人力擴充，以實現機會的最大效益。`;
+      default:
+        return '請選擇適合的機會把握策略';
+    }
+  }
+};
+
+// 基本策略選項定義
 const RISK_STRATEGIES = [
-  { value: 'mitigate', label: '減緩 (Mitigate)', description: '採取行動減少風險發生的可能性或影響' },
-  { value: 'transfer', label: '轉移 (Transfer)', description: '將風險轉移給第三方，如保險或外包' },
-  { value: 'accept', label: '接受 (Accept)', description: '承認風險並接受其潛在影響' },
-  { value: 'control', label: '控制 (Control)', description: '建立控制措施來管理和監控風險' },
+  { value: 'mitigate', label: '減緩 (Mitigate)' },
+  { value: 'transfer', label: '轉移 (Transfer)' },
+  { value: 'accept', label: '接受 (Accept)' },  
+  { value: 'control', label: '控制 (Control)' },
 ];
 
 const OPPORTUNITY_STRATEGIES = [
-  { value: 'explore', label: '探索 (Explore)', description: '研究和評估機會的可行性' },
-  { value: 'build', label: '建設 (Build)', description: '建立能力和資源來把握機會' },
-  { value: 'transform', label: '轉換 (Transform)', description: '改變業務模式或流程來利用機會' },
-  { value: 'collaborate', label: '合作 (Collaborate)', description: '與夥伴合作共同把握機會' },
-  { value: 'invest', label: '投入 (Invest)', description: '投資資源來實現機會價值' },
+  { value: 'explore', label: '探索 (Explore)' },
+  { value: 'build', label: '建設 (Build)' },
+  { value: 'transform', label: '轉換 (Transform)' },
+  { value: 'collaborate', label: '合作 (Collaborate)' },
+  { value: 'invest', label: '投入 (Invest)' },
 ];
 
 const TCFDStage3: React.FC<TCFDStage3Props> = ({ 
@@ -274,22 +330,32 @@ const TCFDStage3: React.FC<TCFDStage3Props> = ({
                     onValueChange={(value) => handleStrategySelection(key, value)}
                     className="space-y-3"
                   >
-                    {strategies.map((strategy) => (
-                      <div key={strategy.value} className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50">
-                        <RadioGroupItem value={strategy.value} id={`${key}-${strategy.value}`} className="mt-1" />
-                        <div className="flex-1">
-                          <Label 
-                            htmlFor={`${key}-${strategy.value}`}
-                            className="text-sm font-medium text-gray-900 cursor-pointer"
-                          >
-                            {strategy.label}
-                          </Label>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {strategy.description}
-                          </p>
+                    {strategies.map((strategy) => {
+                      const personalizedDescription = getPersonalizedStrategyDescription(
+                        strategy.value,
+                        assessment.industry,
+                        assessment.company_size,
+                        selection.category_name,
+                        selection.category_type
+                      );
+                      
+                      return (
+                        <div key={strategy.value} className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-gray-50">
+                          <RadioGroupItem value={strategy.value} id={`${key}-${strategy.value}`} className="mt-1" />
+                          <div className="flex-1">
+                            <Label 
+                              htmlFor={`${key}-${strategy.value}`}
+                              className="text-sm font-medium text-gray-900 cursor-pointer"
+                            >
+                              {strategy.label}
+                            </Label>
+                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                              {personalizedDescription}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </RadioGroup>
                 </div>
               )}
