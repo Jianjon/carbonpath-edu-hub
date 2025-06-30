@@ -63,7 +63,7 @@ const TCFDReportContent = ({
   const riskSelections = strategySelections.filter(s => s.categoryType === 'risk');
   const opportunitySelections = strategySelections.filter(s => s.categoryType === 'opportunity');
 
-  // 生成策略對應的財務影響分析內容
+  // Generate strategy-specific financial analysis with actual user selections
   const generateStrategyFinancialAnalysis = (selection: SelectedStrategyData) => {
     const strategyName = strategyMapping[selection.strategy] || selection.strategy;
     const isRisk = selection.categoryType === 'risk';
@@ -74,7 +74,7 @@ const TCFDReportContent = ({
       subcategoryName: selection.subcategoryName,
       scenarioDescription: selection.scenarioDescription,
       selectedStrategy: selection.strategy,
-      strategyNotes: selection.notes,
+      strategyNotes: selection.notes || userModifications?.[selection.scenarioKey] || '',
       companyProfile: {
         industry: assessment.industry,
         size: assessment.company_size,
@@ -90,30 +90,49 @@ const TCFDReportContent = ({
       <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h6 className="font-medium text-blue-800 mb-3 flex items-center">
           <DollarSign className="h-4 w-4 mr-2" />
-          策略財務影響分析
+          策略財務影響分析 - {strategyName}
         </h6>
         <div className="space-y-3">
           <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">指標表現變動：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.kpiImpact}</p>
+            <span className="font-medium text-blue-700 text-sm">損益表影響分析：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.profitLossAnalysis}</p>
           </div>
           <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">現金流影響：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.cashFlowImpact}</p>
+            <span className="font-medium text-blue-700 text-sm">現金流影響分析：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.cashFlowAnalysis}</p>
           </div>
           <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">資產負債表變化：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.balanceSheetImpact}</p>
+            <span className="font-medium text-blue-700 text-sm">資產負債影響分析：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.balanceSheetAnalysis}</p>
           </div>
           <div className="bg-white p-3 rounded border border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">策略執行成本：</span>
-            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.executionCost}</p>
+            <span className="font-medium text-blue-700 text-sm">策略可行性說明：</span>
+            <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.strategyFeasibilityAnalysis}</p>
           </div>
+          
+          {/* Show additional analysis dimensions if available */}
+          {analysis.analysisMethodology && (
+            <div className="bg-white p-3 rounded border border-blue-200">
+              <span className="font-medium text-blue-700 text-sm">分析方法說明：</span>
+              <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.analysisMethodology}</p>
+            </div>
+          )}
+          
+          {analysis.calculationMethodSuggestions && (
+            <div className="bg-white p-3 rounded border border-blue-200">
+              <span className="font-medium text-blue-700 text-sm">計算方法建議：</span>
+              <p className="text-red-600 text-sm mt-1 leading-relaxed">{analysis.calculationMethodSuggestions}</p>
+            </div>
+          )}
         </div>
-        {userModifications?.[selection.scenarioKey] && (
+        
+        {/* Show user modifications or strategy notes if available */}
+        {(selection.notes || userModifications?.[selection.scenarioKey]) && (
           <div className="mt-3 pt-3 border-t border-blue-200">
-            <span className="font-medium text-blue-700 text-sm">企業補充說明：</span>
-            <p className="text-sm text-blue-800 mt-1">{userModifications[selection.scenarioKey]}</p>
+            <span className="font-medium text-blue-700 text-sm">策略執行備註：</span>
+            <p className="text-sm text-blue-800 mt-1">
+              {selection.notes || userModifications?.[selection.scenarioKey]}
+            </p>
           </div>
         )}
       </div>
