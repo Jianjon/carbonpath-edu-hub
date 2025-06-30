@@ -1,4 +1,3 @@
-
 export interface FinancialAnalysisInput {
   riskOrOpportunityType: 'risk' | 'opportunity';
   categoryName: string;
@@ -67,6 +66,7 @@ export const generateFinancialAnalysis = (input: FinancialAnalysisInput): Financ
     riskOrOpportunityType,
     categoryName,
     subcategoryName,
+    scenarioDescription,
     selectedStrategy,
     strategyNotes,
     companyProfile
@@ -82,20 +82,20 @@ export const generateFinancialAnalysis = (input: FinancialAnalysisInput): Financ
   const selectedElements = parseStrategyElements(strategyNotes || '');
 
   const basicAnalysis = {
-    kpiImpact: generateKPIImpact(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    cashFlowImpact: generateCashFlowImpact(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    balanceSheetImpact: generateBalanceSheetImpact(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    executionCost: generateExecutionCost(isRisk, categoryName, strategyName, companyContext, selectedElements)
+    kpiImpact: generateKPIImpact(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    cashFlowImpact: generateCashFlowImpact(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    balanceSheetImpact: generateBalanceSheetImpact(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    executionCost: generateExecutionCost(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription)
   };
 
   // 生成詳細的六個分析區塊
   const detailedAnalysis = {
-    profitLossAnalysis: generateProfitLossAnalysis(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    cashFlowAnalysis: generateDetailedCashFlowAnalysis(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    balanceSheetAnalysis: generateDetailedBalanceSheetAnalysis(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    strategyFeasibilityAnalysis: generateStrategyFeasibilityAnalysis(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    analysisMethodology: generateAnalysisMethodology(isRisk, categoryName, strategyName, companyContext, selectedElements),
-    calculationMethodSuggestions: generateCalculationMethodSuggestions(isRisk, categoryName, strategyName, companyContext, selectedElements)
+    profitLossAnalysis: generateProfitLossAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    cashFlowAnalysis: generateDetailedCashFlowAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    balanceSheetAnalysis: generateDetailedBalanceSheetAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    strategyFeasibilityAnalysis: generateStrategyFeasibilityAnalysis(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    analysisMethodology: generateAnalysisMethodology(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription),
+    calculationMethodSuggestions: generateCalculationMethodSuggestions(isRisk, categoryName, subcategoryName, strategyName, companyContext, selectedElements, scenarioDescription)
   };
 
   return {
@@ -115,12 +115,238 @@ const parseStrategyElements = (notes: string): string[] => {
   return elements.length > 0 ? elements : ['通用'];
 };
 
+const generateProfitLossAnalysis = (
+  isRisk: boolean,
+  categoryName: string,
+  subcategoryName: string,
+  strategyName: string,
+  companyContext: string,
+  elements: string[],
+  scenarioDescription: string
+): string => {
+  let analysis = '';
+  
+  if (elements.includes('人力')) {
+    if (categoryName.includes('法規') || categoryName.includes('政策')) {
+      analysis = `因應法規變化進行人員培訓，短期將增加教育訓練費用約佔總薪資成本3-5%，影響營業費用上升。然而培訓後員工合規作業能力提升，可避免違規罰款風險，預期6個月後透過作業效率改善，每人每月可節省2-3小時重工時間，間接提升服務品質與客戶滿意度，有助於營收維持穩定成長。建議設定「合規培訓完成率」與「違規事件減少率」作為績效追蹤指標。`;
+    } else if (categoryName.includes('技術') || categoryName.includes('市場')) {
+      analysis = `針對技術轉型投入專業人力培訓，預估培訓成本為年薪資總額8-12%，將計入當期管理費用。培訓完成後預期員工專業技能提升，可承接更高價值業務，預估每位培訓員工可帶來15-20%的個人產值提升。${companyContext}可透過「技能認證通過率」與「高價值專案承接量」監控投資效益，預期12-18個月回收培訓投資成本。`;
+    } else {
+      analysis = `人力資源強化策略需要持續投入培訓預算，預估每季增加人事費用2-4%。透過系統性培訓提升員工應變能力，預期可減少因應急狀況產生的額外成本支出20-30%。建議${companyContext}建立「員工能力提升指標」與「危機應變成功率」，量化人力投資對營運穩定性的貢獻，確保投資報酬率達到預期目標。`;
+    }
+  } else if (elements.includes('系統')) {
+    if (categoryName.includes('資料') || categoryName.includes('資訊')) {
+      analysis = `導入資訊系統應對數據安全風險，系統建置成本預估為年營收2-4%，將於3年內攤提。系統上線後可大幅降低人工作業錯誤率達80%，每月節省資料處理人力成本約佔原成本15-25%。同時強化資安防護能力，避免資料外洩可能造成的高額賠償與商譽損失。${companyContext}應設定「系統自動化率」與「資安事件零發生」目標，確保投資效益最大化。`;
+    } else if (categoryName.includes('營運') || categoryName.includes('供應鏈')) {
+      analysis = `建置供應鏈管理系統強化營運韌性，初期投資約為年營收3-6%，分2-3年攤提。系統整合後可即時掌握供應商狀況，預期減少缺料停工損失50%以上，每次避免停工可節省營收損失約日營收的8-12%。透過「供應鏈透明度」與「準時交貨率」指標，預估18個月內透過營運效率提升回收系統投資。`;
+    } else {
+      analysis = `系統升級策略需要一次性大額資本支出，預估占年營收2-5%，將影響當期現金流與折舊費用。但系統效能提升後可顯著改善作業流程，預期減少人工處理時間40-60%，節省的人力成本可於第二年起顯現，預估年節省營業費用3-8%。建議追蹤「系統處理效率」與「人力成本節省額度」確保投資回收達標。`;
+    }
+  } else if (elements.includes('設備')) {
+    if (categoryName.includes('實體風險') || categoryName.includes('氣候')) {
+      analysis = `因應極端氣候風險升級防護設備，預估設備投資額約為年營收5-10%，將增加固定資產折舊負擔。然而強化設備可避免天災造成的營運中斷，每次避免停業損失相當於日營收20-40%。透過設備升級提升營運韌性，預期可維持98%以上的營運穩定率，確保${companyContext}在極端氣候下仍能正常獲利，建議設定「設備抗災能力指標」追蹤投資效益。`;
+    } else if (categoryName.includes('能源') || categoryName.includes('效率')) {
+      analysis = `導入節能設備優化能源使用效率，設備採購成本約為年營收3-7%，透過5-7年折舊攤提。新設備預期節能效果達25-35%，以目前能源成本計算，每年可節省能源費用約為總能源支出的30%，相當於營業費用減少1-2%。${companyContext}可設定「能源使用效率指標」與「碳排放減少量」，預估3-4年透過節能效益回收設備投資成本。`;
+    } else {
+      analysis = `設備更新投資將產生顯著的固定資產增加與折舊費用，預估投資金額為年營收4-8%。新設備投入後預期生產效率提升30-50%，單位產品成本下降15-25%，有助於提升毛利率2-4%。透過「設備稼動率」與「單位成本改善率」監控，預期2-3年內透過效率提升與成本節省回收設備投資，對長期獲利能力產生正面影響。`;
+    }
+  } else if (elements.includes('外部')) {
+    if (categoryName.includes('法規') || categoryName.includes('合規')) {
+      analysis = `聘請外部合規顧問協助法規因應，顧問費用預估每月增加營業費用0.5-1.5%，為持續性支出。專業顧問協助可大幅縮短法規適應期，避免因不熟悉法規造成的違規罰款與業務停擺風險。預期透過專業指導，合規作業效率提升60%以上，減少內部摸索成本，同時確保${companyContext}在法規變動下維持正常營運與獲利能力。`;
+    } else if (categoryName.includes('市場') || categoryName.includes('商機')) {
+      analysis = `與外部夥伴合作開發新市場機會，合作費用包含權利金與分潤約佔新業務營收10-20%。透過外部專業資源快速進入新市場，預期可縮短自主開發時程50%以上，提前6-12個月產生營收貢獻。合作模式降低自主投資風險，預估新業務可為${companyContext}帶來15-30%的營收成長，建議設定「合作業務貢獻度」與「市場進入速度」指標追蹤成效。`;
+    } else {
+      analysis = `外部專業服務支援策略執行，服務費用約為專案預算15-25%，屬一次性或階段性支出。專業團隊協助可避免內部試錯成本，預期縮短專案執行時程30-40%，提前實現策略效益。透過知識轉移提升內部能力，長期可減少對外部依賴，建議${companyContext}設定「專案成功率」與「知識內化程度」指標評估外部合作效益。`;
+    }
+  } else if (elements.includes('流程')) {
+    if (categoryName.includes('營運') || categoryName.includes('效率')) {
+      analysis = `營運流程重整優化作業效率，改善期間需投入內部人力約3-6個月專案時間，相當於人力成本增加5-8%。流程標準化完成後預期作業週期時間縮短35-50%，減少重複作業與錯誤率，每月可節省營業費用2-4%。${companyContext}透過「流程標準化完成度」與「作業效率提升率」監控，預期6-9個月內透過效率改善回收流程改善投入成本。`;
+    } else if (categoryName.includes('風險') || categoryName.includes('控制')) {
+      analysis = `建立風險控制流程強化營運穩定性，流程建置需投入專案人力2-4個月，短期增加人事成本。完善的風險控制機制可減少異常事件發生頻率70%以上，避免因突發狀況造成的營收損失，每次成功預防風險事件可節省潛在損失相當於週營收5-15%。建議${companyContext}設定「風險事件發生率」與「應變處理時間」指標量化流程改善效益。`;
+    } else {
+      analysis = `流程改善策略主要為內部資源重新配置，需要2-5個月的專案投入期，影響短期人力調度。流程優化後預期整體作業效率提升20-40%，減少無效作業時間，釋出人力資源投入核心業務。透過「流程效率指標」與「人力資源運用率」追蹤，預期4-8個月內實現流程改善帶來的成本節省與效率提升效益。`;
+    }
+  } else {
+    analysis = `${strategyName}執行將對${companyContext}損益結構產生階段性影響。初期策略投入成本預估為年營收1-3%，主要影響當期營業費用。策略效益發揮後預期可改善營運效率15-30%，透過成本節省與收入優化，預估6-12個月內對獲利能力產生正面貢獻。建議依據${categoryName}特性設定對應績效指標，確保策略投資回收達到預期目標。`;
+  }
+  
+  return analysis;
+};
+
+const generateDetailedCashFlowAnalysis = (
+  isRisk: boolean,
+  categoryName: string,
+  subcategoryName: string,
+  strategyName: string,
+  companyContext: string,
+  elements: string[],
+  scenarioDescription: string
+): string => {
+  let analysis = '';
+  
+  if (elements.includes('人力')) {
+    if (categoryName.includes('技術') || categoryName.includes('數位')) {
+      analysis = `數位轉型人才培訓需要分階段投入，預估前3個月每月增加現金流出8-15%，主要用於外部訓練課程與內部導師費用。培訓期間因學習曲線影響，短期生產力可能下降10-20%。但第4個月起員工數位技能提升，預期作業自動化程度提高，每月可節省加班費與外包費用約佔人力成本5-10%。${companyContext}建議預留6個月營運資金緩衝，確保轉型期間現金流穩定。`;
+    } else if (categoryName.includes('合規') || categoryName.includes('法規')) {
+      analysis = `合規培訓投入相對平穩，每季固定增加現金流出3-6%用於認證課程與法規更新訓練。培訓投資可避免違規罰款風險，以同業違規案例推估，每次避免違規可節省相當於月營收2-8%的罰款支出。同時合規能力提升有助於爭取政府補助與優惠貸款，預期每年可增加額外資金來源相當於年營收1-3%。建議${companyContext}將合規培訓列為固定預算項目。`;
+    } else {
+      analysis = `人力強化策略採分期投入模式，每月穩定增加現金流出2-5%用於培訓與能力建置。人員技能提升後可承接更複雜業務，預期客單價提升15-25%，回款週期維持不變下，每月營運現金流可改善3-8%。透過「人均產值」與「現金回收天數」監控，預期8-12個月後現金流狀況顯著改善，建議預留3-6個月週轉金因應投入期需求。`;
+    }
+  } else if (elements.includes('系統')) {
+    if (categoryName.includes('自動化') || categoryName.includes('效率')) {
+      analysis = `自動化系統建置需要大額前期投入，預估第1季現金流出增加50-80%，包含軟硬體採購與導入服務費。第2-3季為系統整合期，每月持續投入維護費約佔總投資5-8%。系統穩定運行第4季起，自動化作業可減少人工成本20-35%，每月現金節省相當於原人力支出的25-40%。${companyContext}建議準備12個月現金流預算，並評估分期付款或設備融資方案。`;
+    } else if (categoryName.includes('資安') || categoryName.includes('資料')) {
+      analysis = `資安系統投資集中於前2季，現金流出約為年營收4-8%，包含資安軟體授權與防護設備。每月維護費用約佔系統投資2-4%，為持續性現金流出。強化資安防護可避免資料外洩造成的巨額賠償，以同業案例推估，每次成功防護可避免相當於年營收10-30%的潛在損失。建議${companyContext}評估資安保險降低現金流風險，並預留應急資金因應突發狀況。`;
+    } else {
+      analysis = `系統升級投資前期現金流壓力較大，預估前6個月累計流出相當於年營收3-7%。系統導入後作業效率提升，預期應收帳款週轉天數縮短15-25%，加速現金回收。同時減少人工錯誤造成的重工成本，每月可節省營運現金支出5-12%。建議${companyContext}與銀行協商短期週轉額度，確保系統建置期間資金無虞。`;
+    }
+  } else if (elements.includes('設備')) {
+    if (categoryName.includes('環保') || categoryName.includes('節能')) {
+      analysis = `節能設備採購需要大額資本支出，建議分2-3期付款減緩現金流壓力，每期支付約為總投資的35-50%。設備安裝調試期間可能影響正常營運，預估2-4週內現金流入減少10-20%。新設備投入後節能效果顯著，每月電力費用可節省25-40%，以${companyContext}平均能源成本計算，預估12-18個月回收設備投資現金流出。建議評估政府節能補助降低初期投入負擔。`;
+    } else if (categoryName.includes('生產') || categoryName.includes('製程')) {
+      analysis = `生產設備更新投資金額較大，建議採設備融資方案，首付30-40%，餘款分36-60期攤還，可有效分散現金流壓力。新設備產能提升30-50%，預期每月產品出貨量增加，現金流入改善20-35%。同時設備自動化程度提高，每月可節省人工成本15-25%。${companyContext}透過產能與成本雙重改善，預估24-36個月內設備投資現金流可完全回收。`;
+    } else {
+      analysis = `設備投資採分階段執行策略，第1階段投入60%資金進行核心設備更新，第2階段投入40%進行週邊配套。分階段投入可降低現金流衝擊，同時確保設備效益逐步顯現。預期設備投入後營運效率提升25-40%，現金週轉速度加快，每月營運現金流改善10-20%。建議${companyContext}預留設備維護基金，確保長期穩定運作。`;
+    }
+  } else if (elements.includes('外部')) {
+    if (categoryName.includes('諮詢') || categoryName.includes('顧問')) {
+      analysis = `專業顧問服務採專案制付費，預估每月固定支出增加5-12%，付款條件通常為按月或按階段給付。顧問協助可大幅縮短內部摸索時間，預期專案執行週期縮短40-60%，間接節省內部人力成本相當於專案預算20-30%。透過專業指導避免決策錯誤，預估可避免潛在損失相當於月營收5-15%。${companyContext}建議將顧問費列為專案必要成本，確保策略執行品質。`;
+    } else if (categoryName.includes('合作') || categoryName.includes('聯盟')) {
+      analysis = `策略聯盟合作採分潤模式，前期需投入保證金約為合作預算10-20%，後續按業績分潤15-30%。合作模式可快速進入新市場，預期3-6個月內產生營收貢獻，現金流入改善10-25%。分潤制度降低固定成本壓力，現金流風險相對可控。建議${companyContext}建立合作業績追蹤機制，確保現金流回收符合預期目標。`;
+    } else {
+      analysis = `外部資源整合需要階段性投入，每季現金流出增加8-15%用於合作費用與整合成本。外部專業能力補強可提升服務品質，預期客戶滿意度提升帶動續約率增加20-35%，穩定現金流來源。同時外部合作可分攤風險，避免自主投資造成的大額現金流出。建議${companyContext}評估多元合作模式，優化現金流管理效益。`;
+    }
+  } else if (elements.includes('流程')) {
+    if (categoryName.includes('數位化') || categoryName.includes('自動化')) {
+      analysis = `流程數位化改善主要為人力時間投入，預估2-4個月專案期間每月人力成本增加10-15%。數位化流程建立後可大幅提升作業效率，預期處理時間縮短50-70%，間接加速客戶收款週期，每月現金回收提前3-7天。同時減少紙本作業與重複確認成本，每月可節省營運支出2-5%。${companyContext}透過流程優化預期6-10個月內現金流管理效率顯著提升。`;
+    } else if (categoryName.includes('標準化') || categoryName.includes('制度')) {
+      analysis = `制度標準化建置需要內部人力密集投入，預估3-5個月期間相當於增加15-25%人力成本。標準化流程完成後可減少異常處理與重工情況，預期每月可節省額外支出相當於營業費用5-10%。同時標準作業縮短新人培訓期，減少培訓成本與生產力損失，每位新進員工可節省培訓成本20-40%。建議${companyContext}將標準化視為長期投資，持續優化現金流效益。`;
+    } else {
+      analysis = `流程改善專案採內部主導模式，主要現金流出為專案人力機會成本，預估佔總人力成本8-12%。流程優化後營運效率提升，預期客戶服務週期縮短30-45%，加速現金流週轉。同時減少流程冗餘與等待時間，每月可提升營運現金流效率5-15%。透過持續改善機制，${companyContext}可建立長期現金流管理優勢。`;
+    }
+  } else {
+    analysis = `${strategyName}執行需要階段性現金投入，預估前6個月累計現金流出相當於月營收15-30%。策略效益發揮後預期營運效率改善，現金週轉加速10-25%，每月營運現金流可改善5-15%。建議${companyContext}準備充足營運資金，並建立現金流監控機制，確保策略執行期間財務穩定。同時評估外部融資支援，降低現金流壓力風險。`;
+  }
+  
+  return analysis;
+};
+
+const generateDetailedBalanceSheetAnalysis = (
+  isRisk: boolean,
+  categoryName: string,
+  subcategoryName: string,
+  strategyName: string,
+  companyContext: string,
+  elements: string[],
+  scenarioDescription: string
+): string => {
+  let analysis = '';
+  
+  if (elements.includes('人力')) {
+    analysis = `人力投資策略對資產負債表影響相對溫和，培訓費用可考慮遞延費用處理，分12-24個月攤提，避免單期費用衝擊過大。人力資本提升雖無法直接反映於帳面資產，但透過員工技能認證與專業證照可視為無形資產增值。${companyContext}建議建立人力資本評估機制，將重要員工培訓投資列入人力資產管理。長期而言，專業人才培育可提升企業智慧財產價值，間接增強資產品質與股東權益內涵。`;
+  } else if (elements.includes('系統')) {
+    if (categoryName.includes('數位') || categoryName.includes('資訊')) {
+      analysis = `數位系統投資將顯著增加無形資產科目，軟體授權與開發成本按3-5年攤銷，硬體設備按5-8年提列折舊。系統建置如需要銀行融資，將增加長期負債約佔投資額60-80%，需重新評估負債比例與利息負擔。數位資產可提升企業估值，特別是數據處理與分析能力的建立，可視為${companyContext}重要競爭資產。建議定期評估系統資產減損風險，確保帳面價值合理性。`;
+    } else if (categoryName.includes('自動化') || categoryName.includes('智能')) {
+      analysis = `智能化系統投資兼具有形與無形資產特性，設備部分按機械設備折舊，軟體部分按無形資產攤銷。總投資額預估影響固定資產增加20-40%，如採融資購置需增加相應長期負債。自動化系統可提升資產使用效率，預期總資產週轉率改善15-25%。${companyContext}需評估資產負債比例變化對財務結構的影響，必要時考慮增資強化股東權益。`;
+    } else {
+      analysis = `系統升級投資主要影響固定資產與無形資產科目，預估增加資產總值5-15%。如採分期付款將產生應付款項，影響流動負債結構。系統資產可改善營運效率，預期資產報酬率提升10-20%。建議${companyContext}建立資產管理制度，定期檢視系統資產效益與折舊政策的合理性，確保資產配置最佳化。`;
+    }
+  } else if (elements.includes('設備')) {
+    if (categoryName.includes('環保') || categoryName.includes('綠能')) {
+      analysis = `綠能設備投資將大幅增加固定資產規模，預估佔總資產15-30%，按10-15年提列折舊。設備融資將增加長期負債，需評估償債能力與資產擔保價值。綠能設備可享有政府補助與稅務優惠，實際投資負擔約為帳面值70-85%。此類資產具環保價值，有助於提升企業ESG評等與品牌價值。${companyContext}建議將綠能投資視為長期策略資產管理。`;
+    } else if (categoryName.includes('安全') || categoryName.includes('防護')) {
+      analysis = `安全防護設備投資主要增加機械設備科目，按5-10年折舊攤提。此類設備通常無法產生直接收益，但可避免災害損失，應視為風險控制資產。如需要保險搭配，將增加預付費用科目。防護設備可降低資產減損風險，有助於維持資產價值穩定。建議${companyContext}定期評估防護效益，確保資產投資與風險控制效果相符。`;
+    } else {
+      analysis = `生產設備更新將汰換舊有資產，需辦理除帳並認列處分損益。新設備投資增加固定資產30-60%，大幅改變資產結構。設備融資增加長期負債，資產負債比例需重新平衡。新設備效率提升可改善資產週轉率，預期固定資產報酬率提升20-40%。${companyContext}需建立設備資產管理制度，優化資產配置效益。`;
+    }
+  } else if (elements.includes('外部')) {
+    if (categoryName.includes('合資') || categoryName.includes('投資')) {
+      analysis = `策略投資合作將產生長期股權投資科目，按持股比例認列投資收益。合資可能需要資金投入，影響現金與其他資產結構。投資收益可改善獲利能力，間接增強保留盈餘與股東權益。如為重大投資需評估對資產負債比例的影響，必要時考慮增資或融資調整財務結構。${companyContext}建議建立投資管理制度，定期評估投資效益與風險。`;
+    } else if (categoryName.includes('服務') || categoryName.includes('外包')) {
+      analysis = `外部服務採購主要影響營業費用，對資產負債表直接影響有限。服務費用如採預付方式將產生預付費用科目，按服務期間攤銷。外部專業服務可提升營運效率，間接改善資產使用效益。長期服務合約可能產生合約負債，需按會計準則適當處理。建議${companyContext}建立服務採購管理制度，優化外部資源配置。`;
+    } else {
+      analysis = `外部合作策略對資產負債表影響視合作模式而定，一般以營業費用科目處理，不直接影響資產負債結構。合作如涉及權利金或保證金將產生相應資產或負債科目。外部資源整合可提升營運能力，間接增強企業價值與股東權益。建議${companyContext}依合作性質適當會計處理，確保財務報表合規性。`;
+    }
+  } else if (elements.includes('流程')) {
+    analysis = `流程改善主要為人力時間投入，對資產負債表直接影響較小。流程標準化可能涉及軟體系統或設備投資，需按性質分別處理。流程優化提升營運效率，可改善資產週轉率與投資報酬率。標準化制度建立可視為企業內部管理制度資產，雖不入帳但具實質價值。${companyContext}透過流程改善可提升整體資產運用效率，間接增強財務體質與競爭力。`;
+  } else {
+    analysis = `${strategyName}對${companyContext}資產負債結構影響需視具體執行內容而定。一般而言，策略投入可能影響資產配置與負債結構，需要定期檢視財務比例的合理性。策略執行如能改善營運效率，將有助於提升資產報酬率與股東權益報酬率。建議建立策略投資管理制度，追蹤投資效益對財務結構的影響，確保資本配置最佳化。`;
+  }
+  
+  return analysis;
+};
+
+const generateStrategyFeasibilityAnalysis = (
+  isRisk: boolean,
+  categoryName: string,
+  subcategoryName: string,
+  strategyName: string,
+  companyContext: string,
+  elements: string[],
+  scenarioDescription: string
+): string => {
+  let analysis = '';
+  
+  if (elements.includes('人力')) {
+    if (categoryName.includes('技術') && isRisk) {
+      analysis = `人力培訓策略適合應對技術風險，因為${companyContext}可透過內部人才培育建立技術能力，相較於外部採購技術服務更具成本效益與可控性。技術人才培育雖需時間累積，但可建立持續性競爭優勢，避免對外部技術依賴風險。以${industryText}特性而言，內部技術團隊更了解業務需求，培訓投資報酬率通常優於外購方案。實施關鍵在於選對培訓方向與建立學習激勵機制，確保人才留任。`;
+    } else if (categoryName.includes('法規') && isRisk) {
+      analysis = `面對法規風險採用人力培訓策略具高度可行性，因為合規能力需要深度理解與持續更新，內部培訓比外部委託更能確保執行品質。${companyContext}透過建立內部合規專家可長期受益，避免持續依賴外部顧問的高昂成本。法規培訓具標準化特性，訓練成本相對可控，且培訓後員工可同時提升專業能力與合規意識，一舉兩得。成功關鍵在於建立持續學習機制與定期更新訓練內容。`;
+    } else if (!isRisk) {
+      analysis = `人力投資策略適合把握市場機會，因為${companyContext}可透過人才升級快速提升服務品質與創新能力，相較於設備投資更具彈性與適應性。人力資本投資可同時服務多個市場機會，投資效益具擴散效果。以${sizeText}企業資源條件，人力培訓投資門檻相對較低，風險可控且易於調整。實施重點在於精準識別關鍵技能需求，建立人才發展路徑，確保培訓投資轉化為競爭優勢。`;
+    } else {
+      analysis = `人力強化策略對${companyContext}具高可行性，投資門檻低且可彈性調整規模。相較於大額設備投資，人力培訓風險較低且可逐步見效。${industryText}特性需要專業人才支撐，人力投資可同時提升多項能力指標。成功關鍵在於建立完整培訓體系與績效評估機制，確保人力投資產生預期效益。建議採階段性實施，持續優化培訓內容與方法。`;
+    }
+  } else if (elements.includes('系統')) {
+    if (categoryName.includes('效率') && !isRisk) {
+      analysis = `系統投資策略最適合把握效率提升機會，因為${companyContext}可透過自動化與數位化大幅改善營運效率，投資效益明確且可量化。系統一旦建置完成可持續發揮效益，不像人力需要持續投入。以${industryText}作業特性，系統化可消除人工錯誤與提升處理速度，競爭優勢顯著。實施風險主要在於系統選型與整合，建議選擇有經驗的系統廠商，採分階段導入降低實施風險。`;
+    } else if (categoryName.includes('資安') && isRisk) {
+      analysis = `系統強化策略是應對資安風險的最佳選擇，因為技術問題需要技術解決方案，人為防護無法達到系統性保護效果。${companyContext}透過資安系統投資可建立多層防護，相較於事後補救更具成本效益。資安系統具專業性，內部建置比外部委託更能確保持續性與客製化需求。實施關鍵在於選擇適合的資安方案與建立維護機制，確保防護效果持續有效。`;
+    } else if (isRisk) {
+      analysis = `系統升級策略適合控制營運風險，因為系統化管理可減少人為錯誤與提升作業穩定性。${companyContext}透過系統建置可建立標準化流程，降低營運風險發生機率。雖然初期投資較大，但系統穩定性高且可長期使用，總體成本效益優於人工管理。實施重點在於需求分析與系統整合，建議採用成熟技術方案，確保系統穩定可靠。`;
+    } else {
+      analysis = `系統投資策略對${companyContext}具中高度可行性，可大幅提升營運效率與競爭力。系統建置需要專業技術與充足預算，建議評估內部IT能力與財務條件。系統效益明確且可持續，適合作為中長期競爭優勢建立工具。成功關鍵在於選擇合適系統方案與完善的專案管理，確保系統導入順利且發揮預期效益。`;
+    }
+  } else if (elements.includes('設備')) {
+    if (categoryName.includes('生產') && !isRisk) {
+      analysis = `設備投資策略最適合把握產能擴張機會，因為${companyContext}可透過設備升級直接提升生產能力與產品品質，市場機會轉換效率最高。設備投資效益明確且可量化，相較於其他策略更容易評估投資報酬率。以${industryText}產業特性，設備現代化是競爭力提升的關鍵因素。實施風險主要在於設備選型與市場變化，建議充分評估市場需求穩定性，選擇技術成熟且維護便利的設備。`;
+    } else if (categoryName.includes('安全') && isRisk) {
+      analysis = `設備強化策略是應對安全風險的必要選擇，因為安全防護需要實體設備支撐，無法僅靠管理制度達成。${companyContext}透過安全設備投資可根本性降低風險發生機率，相較於風險轉移策略更具主動性。安全設備通常具長期使用價值，一次投資可長期受益。實施重點在於風險評估與設備規格選擇，確保防護效果符合實際需求與法規要求。`;
+    } else {
+      analysis = `設備投資策略需要${companyContext}具備充足資金與技術能力，投資門檻相對較高但效益明確。設備投資可建立長期競爭優勢，適合有穩定市場需求的企業。投資風險主要在於技術變化與市場波動，建議採用成熟技術與彈性配置。成功關鍵在於精準的需求分析與完善的維護計畫，確保設備投資發揮最大效益。`;
+    }
+  } else if (elements.includes('外部')) {
+    if (categoryName.includes('專業') && isRisk) {
+      analysis = `外部合作策略適合應對專業性風險，因為${companyContext}可快速取得專業能力，避免內部學習的時間成本與試錯風險。專業服務提供者具豐富經驗，可提供最佳實務方案。相較於內部建置，外部合作可分散風險且成本相對可控。實施關鍵在於合作夥伴選擇與合約管理，確保服務品質與知識轉移效果，避免過度依賴外部資源。`;
+    } else if (categoryName.includes('市場') && !isRisk) {
+      analysis = `外部合作策略最適合把握市場機會，因為${companyContext}可借助合作夥伴的市場資源與通路，快速進入新市場。合作模式可分攤風險與成本，相較於自主開發更具效率。外部夥伴的專業能力與資源可補強內部不足，提升市場機會掌握成功率。實施重點在於合作模式設計與利益分配機制，確保雙方長期合作意願與共同利益最大化。`;
+    } else {
+      analysis = `外部資源整合策略對${companyContext}具中度可行性，可快速補強內部能力不足。外部合作成本相對可控，風險分散效果佳。合作模式具彈性，可依需求調整合作深度與範圍。成功關鍵在於合作夥伴評選與關係管理，建立互信基礎與有效溝通機制，確保合作效益最大化。`;
+    }
+  } else if (elements.includes('流程')) {
+    if (categoryName.includes('效率') && !isRisk) {
+      analysis = `流程改善策略最適合把握效率提升機會，因為${companyContext}可透過內部流程優化直接改善營運效率，投資成本低且效益持續。流程改善具高度客製化特性，可完全符合企業需求。相較於外部解決方案，內部流程改善更具持續性與可控性。實施風險低，主要為變革管理挑戰。成功關鍵在於員工參與與持續改善機制，確保流程優化效果可持續發揮。`;
+    } else if (categoryName.includes('風險') && isRisk) {
+      analysis = `流程控制策略適合應對管理風險，因為${companyContext}可透過制度建立與流程標準化降低人為風險。流程改善成本低且可逐步實施，風險控制效果明確。相較於技術方案，流程控制更注重人員執行與制度落實。實施關鍵在於流程設計合理性與執行力確保，建立監控機制與持續改善文化，確保風險控制效果。`;
+    } else {
+      analysis = `流程改善策略對${companyContext}具高度可行性，主要依賴內部資源與管理能力。流程優化投資門檻低，可彈性調整實施範圍與進度。改善效益可持續發揮，且具累積效果。成功關鍵在於變革管理與員工參與，建立持續改善機制與績效評估制度，確保流程改善帶來實質效益。`;
+    }
+  } else {
+    analysis = `${strategyName}對${companyContext}的可行性需依具體策略內容與企業資源條件評估。一般而言，策略選擇應考量投資能力、執行難度、效益大小與風險程度等因素。建議採用多元評估標準，包含財務可行性、技術可行性與營運可行性，確保策略選擇符合企業現況與發展目標。實施時應建立階段性目標與檢核機制，確保策略執行效果符合預期。`;
+  }
+  
+  return analysis;
+};
+
 const generateKPIImpact = (
   isRisk: boolean,
   categoryName: string,
+  subcategoryName: string,
   strategyName: string,
   companyContext: string,
-  elements: string[]
+  elements: string[],
+  scenarioDescription: string
 ): string => {
   let impact = '';
   
@@ -144,9 +370,11 @@ const generateKPIImpact = (
 const generateCashFlowImpact = (
   isRisk: boolean,
   categoryName: string,
+  subcategoryName: string,
   strategyName: string,
   companyContext: string,
-  elements: string[]
+  elements: string[],
+  scenarioDescription: string
 ): string => {
   let impact = '';
   
@@ -170,9 +398,11 @@ const generateCashFlowImpact = (
 const generateBalanceSheetImpact = (
   isRisk: boolean,
   categoryName: string,
+  subcategoryName: string,
   strategyName: string,
   companyContext: string,
-  elements: string[]
+  elements: string[],
+  scenarioDescription: string
 ): string => {
   let impact = '';
   
@@ -196,9 +426,11 @@ const generateBalanceSheetImpact = (
 const generateExecutionCost = (
   isRisk: boolean,
   categoryName: string,
+  subcategoryName: string,
   strategyName: string,
   companyContext: string,
-  elements: string[]
+  elements: string[],
+  scenarioDescription: string
 ): string => {
   let cost = '';
   
@@ -219,261 +451,14 @@ const generateExecutionCost = (
   return cost;
 };
 
-// 詳細的六個分析區塊生成函數
-const generateProfitLossAnalysis = (
-  isRisk: boolean,
-  categoryName: string,
-  strategyName: string,
-  companyContext: string,
-  elements: string[]
-): string => {
-  let analysis = '';
-  
-  if (elements.includes('人力')) {
-    analysis = `營業收入面：人力培訓提升服務品質，預期帶動客戶滿意度提升5-10%，間接增加營收。建議追蹤「人均營收」與「客戶滿意度」指標。
-
-營業費用面：培訓費用將計入當期管理費用，預估增加3-5%營管費用。可透過「培訓費用/總薪資」比例監控合理性。
-
-稅前淨利影響：短期淨利可能因培訓成本增加而下降，長期透過效率提升回收。建議設定18個月投資回收期目標。
-
-計算建議：設定基準績效指標，按月追蹤培訓前後的績效變化幅度。`;
-  } else if (elements.includes('系統')) {
-    analysis = `營業收入面：系統自動化提升服務效率，預期減少人工錯誤率50%以上，提升客戶留存率。建議設定「系統處理量」與「錯誤率」指標。
-
-營業費用面：系統折舊費用分3-5年攤提，年攤提額約為投資額的20-30%。人力成本預期可節省15-25%。
-
-稅前淨利影響：第一年因折舊費用影響獲利，第二年起透過人力成本節省提升淨利率2-4%。
-
-計算建議：建立「系統投資回收計算表」，按季檢視實際節省成本與預期差異。`;
-  } else if (elements.includes('設備')) {
-    analysis = `營業收入面：設備效率提升直接改善產能，預期單位時間產出增加20-30%。建議追蹤「設備稼動率」與「單位產出」指標。
-
-營業費用面：設備折舊費用按5-10年攤提，維護費用約為設備價值的3-5%/年。預期可降低維修停機成本。
-
-稅前淨利影響：初期折舊費用較高，但透過產能提升與維修成本降低，預期2-3年內回收投資。
-
-計算建議：建立「設備投資效益追蹤表」，按月計算實際投資回收進度與預期比較。`;
-  } else if (elements.includes('外部')) {
-    analysis = `營業收入面：外部專業服務提升作業品質，預期減少重工與客訴率。建議追蹤「專案成功率」與「客戶滿意度」指標。
-
-營業費用面：顧問費用計入當期管理費用，預估增加5-10%營管費用。但可避免內部人力配置與試錯成本。
-
-稅前淨利影響：短期因顧問費用增加而影響獲利，中長期透過專業化提升帶來成本節省。
-
-計算建議：設定「顧問效益評估表」，按季追蹤專業服務帶來的實際效益與成本比較。`;
-  } else if (elements.includes('流程')) {
-    analysis = `營業收入面：流程標準化提升服務一致性，預期減少異常處理時間30-40%。建議追蹤「流程週期時間」與「異常事件數」指標。
-
-營業費用面：流程改善主要為內部人力投入，預估增加3-6個月專案人力成本。長期可降低營運成本。
-
-稅前淨利影響：短期因專案人力投入影響獲利，長期透過效率提升與風險降低改善獲利能力。
-
-計算建議：建立「流程改善效益追蹤表」，按月計算流程改善前後的成本與效率差異。`;
-  } else {
-    analysis = `營業收入面：${strategyName}執行後預期改善營運效率，但具體影響需依實際策略內容評估。建議設定對應的營收成長指標。
-
-營業費用面：策略執行將產生相關費用，需納入當期損益計算。建議建立費用預算控制機制。
-
-稅前淨利影響：短期可能因策略投入影響獲利，長期目標為透過風險控制或機會掌握提升獲利能力。
-
-計算建議：依據實際選擇的策略項目，建立相對應的效益追蹤與計算方法。`;
-  }
-  
-  return analysis;
-};
-
-const generateDetailedCashFlowAnalysis = (
-  isRisk: boolean,
-  categoryName: string,
-  strategyName: string,
-  companyContext: string,
-  elements: string[]
-): string => {
-  let analysis = '';
-  
-  if (elements.includes('人力')) {
-    analysis = `營運現金流：培訓費用按月或按季支付，現金流出較為平穩。預估每季現金流出增加2-5%。建議建立培訓預算分配機制。
-
-投資現金流：人力投資主要為費用性質，不涉及固定資產投資。但可考慮將重要培訓課程資本化處理。
-
-融資現金流：一般情況下不需要額外融資，但大規模培訓計畫可考慮分期付款或教育貸款。
-
-現金管理建議：設定「培訓費用現金流預測表」，按季預估培訓相關現金需求，確保營運資金充足。`;
-  } else if (elements.includes('系統')) {
-    analysis = `營運現金流：系統導入後可節省人力成本，預期第3季起營運現金流轉正。但需考慮系統維護費用的持續支出。
-
-投資現金流：系統建置需要一次性大額現金投入，建議評估分期付款或租賃方案。預估投資現金流出為總投資額的80-100%。
-
-融資現金流：如資金不足，可考慮設備融資或營運資金貸款。建議預留20-30%資金緩衝。
-
-現金管理建議：建立「系統投資現金流規劃表」，按月追蹤實際現金流與預算差異，確保專案資金到位。`;
-  } else if (elements.includes('設備')) {
-    analysis = `營運現金流：設備投入後可改善生產效率，預期12-18個月後營運現金流顯著改善。需考慮設備維護的現金需求。
-
-投資現金流：設備採購產生大額現金流出，建議評估設備融資或分期付款方案。預估現金流出為設備價值的100-120%。
-
-融資現金流：大型設備投資常需要融資支應，建議比較銀行貸款與租賃方案的成本效益。
-
-現金管理建議：建立「設備投資現金流管理表」，按月監控設備投資的現金流出與回收狀況。`;
-  } else if (elements.includes('外部')) {
-    analysis = `營運現金流：顧問費用按專案進度分期支付，現金流壓力相對平緩。預估每季現金流出增加3-8%。
-
-投資現金流：外部服務主要為費用性質，不涉及固定資產投資。但知識轉移可視為無形資產投資。
-
-融資現金流：一般情況下不需要額外融資，但大型顧問專案可考慮專案融資或分期付款。
-
-現金管理建議：建立「外部服務現金流預測表」，按專案階段預估現金需求，確保合作款項及時到位。`;
-  } else if (elements.includes('流程')) {
-    analysis = `營運現金流：流程改善主要為內部人力投入，現金流出有限。預期6個月內透過效率提升產生正現金流。
-
-投資現金流：流程改善可能涉及少量系統或設備投資，但金額相對較小。主要為人力時間成本。
-
-融資現金流：流程改善專案一般不需要外部融資，以內部資源為主。
-
-現金管理建議：建立「流程改善現金流追蹤表」，按月計算專案投入成本與效率提升帶來的現金流回收。`;
-  } else {
-    analysis = `營運現金流：${strategyName}對營運現金流的影響需依具體策略內容評估。建議設定現金流監控指標。
-
-投資現金流：策略執行可能涉及投資現金流出，需依實際選擇項目進行評估。
-
-融資現金流：大型策略可能需要融資支應，建議評估不同融資方案的成本效益。
-
-現金管理建議：依據實際策略內容建立現金流管理機制，確保策略執行的資金需求。`;
-  }
-  
-  return analysis;
-};
-
-const generateDetailedBalanceSheetAnalysis = (
-  isRisk: boolean,
-  categoryName: string,
-  strategyName: string,
-  companyContext: string,
-  elements: string[]
-): string => {
-  let analysis = '';
-  
-  if (elements.includes('人力')) {
-    analysis = `資產面：人力培訓費用可考慮遞延費用處理，分期攤提。人力資本提升雖無法直接入帳，但可透過績效改善反映於營運效率。
-
-負債面：培訓費用如採分期付款，會產生應付款項。一般情況下不會顯著影響負債結構。
-
-權益面：培訓投資透過費用化處理，會直接影響當期淨利與保留盈餘。長期透過人力資本增值間接增強股東權益。
-
-財務比率影響：對流動比率影響有限，但可能短期影響淨利率。建議設定人力投資報酬率指標進行評估。`;
-  } else if (elements.includes('系統')) {
-    analysis = `資產面：系統建置將增加固定資產（電腦設備）或無形資產（軟體）科目。需按使用年限提列折舊或攤銷。
-
-負債面：系統投資如需要融資，會增加長期負債。分期付款會產生應付款項，影響負債結構。
-
-權益面：系統投資透過折舊攤銷影響淨利，進而影響保留盈餘。但營運效率提升可改善長期獲利能力。
-
-財務比率影響：固定資產增加會影響總資產週轉率，但可改善資產使用效率。需重新評估資產負債比例的合理性。`;
-  } else if (elements.includes('設備')) {
-    analysis = `資產面：設備投資將顯著增加固定資產規模，需按設備類別設定折舊年限與方法。同時可能影響資產組合結構。
-
-負債面：設備融資會增加長期負債，需考慮償債能力與利息負擔。可能需要提供資產抵押或保證。
-
-權益面：設備投資透過折舊費用影響淨利，短期可能降低權益報酬率。長期透過產能提升改善獲利能力。
-
-財務比率影響：固定資產增加會影響資產週轉率與負債比率，需重新評估財務結構的適當性與償債能力。`;
-  } else if (elements.includes('外部')) {
-    analysis = `資產面：外部服務費用主要為當期費用，對資產結構影響有限。但知識轉移可視為無形資產增值。
-
-負債面：顧問費用分期付款會產生應付款項，但金額相對較小，不會顯著改變負債結構。
-
-權益面：顧問費用直接影響當期淨利與保留盈餘。專業服務品質提升可間接增強企業價值。
-
-財務比率影響：對主要財務比率影響有限，但可能短期影響淨利率。建議設定外部服務投資效益指標。`;
-  } else if (elements.includes('流程')) {
-    analysis = `資產面：流程改善主要為內部人力投入，對資產結構直接影響較小。但可能涉及少量系統或設備投資。
-
-負債面：流程改善一般不會增加負債，主要以內部資源支應。如有外部顧問或系統投資才會影響負債。
-
-權益面：專案人力成本會影響當期淨利，但流程效率提升可改善長期獲利能力與股東權益。
-
-財務比率影響：對資產負債結構影響較小，主要透過營運效率提升間接改善資產使用效率與獲利能力。`;
-  } else {
-    analysis = `資產面：${strategyName}對資產結構的影響需依具體策略內容評估。建議分析策略執行對各項資產的影響。
-
-負債面：策略執行可能影響負債結構，需評估融資需求與償債能力的變化。
-
-權益面：策略投入會影響淨利與股東權益，需平衡短期成本與長期效益。
-
-財務比率影響：策略執行可能影響各項財務比率，建議建立財務影響評估機制。`;
-  }
-  
-  return analysis;
-};
-
-const generateStrategyFeasibilityAnalysis = (
-  isRisk: boolean,
-  categoryName: string,
-  strategyName: string,
-  companyContext: string,
-  elements: string[]
-): string => {
-  let analysis = '';
-  
-  if (elements.includes('人力')) {
-    analysis = `實施可行性：人力培訓策略對${companyContext}而言具有高度可行性，投資門檻相對較低，可採階段性實施。
-
-資源需求評估：需要培訓預算（建議為年薪資總額的5-10%）、內部講師資源或外部培訓機構合作、員工培訓時間安排。
-
-實施風險控制：主要風險為培訓成效不如預期、關鍵人才流失等。建議建立培訓效果評估機制與留才方案。
-
-成功關鍵因素：管理層支持、培訓內容與實務結合、建立學習激勵機制、持續性投入而非一次性培訓。`;
-  } else if (elements.includes('系統')) {
-    analysis = `實施可行性：系統導入策略需要較高的初期投資與技術門檻，建議${companyContext}評估內部IT能力與預算充足性。
-
-資源需求評估：需要系統建置預算（建議為年營收的2-5%）、IT人力資源、系統整合與測試時間、員工教育訓練。
-
-實施風險控制：主要風險為系統整合失敗、成本超支、員工適應困難等。建議選擇有經驗的系統廠商與建立分階段驗收機制。
-
-成功關鍵因素：選擇合適的系統解決方案、充分的需求分析、使用者參與設計、完整的測試與訓練。`;
-  } else if (elements.includes('設備')) {
-    analysis = `實施可行性：設備投資策略需要大額資金投入，建議${companyContext}評估投資回收期與融資能力。
-
-資源需求評估：需要設備採購預算、安裝場地準備、操作人員培訓、維護保養資源。投資金額通常較大，需要充分評估。
-
-實施風險控制：主要風險為設備選型錯誤、安裝延遲、操作安全等。建議選擇信譽良好的設備供應商與建立完整的設備管理制度。
-
-成功關鍵因素：正確的設備選型、充分的事前規劃、專業的安裝調試、完善的維護保養計畫。`;
-  } else if (elements.includes('外部')) {
-    analysis = `實施可行性：外部合作策略可快速取得專業資源，對${companyContext}而言具有中高度可行性，但需要慎選合作夥伴。
-
-資源需求評估：需要外部服務預算、內部配合人力、專案管理資源、知識轉移機制。成本相對可控，風險相對較低。
-
-實施風險控制：主要風險為合作夥伴選擇錯誤、知識轉移不足、依賴性過高等。建議建立供應商評估機制與合約管理制度。
-
-成功關鍵因素：選擇合適的合作夥伴、明確的合作目標與範圍、有效的溝通協調、知識轉移與內化。`;
-  } else if (elements.includes('流程')) {
-    analysis = `實施可行性：流程改善策略主要依賴內部資源，對${companyContext}而言具有高度可行性，可配合營運需求彈性調整。
-
-資源需求評估：需要專案團隊人力、流程分析與設計時間、系統或表單調整、員工教育訓練。主要為人力時間成本。
-
-實施風險控制：主要風險為員工抗拒改變、流程設計不佳、缺乏持續改善等。建議建立變革管理機制與持續改善文化。
-
-成功關鍵因素：管理層承諾、員工參與、流程標準化、持續監控與改善、建立流程管理制度。`;
-  } else {
-    analysis = `實施可行性：${strategyName}的可行性需依據${companyContext}的資源條件與策略目標進行評估。
-
-資源需求評估：需要依據實際選擇的策略項目評估所需資源，包括人力、資金、時間、技術等面向。
-
-實施風險控制：需要識別策略執行的主要風險點，建立風險控制機制與應變計畫。
-
-成功關鍵因素：需要依據策略特性識別成功的關鍵因素，確保策略執行的有效性。`;
-  }
-  
-  return analysis;
-};
-
 const generateAnalysisMethodology = (
   isRisk: boolean,
   categoryName: string,
+  subcategoryName: string,
   strategyName: string,
   companyContext: string,
-  elements: string[]
+  elements: string[],
+  scenarioDescription: string
 ): string => {
   let methodology = '';
   
@@ -569,9 +554,11 @@ const generateAnalysisMethodology = (
 const generateCalculationMethodSuggestions = (
   isRisk: boolean,
   categoryName: string,
+  subcategoryName: string,
   strategyName: string,
   companyContext: string,
-  elements: string[]
+  elements: string[],
+  scenarioDescription: string
 ): string => {
   let suggestions = '';
   
@@ -628,7 +615,7 @@ NPV = Σ(年度現金流入 - 年度現金流出) / (1 + 折現率)^年數 - 初
 外部服務成本：
 - 直接成本：顧問費 + 專案費 + 材料費
 - 間接成本：內部配合人力 × 時薪 + 管理成本
-- 機會成本：內部人力投入其他專案的潜在收益
+- 機會成本：內部人力投入其他專案的潛在收益
 
 價值計算：
 - 專業價值：(外部專業解決方案 - 內部摸索成本) × 時間價值
