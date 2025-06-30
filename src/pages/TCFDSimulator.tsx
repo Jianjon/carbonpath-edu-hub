@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -77,11 +76,11 @@ const TCFDSimulator = () => {
   };
 
   const tcfdSteps: TCFDStepConfig[] = [
-    { title: '輸入條件', icon: Building2 },
-    { title: '選擇評估', icon: Search },
-    { title: 'LLM分析', icon: Brain },
+    { title: '基本條件', icon: Building2 },
+    { title: '風險評估', icon: Search },
+    { title: '智能分析', icon: Brain },
     { title: '策略財務', icon: TrendingUp },
-    { title: '生成報告', icon: FileText },
+    { title: '報告生成', icon: FileText },
   ];
 
   const renderStageContent = () => {
@@ -115,7 +114,7 @@ const TCFDSimulator = () => {
   const stageNames = [
     '基本條件輸入',
     '風險與機會選擇',
-    'LLM 情境評估',
+    '智能情境評估',
     '策略與財務分析',
     '報告生成'
   ];
@@ -124,18 +123,18 @@ const TCFDSimulator = () => {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white">
+      {/* Header - 統一設計風格 */}
+      <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="flex items-center justify-center space-x-3 mb-4">
               <FileText className="h-8 w-8" />
-              <h1 className="text-4xl md:text-5xl font-bold">TCFD 模擬器</h1>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-wide">TCFD 模擬器</h1>
             </div>
-            <p className="text-xl text-blue-100 mb-8">
-              气候相關財務揭露架構評估工具
+            <p className="text-xl text-blue-100 mb-8 font-medium">
+              氣候相關財務揭露架構評估工具
             </p>
-            <p className="text-lg text-blue-200 max-w-3xl mx-auto">
+            <p className="text-lg text-blue-200 max-w-3xl mx-auto font-medium leading-relaxed">
               依據 TCFD 官方框架，協助企業完成風險與機會評估，並自動生成報告草稿
             </p>
           </div>
@@ -147,9 +146,9 @@ const TCFDSimulator = () => {
         <TCFDStepper currentStep={currentStage} steps={tcfdSteps} />
       )}
 
-      {/* Original Progress Bar - 保留作為詳細進度顯示 */}
+      {/* 詳細進度顯示 - 統一設計風格 */}
       {assessment && (
-        <div className="bg-white border-b">
+        <div className="bg-white border-b border-slate-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -157,7 +156,7 @@ const TCFDSimulator = () => {
                   {stageNames.map((name, index) => (
                     <div key={index} className="flex items-center">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${
                           index + 1 < currentStage
                             ? 'bg-green-500 text-white'
                             : index + 1 === currentStage
@@ -167,8 +166,8 @@ const TCFDSimulator = () => {
                       >
                         {index + 1}
                       </div>
-                      <span className={`ml-2 text-sm ${
-                        index + 1 === currentStage ? 'text-blue-600 font-medium' : 'text-gray-600'
+                      <span className={`ml-2 text-sm font-medium ${
+                        index + 1 === currentStage ? 'text-blue-600' : 'text-gray-600'
                       }`}>
                         {name}
                       </span>
@@ -184,6 +183,7 @@ const TCFDSimulator = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentStage(Math.max(1, currentStage - 1))}
+                  className="font-medium shadow-sm hover:shadow-md transition-shadow"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   上一階段
@@ -199,16 +199,16 @@ const TCFDSimulator = () => {
         {loading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">載入中...</p>
+            <p className="mt-4 text-gray-600 font-medium">載入中...</p>
           </div>
         )}
         
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">
             <div className="flex">
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">發生錯誤</h3>
-                <div className="mt-2 text-sm text-red-700">
+                <h3 className="text-sm font-bold text-red-800">發生錯誤</h3>
+                <div className="mt-2 text-sm text-red-700 font-medium">
                   <p>{error}</p>
                   <p className="mt-2 text-xs text-red-600">
                     資料已暫時儲存供系統使用，如果問題持續發生，請嘗試重新整理頁面。

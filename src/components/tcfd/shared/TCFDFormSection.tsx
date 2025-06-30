@@ -16,14 +16,14 @@ export const TCFDFormSection: React.FC<TCFDFormSectionProps> = ({
   children
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-1">
       <div>
-        <Label className="text-base font-semibold text-slate-800">
+        <Label className="text-base font-bold text-slate-800 tracking-wide">
           {title}
           {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
         {description && (
-          <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+          <p className="text-sm text-slate-600 mt-2 leading-relaxed font-medium">
             {description}
           </p>
         )}

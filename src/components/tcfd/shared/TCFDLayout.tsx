@@ -18,9 +18,11 @@ interface TCFDLayoutProps {
 
 const getChineseText = (text: string): string => {
   const translations: Record<string, string> = {
-    'medium': '中型',
-    'large': '大型',
-    'small': '小型',
+    // 公司規模
+    'medium': '中型企業',
+    'large': '大型企業', 
+    'small': '小型企業',
+    // 產業別
     'hospitality': '旅宿業',
     'manufacturing': '製造業',
     'technology': '科技業',
@@ -45,28 +47,28 @@ export const TCFDLayout: React.FC<TCFDLayoutProps> = ({
 }) => {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* 統一的標題區 */}
-      <Card className="bg-gradient-to-r from-slate-50 to-blue-50 border-slate-200">
-        <CardHeader className="text-center space-y-4">
+      {/* 統一的標題區 - 增強設計風格 */}
+      <Card className="bg-gradient-to-r from-slate-50 to-blue-50 border-slate-200 shadow-sm">
+        <CardHeader className="text-center space-y-4 py-8">
           <div className="flex items-center justify-center space-x-3">
-            <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-slate-700 rounded-xl flex items-center justify-center shadow-md">
               <Icon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-semibold text-slate-800">
+              <CardTitle className="text-2xl font-bold text-slate-800 tracking-wide">
                 {stage}：{title}
               </CardTitle>
             </div>
           </div>
-          <p className="text-slate-600 text-base leading-relaxed max-w-3xl mx-auto">
+          <p className="text-slate-600 text-base leading-relaxed max-w-3xl mx-auto font-medium">
             {description}
           </p>
           {assessment && (
-            <div className="flex justify-center space-x-2">
-              <Badge variant="outline" className="bg-white text-slate-700 border-slate-300">
+            <div className="flex justify-center space-x-3 pt-2">
+              <Badge variant="outline" className="bg-white text-slate-700 border-slate-300 px-3 py-1 font-medium shadow-sm">
                 {getChineseText(assessment.company_size)}
               </Badge>
-              <Badge variant="outline" className="bg-white text-slate-700 border-slate-300">
+              <Badge variant="outline" className="bg-white text-slate-700 border-slate-300 px-3 py-1 font-medium shadow-sm">
                 {getChineseText(assessment.industry)}
               </Badge>
             </div>
