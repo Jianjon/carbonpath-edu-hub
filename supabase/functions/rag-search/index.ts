@@ -23,10 +23,16 @@ async function generateEmbedding(text: string): Promise<number[]> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'text-embedding-ada-002',
+      model: 'text-embedding-3-small',
       input: text,
     }),
   });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('OpenAI Embeddings Error:', errorBody);
+    throw new Error(`OpenAI embeddings failed: ${response.status}`);
+  }
 
   const data = await response.json();
   return data.data[0].embedding;
@@ -60,6 +66,13 @@ async function searchRelevantChunks(query: string, topK: number = 4): Promise<an
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  if (!openAIApiKey || openAIApiKey.trim() === '') {
+    console.error('OPENAI_API_KEY is not set');
+    return new Response(JSON.stringify({ error: 'missing_openai_api_key' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {

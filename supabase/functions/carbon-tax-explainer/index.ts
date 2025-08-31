@@ -14,6 +14,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (!openAIApiKey || openAIApiKey.trim() === '') {
+    console.error('OPENAI_API_KEY is not set');
+    return new Response(JSON.stringify({ error: 'missing_openai_api_key' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const { annualEmissions, feeRateOption, customFeeRate, reductionPercentage, hasOffset, offsetAmount, savings } = await req.json();
 
