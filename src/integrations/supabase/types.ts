@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       document_chunks: {
@@ -81,6 +86,54 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      ESG: {
+        Row: {
+          created_at: string | null
+          id: string
+          question_type: string | null
+          updated_at: string | null
+          知識點: string
+          答案: string
+          解析: string
+          選項a: string
+          選項b: string
+          選項c: string
+          選項d: string
+          難度: Database["public"]["Enums"]["difficulty_level"]
+          題目: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          question_type?: string | null
+          updated_at?: string | null
+          知識點?: string
+          答案: string
+          解析?: string
+          選項a: string
+          選項b: string
+          選項c: string
+          選項d: string
+          難度?: Database["public"]["Enums"]["difficulty_level"]
+          題目: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          question_type?: string | null
+          updated_at?: string | null
+          知識點?: string
+          答案?: string
+          解析?: string
+          選項a?: string
+          選項b?: string
+          選項c?: string
+          選項d?: string
+          難度?: Database["public"]["Enums"]["difficulty_level"]
+          題目?: string
         }
         Relationships: []
       }
@@ -297,6 +350,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          question_type: string | null
           updated_at: string | null
           知識點: string
           答案: string
@@ -311,6 +365,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          question_type?: string | null
           updated_at?: string | null
           知識點?: string
           答案: string
@@ -325,6 +380,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          question_type?: string | null
           updated_at?: string | null
           知識點?: string
           答案?: string
@@ -342,6 +398,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          question_type: string | null
           updated_at: string | null
           知識點: string
           答案: string
@@ -356,6 +413,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          question_type?: string | null
           updated_at?: string | null
           知識點?: string
           答案: string
@@ -370,6 +428,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          question_type?: string | null
           updated_at?: string | null
           知識點?: string
           答案?: string
@@ -804,35 +863,110 @@ export type Database = {
         }
         Relationships: []
       }
+      topic_knowledge: {
+        Row: {
+          created_at: string | null
+          explanation: string
+          id: string
+          key_points: string[]
+          related_concepts: string[]
+          topic: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          explanation: string
+          id?: string
+          key_points: string[]
+          related_concepts: string[]
+          topic: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          explanation?: string
+          id?: string
+          key_points?: string[]
+          related_concepts?: string[]
+          topic?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      topic_mastery: {
+        Row: {
+          correct: number | null
+          created_at: string | null
+          id: string
+          last_practice: string | null
+          mastery: string
+          topic: string
+          total: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          correct?: number | null
+          created_at?: string | null
+          id?: string
+          last_practice?: string | null
+          mastery: string
+          topic: string
+          total?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          correct?: number | null
+          created_at?: string | null
+          id?: string
+          last_practice?: string | null
+          mastery?: string
+          topic?: string
+          total?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_answers: {
         Row: {
+          difficulty: string | null
           id: string
           is_correct: boolean
           mode: string
           question_id: string
+          question_type: string | null
           selected_option: string
           session_id: string | null
           timestamp: string | null
+          topic: string | null
           user_id: string
         }
         Insert: {
+          difficulty?: string | null
           id?: string
           is_correct?: boolean
           mode?: string
           question_id: string
+          question_type?: string | null
           selected_option?: string
           session_id?: string | null
           timestamp?: string | null
+          topic?: string | null
           user_id: string
         }
         Update: {
+          difficulty?: string | null
           id?: string
           is_correct?: boolean
           mode?: string
           question_id?: string
+          question_type?: string | null
           selected_option?: string
           session_id?: string | null
           timestamp?: string | null
+          topic?: string | null
           user_id?: string
         }
         Relationships: [
@@ -845,6 +979,42 @@ export type Database = {
           },
         ]
       }
+      user_progress: {
+        Row: {
+          correct_answers: number | null
+          correct_rate: number | null
+          created_at: string | null
+          date: string
+          id: string
+          subject: string | null
+          total_answers: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          correct_answers?: number | null
+          correct_rate?: number | null
+          created_at?: string | null
+          date: string
+          id?: string
+          subject?: string | null
+          total_answers?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          correct_answers?: number | null
+          correct_rate?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          subject?: string | null
+          total_answers?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -853,6 +1023,22 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      determine_question_type: {
+        Args: { p_question_content: string }
+        Returns: string
+      }
+      get_topic_knowledge: {
+        Args: { p_topic: string }
+        Returns: {
+          created_at: string
+          explanation: string
+          id: string
+          key_points: string[]
+          related_concepts: string[]
+          topic: string
+          updated_at: string
+        }[]
       }
       halfvec_avg: {
         Args: { "": number[] }
@@ -906,6 +1092,49 @@ export type Database = {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
       }
+      save_ai_generated_question: {
+        Args: { p_question: Json; p_subject: string }
+        Returns: string
+      }
+      save_ai_generated_question_subject_one: {
+        Args: {
+          p_question_type?: string
+          p_知識點: string
+          p_答案: string
+          p_解析: string
+          p_選項a: string
+          p_選項b: string
+          p_選項c: string
+          p_選項d: string
+          p_難度?: string
+          p_題目: string
+        }
+        Returns: string
+      }
+      save_ai_generated_question_subject_two: {
+        Args: {
+          p_question_type?: string
+          p_知識點: string
+          p_答案: string
+          p_解析: string
+          p_選項a: string
+          p_選項b: string
+          p_選項c: string
+          p_選項d: string
+          p_難度?: string
+          p_題目: string
+        }
+        Returns: string
+      }
+      save_topic_knowledge: {
+        Args: {
+          p_explanation: string
+          p_key_points: string[]
+          p_related_concepts: string[]
+          p_topic: string
+        }
+        Returns: string
+      }
       sparsevec_out: {
         Args: { "": unknown }
         Returns: unknown
@@ -917,6 +1146,10 @@ export type Database = {
       sparsevec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      standardize_knowledge_point: {
+        Args: { p_knowledge_point: string }
+        Returns: string
       }
       vector_avg: {
         Args: { "": number[] }
@@ -963,21 +1196,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -995,14 +1232,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1018,14 +1257,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1041,14 +1282,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -1056,14 +1299,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
